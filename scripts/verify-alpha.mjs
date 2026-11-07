@@ -1,7 +1,8 @@
-import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import {stripTypeScriptTypes} from 'node:module';
+import {readModelSource} from './source-files.mjs';
+import vm from 'node:vm';import assert from 'node:assert/strict';import {stripTypeScriptTypes} from 'node:module';
 const storage={value:null,getItem(){return this.value},setItem(_,value){this.value=value}};
 const context=vm.createContext({assert,console,localStorage:storage});
-vm.runInContext(stripTypeScriptTypes(['farm.ts','resources.ts','packs.ts','storage.ts'].map(f=>fs.readFileSync('src/'+f,'utf8')).join('\n')),context);
+vm.runInContext(stripTypeScriptTypes(readModelSource()),context);
 vm.runInContext(`
 let seed=123456;const random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
 const f=newFarm();assert.equal(f.resources.orbs,0);assert.equal(crops[0].seconds,120);assert.equal(crops[15].seconds,3600);

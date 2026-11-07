@@ -5,14 +5,17 @@ const newPackProgress=():PackProgress=>({version:1,speed:0,slots:0,refund:0,luck
 const orbRewards=[1,4,16,64];
 function basePackOdds(){
  const inverse=crops.map((_,i)=>cropTiers[i]===0?1/cropPrices[i]:0),sum=total(inverse);
- return crops.map((_,i)=>cropTiers[i]===0?90*inverse[i]/sum:cropTiers[i]===1?2:cropTiers[i]===2?.4:.1);
+ const tierCounts=[0,0,0,0];
+ for(const tier of cropTiers)tierCounts[tier]++;
+ return crops.map((crop,i)=>crop.tier===0?90*inverse[i]/sum:[90,8,1.6,.4][crop.tier]/tierCounts[crop.tier]);
 }
 function openingOdds(farm:Farm,pack:number,luck=farm.luck){
  if(!seedPacks[pack])return crops.map(()=>0);
  const base=basePackOdds(),tier=pack,t=Math.max(0,luck)/(Math.max(0,luck)+100);
  const start=[92,10,2,.5][tier],limit=[100-12e-7,80,50,[1,2,5][farm.packProgress.luckGate]][tier];
- const group=start+(limit-start)*t,baseGroup=total(base.filter((_,i)=>cropTiers[i]===tier));
- return base.map((value,i)=>cropTiers[i]===tier?group*((1-t)*value/baseGroup+t/4):(100-group)*value/(100-baseGroup));
+ const members=base.filter((_,i)=>cropTiers[i]===tier);
+ const group=start+(limit-start)*t,baseGroup=total(members);
+ return base.map((value,i)=>cropTiers[i]===tier?group*((1-t)*value/baseGroup+t/members.length):(100-group)*value/(100-baseGroup));
 }
 const packSlotLimit=(farm:Farm)=>1+farm.packProgress.slots;
 function packOpeningPrice(pack:number,count:number){return Math.ceil(seedPacks[pack].price*count*(count>1?.75:1));}
@@ -72,5 +75,5 @@ function migratePackProgress(s:Farm){
  const p=s.packProgress;
  const int=(n:unknown,min:number,max:number)=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=min&&n<=max;
  if(p.version!==1||!int(p.speed,0,60)||!int(p.slots,0,4)||!int(p.refund,0,14)||!int(p.luckGate,0,2)||!int(p.refundUnits,0,5999)||typeof p.refundGate!=='boolean')throw new Error('Повреждены улучшения мешков');
- if(p.pending){const job=p.pending;if(!int(job.pack,0,3)||!int(job.paid,1,Number.MAX_SAFE_INTEGER)||!Array.isArray(job.entries)||job.entries.length<1||job.entries.length>5||!job.entries.every(item=>int(item.crop,0,15)&&typeof item.first==='boolean'))throw new Error('Повреждено открытие мешка');}
+ if(p.pending){const job=p.pending;if(!int(job.pack,0,3)||!int(job.paid,1,Number.MAX_SAFE_INTEGER)||!Array.isArray(job.entries)||job.entries.length<1||job.entries.length>5||!job.entries.every(item=>int(item.crop,0,crops.length-1)&&typeof item.first==='boolean'))throw new Error('Повреждено открытие мешка');}
 }

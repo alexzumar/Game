@@ -1,10 +1,11 @@
+import {readModelSource} from './source-files.mjs';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import {stripTypeScriptTypes} from 'node:module';
 const storage={value:null,getItem(){return this.value},setItem(_,value){this.value=value}};
 const context=vm.createContext({assert,console,localStorage:storage});
-const model=['farm.ts','resources.ts','packs.ts','storage.ts'].map(file=>fs.readFileSync('src/'+file,'utf8')).join(String.fromCharCode(10));
+const model=readModelSource();
 vm.runInContext(stripTypeScriptTypes(model),context);
 vm.runInContext(`
 const farm=newFarm(), t=farm.epoch;

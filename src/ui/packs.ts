@@ -34,7 +34,7 @@ function renderPackWorkshop(){
  }
  button('pack-buy-'+id).disabled=!canPayPackOffer(offer);button('pack-buy-'+id).textContent=offer.max?'Максимум':packCostText(offer);}
  for(const kind of ['luck'] as const){const offer=packGateOffer(farm,kind),max=kind==='luck'?farm.packProgress.luckGate>=2:farm.packProgress.refundGate;
- get('pack-gate-'+kind).textContent=kind==='refund'?'Открывает возврат выше 20%. Достигни возврата 20% и внеси материалы.':farm.packProgress.luckGate===0?'Следующий предел: 2% легендарных суммарно. Требуются все 16 видов.':'Следующий предел: 5% легендарных суммарно. Требуются поле 8×8, все виды и 100 000 собранных плодов.';
+ get('pack-gate-'+kind).textContent=kind==='refund'?'Открывает возврат выше 20%. Достигни возврата 20% и внеси материалы.':farm.packProgress.luckGate===0?'Следующий предел: 2% легендарных суммарно. Требуются все виды семян.':'Следующий предел: 5% легендарных суммарно. Требуются поле 8×8, все виды и 100 000 собранных плодов.';
  button('pack-gate-buy-'+kind).textContent=max?'Максимум':packCostText(offer);button('pack-gate-buy-'+kind).disabled=max||!canPayPackOffer(offer);}
  button('starter-rescue').hidden=!needsStarterRescue(farm);
  applyPlantGlows();

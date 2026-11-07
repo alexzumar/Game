@@ -19,6 +19,15 @@ function loadFarm():Farm {
     const raw = localStorage.getItem(key);
     if (!raw) return newFarm();
     const s = JSON.parse(raw);
+    // The first public catalog had 16 slots. Append defaults when new slots are added.
+    const savedSlots=s.catalogSlots??16;
+    if(!int(savedSlots,1,crops.length))throw new Error("Неизвестная версия каталога");
+    if(crops.length>savedSlots){
+      for(const field of ['seeds','harvest','harvestValue','harvestQuality','collection','harvested']){
+        if(Array.isArray(s[field])&&s[field].length===savedSlots)s[field]=s[field].concat(crops.slice(savedSlots).map(()=>0));
+      }
+      if(Array.isArray(s.levels)&&s.levels.length===savedSlots)s.levels=s.levels.concat(emptyLevels().slice(savedSlots));
+    }
     const resumed=s.pausedAt!==undefined;
     if(resumed){
       if(!int(s.pausedAt,0))throw new Error('Повреждена отметка паузы сохранения');
@@ -34,10 +43,10 @@ function loadFarm():Farm {
         s.coins ??= 0;
     if(typeof s.coins==='number'&&Number.isFinite(s.coins)&&s.coins>=0)s.coins=Math.ceil(s.coins);
     s.harvestQuality ??= crops.map(()=>0);
-    if(!Array.isArray(s.harvestQuality)||s.harvestQuality.length!==16||!s.harvestQuality.every((n:unknown)=>typeof n==="number"&&Number.isFinite(n)&&n>=0))throw new Error("Повреждено качество урожая");
+    if(!Array.isArray(s.harvestQuality)||s.harvestQuality.length!==crops.length||!s.harvestQuality.every((n:unknown)=>typeof n==="number"&&Number.isFinite(n)&&n>=0))throw new Error("Повреждено качество урожая");
     s.harvestValue ??= [...(s.harvest??[])];
-    if(s.harvestValue.length===3)s.harvestValue=s.harvestValue.concat(Array(13).fill(0));
-    if(!Array.isArray(s.harvestValue)||s.harvestValue.length!==16||!s.harvestValue.every((v:unknown)=>typeof v==="number"&&Number.isFinite(v)&&v>=0))throw new Error("Повреждена стоимость урожая");
+    if(s.harvestValue.length===3)s.harvestValue=s.harvestValue.concat(Array(crops.length-3).fill(0));
+    if(!Array.isArray(s.harvestValue)||s.harvestValue.length!==crops.length||!s.harvestValue.every((v:unknown)=>typeof v==="number"&&Number.isFinite(v)&&v>=0))throw new Error("Повреждена стоимость урожая");
     s.relics ??= 0;s.xray ??= false;
     if(!int(s.relics,0)||typeof s.xray!=="boolean")throw new Error("Повреждены предметы");
     s.mutationCheck ??= Date.now()+(s.offset??0)+30000;
@@ -51,18 +60,18 @@ function loadFarm():Farm {
     s.hybridSlots ??= Math.max(20,20+5*Math.ceil(Math.max(0,s.lines.length-20)/5));
     if(!int(s.hybridSlots,20))throw new Error("Повреждён размер инвентаря");
     if(!Array.isArray(s.lines)||!s.lines.every((line:Line)=>line && typeof line.name==="string" &&
-      (line.archived===undefined||typeof line.archived==="boolean")&&int(line.crop,0,15)&&int(line.seeds,0)&&Array.isArray(line.traits)&&line.traits.length<=5&&line.traits.every(t=>traitNames[t])))
+      (line.archived===undefined||typeof line.archived==="boolean")&&int(line.crop,0,crops.length-1)&&int(line.seeds,0)&&Array.isArray(line.traits)&&line.traits.length<=5&&line.traits.every(t=>traitNames[t])))
       throw new Error("Повреждены линии селекции");
     s.extraction ??= newExtraction();
     const machine=s.extraction;
-    if(machine.history!==undefined&&(!Array.isArray(machine.history)||machine.history.length>12||machine.history.some(entry=>!entry||!int(entry.crop,0,15)||!int(entry.input,1,extractionCapacity)||!int(entry.seeds,0))))throw new Error('Повреждён журнал переработки');
+    if(machine.history!==undefined&&(!Array.isArray(machine.history)||machine.history.length>12||machine.history.some(entry=>!entry||!int(entry.crop,0,crops.length-1)||!int(entry.input,1,extractionCapacity)||!int(entry.seeds,0))))throw new Error('Повреждён журнал переработки');
     if(!int(machine.slots??1,1,3)|| (machine.extraJobs!==undefined&&(!Array.isArray(machine.extraJobs)||machine.extraJobs.length>2||machine.extraJobs.some((job,index)=>job!==null&&index+2>(machine.slots??1)))))throw new Error("Повреждены слоты экстрактора");
     if (!int(machine.speed,0) || !int(machine.yield,0) || !int(machine.processed,0) ||
         !int(machine.produced,0) || typeof machine.last!=="string")throw new Error("Повреждены данные экстрактора");
     machine.speed=Math.min(machine.speed,extractionSpeedMax);
     for(const job of extractionJobs(machine)){
       if
-        (job!==null && (!job || !int(job.crop,0,15) || !int(job.input,1,extractionCapacity) ||
+        (job!==null && (!job || !int(job.crop,0,crops.length-1) || !int(job.input,1,extractionCapacity) ||
           !int(job.output,0) || !int(job.start,0) || !int(job.end,job.start)))
       throw new Error("Повреждены данные экстрактора");
     if(job) {
@@ -89,7 +98,7 @@ function loadFarm():Farm {
     s.pendingDiscovery ??= [];
     if (!["speed","slots","amount"].every(id=>int(s.discoveryUp[id],0,discoveryLimit(id as DiscoveryUpgrade))) ||
         !Array.isArray(s.pendingDiscovery) || s.pendingDiscovery.length>3 ||
-        !s.pendingDiscovery.every((item:{crop:number;amount:number})=>item && int(item.crop,0,15) && int(item.amount,1)))
+        !s.pendingDiscovery.every((item:{crop:number;amount:number})=>item && int(item.crop,0,crops.length-1) && int(item.amount,1)))
       throw new Error("Повреждена рулетка коллекции");
     s.collection ??= crops.map((_,i)=> i===0 || s.seeds?.[i]>0 || s.harvest?.[i]>0 || s.plots?.some((p:Plant|null)=>p?.crop===i) ? 1 : 0);
     if (!int(s.discoveries,0) || !Array.isArray(s.collection) || s.collection.length!==crops.length ||
@@ -102,7 +111,7 @@ function loadFarm():Farm {
     s.automation ??= {irrigation:false,replant:false};
     if(s.automationRevision!==1){s.automation={irrigation:false,replant:false};s.automationRevision=1;}
     s.irrigationUntil ??= 0;s.replantCrop ??= null;
-    if(!int(s.irrigationUntil,0) || s.replantCrop!==null && !int(s.replantCrop,0,15))
+    if(!int(s.irrigationUntil,0) || s.replantCrop!==null && !int(s.replantCrop,0,crops.length-1))
       throw new Error("Повреждены сеансы автоматизации");
     if(typeof s.automation.irrigation!=="boolean" || typeof s.automation.replant!=="boolean")
       throw new Error("Повреждены настройки автоматизации");
@@ -148,7 +157,7 @@ function loadFarm():Farm {
     if (s.weather.last === null ? s.weather.end !== null :
         !int(s.weather.end,s.weather.last+1,s.weather.next-1)) throw new Error('Повреждена длительность дождя');
     if(s.plots.some((p:Plant|null)=>p?.line!==undefined && (!int(p.line,0,s.lines.length-1)||s.lines[p.line].crop!==p.crop))) throw new Error("Повреждено растение линии");
-    if(s.plots.some((p:Plant|null)=>p?.mystery && (!Array.isArray(p.mystery.parents)||p.mystery.parents.length!==2||!p.mystery.parents.every(i=>int(i,0,15))||!Array.isArray(p.mystery.traits)||p.mystery.traits.length>10||!p.mystery.traits.every(t=>traitNames[t]))))throw new Error("Повреждена мутация");
+    if(s.plots.some((p:Plant|null)=>p?.mystery && (!Array.isArray(p.mystery.parents)||p.mystery.parents.length!==2||!p.mystery.parents.every(i=>int(i,0,crops.length-1))||!Array.isArray(p.mystery.traits)||p.mystery.traits.length>10||!p.mystery.traits.every(t=>traitNames[t]))))throw new Error("Повреждена мутация");
     if(s.plots.some((plot:Plant|null)=>plot?.mystery?.genomes && (plot.mystery.genomes.length!==2 || !plot.mystery.genomes.every(validGenome))))throw new Error("Повреждена генетика родителей");
     for(const plot of s.plots)if(plot?.mystery){
       if(plot.mystery.preview && !plot.mystery.preview.parents && plot.mystery.genomes){
@@ -156,22 +165,22 @@ function loadFarm():Farm {
       }
       if(plot.mystery.preview){
         const line=plot.mystery.preview;
-        if(!int(line.crop,0,15)||!validGenome({genes:line.genes,powers:line.powers})||!Array.isArray(line.traits)||line.traits.length>3||!line.traits.every((t:string)=>traitNames[t]))throw new Error("Повреждён генотип находки");
+        if(!int(line.crop,0,crops.length-1)||!validGenome({genes:line.genes,powers:line.powers})||!Array.isArray(line.traits)||line.traits.length>3||!line.traits.every((t:string)=>traitNames[t]))throw new Error("Повреждён генотип находки");
       }else plot.mystery.preview=generateMutationLine(s,plot);
     }
     s.rot ??= Array(s.plots.length).fill(null);
-    if(!Array.isArray(s.rot)||s.rot.length!==s.plots.length||!s.rot.every((r:RotRecord|null)=>r===null||(r&&int(r.crop,0,15)&&int(r.at,0)&&int(r.checks,1)&&typeof r.risk==="number"&&r.risk>=0&&r.risk<=1&&typeof r.value==="number"&&Number.isFinite(r.value)&&r.value>=0&&typeof r.name==="string"&&validGenome(r.genome))))throw new Error("Повреждена история гнили");
-    for(const line of s.lines)if(line.parents && (!Array.isArray(line.parents)||line.parents.length!==2||!line.parents.every((p:ParentRecord)=>p&&typeof p.name==="string"&&int(p.crop,0,15)&&validGenome(p.genome))))throw new Error("Повреждена родословная");
+    if(!Array.isArray(s.rot)||s.rot.length!==s.plots.length||!s.rot.every((r:RotRecord|null)=>r===null||(r&&int(r.crop,0,crops.length-1)&&int(r.at,0)&&int(r.checks,1)&&typeof r.risk==="number"&&r.risk>=0&&r.risk<=1&&typeof r.value==="number"&&Number.isFinite(r.value)&&r.value>=0&&typeof r.name==="string"&&validGenome(r.genome))))throw new Error("Повреждена история гнили");
+    for(const line of s.lines)if(line.parents && (!Array.isArray(line.parents)||line.parents.length!==2||!line.parents.every((p:ParentRecord)=>p&&typeof p.name==="string"&&int(p.crop,0,crops.length-1)&&validGenome(p.genome))))throw new Error("Повреждена родословная");
     s.harvested??=s.harvest.map((count:number)=>count);
     if(!Array.isArray(s.harvested)||s.harvested.length!==crops.length||!s.harvested.every((n:unknown)=>typeof n==='number'&&Number.isFinite(n)&&n>=0))throw new Error('Повреждена коллекция урожая');
     s.resources??=newResources();
     s.resources.barriers??={};s.resources.irrigation??=0;
     if(!s.resources.barriers||!int(s.resources.irrigation,0))throw new Error('Повреждены ресурсные улучшения');
-    for(const [key,value] of Object.entries(s.resources.barriers))if(!/^([0-9]|1[0-5]):(growth|yield|moisture)$/.test(key)||!int(value,0))throw new Error('Повреждены барьеры');
+    for(const [key,value] of Object.entries(s.resources.barriers))if(!/^[0-9]+:(growth|yield|moisture)$/.test(key)||!int(Number(key.split(':')[0]),0,crops.length-1)||!int(value,0))throw new Error('Повреждены барьеры');
     for(let crop=0;crop<crops.length;crop++)for(const {id} of traits){const key=crop+':'+id;s.resources.barriers[key]=Math.max(s.resources.barriers[key]??0,s.levels[crop][id]>10?Math.ceil(s.levels[crop][id]/50):0);}
     if(!s.resources||!int(s.resources.orbs,0)||!int(s.resources.duplication,0)||!s.resources.items||!s.resources.found)throw new Error('Повреждены ресурсы');
-    for(const [id,count] of Object.entries(s.resources.items))if(!materials.some(item=>item.id===id)||!int(count,0))throw new Error('Повреждён материал');
-    for(const [id,value] of Object.entries(s.resources.found))if(!materials.some(item=>item.id===id)||typeof value!=='boolean')throw new Error('Повреждена коллекция предметов');
+    for(const [id,count] of Object.entries(s.resources.items))if(!materialsBySaveKey.has(id)||!int(count,0))throw new Error('Повреждён материал');
+    for(const [id,value] of Object.entries(s.resources.found))if(!materialsBySaveKey.has(id)||typeof value!=='boolean')throw new Error('Повреждена коллекция предметов');
     const validateEnhancements=(data:Genome|Line)=>{if(data.enhancements&&Object.entries(data.enhancements).some(([id,n])=>!traitNames[id]||!int(n,0,100)))throw new Error('Повреждены усиления');};
     for(const line of s.lines){validateEnhancements(line);for(const parent of line.parents??[])validateEnhancements(parent.genome);}
     for(const plot of s.plots)if(plot?.mystery){if(plot.mystery.preview){validateEnhancements(plot.mystery.preview);plot.mystery.preview.enhancements={};}for(const data of plot.mystery.genomes??[])validateEnhancements(data);}
@@ -212,7 +221,7 @@ function loadFarm():Farm {
 }
 function saveFarm(state:Farm,targetKey=key) {
   try {
-    localStorage.setItem(targetKey,JSON.stringify(state));
+    localStorage.setItem(targetKey,JSON.stringify({...state,catalogSlots:crops.length}));
     storageError = false;
     return true;
   } catch (error) {

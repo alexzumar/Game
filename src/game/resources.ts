@@ -1,15 +1,5 @@
 type Resources={barriers:Record<string,number>;irrigation:number;orbs:number;items:Record<string,number>;found:Record<string,boolean>;duplication:number};
 const newResources=():Resources=>({barriers:{},irrigation:0,orbs:0,items:{},found:{},duplication:0});
-type Material={id:string;icon:string;name:string;description:string;category:'sets'|'properties'|'special'};
-const materialNames:Record<string,[string,string]>={growth:['⏱️','Искра скороспелости'],sprout:['🤝','Узел всходов'],bounty:['💠','Кабачок изобилия'],pod:['🎰','Счастливая горошина'],sweet:['🍬','Сахарный кристалл'],moisture:['💧','Капля запаса'],resistance:['🧿','Защитная сердцевина'],regrow:['🔄','Почка отрастания'],drought:['⚓','Корневой стержень'],leap:['🚀','Импульс роста'],value:['⌛','Песчинка дозревания'],stability:['💀','Спора распада'],catalyst:['🧪','Каталитическая эссенция'],sunshine:['🔥','Тепловое зерно'],head:['🏋️','Плотное ядро'],mutation:['🎲','Изменчивый фрагмент'],renew:['🌀','Спираль возобновления']};
-const materials:Material[]=[
- {id:'set0',icon:'🌱',name:'Ростовой концентрат',description:'Нужен для открытия дополнительных слотов экстрактора. Выпадает с урожая «Корнеплоды и зелень» и при переработке плодов. Шанс за плод в экстракторе — 2% для этого набора, 0,1% для остальных.',category:'sets'},
- {id:'set1',icon:'🧵',name:'Растительное волокно',description:'Нужно для дополнительных слотов пакетов, возврата за повторки и легендарной удачи.',category:'sets'},
- {id:'set2',icon:'⚗️',name:'Активный экстракт',description:'Оплачивает уровни возврата за повторки выше 20% после снятия барьера.',category:'sets'},
- {id:'set3',icon:'🌀',name:'Ядро возобновления',description:'Нужно для пятого слота открытия пакетов и позднего улучшения легендарной удачи.',category:'sets'},
- ...Object.entries(materialNames).map(([id,[icon,name]])=>({id:'property:'+id,icon:abilityDefinitions[id]?.icon??icon,name,description:'Усиление свойства «'+(abilityDefinitions[id]?.name??traitNames[id])+'» конкретного гибрида. '+(abilityDefinitions[id]?.description??'Увеличивает урожай.'),category:'properties' as const})),
- {id:'duplication',icon:'✨',name:'Кристалл дублирования',description:'Шанс от 0,15% до 4,5% за обычный плод, пропорционально базовому времени роста. Покупает шанс дополнительных копий материалов. Не дублируется сам.',category:'special'}
-];
 // Exact geometric sampling for sparse results, bounded-cost normal approximation for large batches.
 function extractorConcentrateChance(crop:number){
   return cropSets[0].crops.includes(crop)?.02:.001;
@@ -76,7 +66,7 @@ const barrierPrice=(farm:Farm,crop:number,id:Trait)=>Math.ceil((barrierLevel(far
 function barrierMaterial(crop:number,id:Trait){
  const properties=Object.keys(basePowers[crop]);
  const property=id==='moisture'&&properties.length>1?properties[1]:properties[0];
- return materials.find(item=>item.id===propertyMaterialId(property))!;
+ return materialsBySaveKey.get(propertyMaterialId(property))!;
 }
 function unlockBarrier(farm:Farm,crop:number,id:Trait){
  if(!unlocked(farm,crop)||!barrierClosed(farm,crop,id))return false;

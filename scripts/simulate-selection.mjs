@@ -1,8 +1,9 @@
+import {readModelSource} from './source-files.mjs';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {stripTypeScriptTypes} from 'node:module';
 const context=vm.createContext({});
-vm.runInContext(stripTypeScriptTypes(['farm.ts','resources.ts','packs.ts'].map(file=>fs.readFileSync('src/'+file,'utf8')).join('\n')),context);
+vm.runInContext(stripTypeScriptTypes(readModelSource()),context);
 const result=vm.runInContext(`
 function seeded(seed){return ()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};}
 function simulate(seed){
@@ -31,6 +32,6 @@ const completed=runs.filter(Boolean);
 ({runs:runs.length,completed:completed.length,offspring:summary(completed.map(r=>r.attempts)),oneCellExpectedGameHours:summary(completed.map(r=>r.expectedHours)),previousOneCellExpectedGameHours:summary(completed.map(r=>r.previousExpectedHours))});
 `,context);
 console.log(JSON.stringify(result,null,2));
-fs.writeFileSync('docs/SelectionSimulation.md', '# Проверка наследования\n\n300 воспроизводимых прогонов. Начало 1/1/1 и 1/1/1. После каждого потомка остаются два лучших растения по Gr + Ga + Re, при равенстве более ровные характеристики. Цель — первый потомок 30/30/30. Симуляция вызывает настоящую функцию generateMutationLine из farm.ts.\n\nЧисло потомков — основной результат. Оценка времени дана для одной свободной клетки, готовых родителей, стартового времени вида 120 секунд и без бонусов способностей. Ожидание мутации оценено как 30 / вероятность, к нему прибавлено среднее время роста одного родителя с учётом Gr. Это модель ожидаемого времени, не точная симуляция кликов, влажности и последовательности посадок. Параллельные клетки ускорят поиск, ручные действия и нехватка ресурсов могут его замедлить.\n\n'+JSON.stringify(result,null,2)+'\n');
+fs.writeFileSync('docs/SelectionSimulation.md', '# Проверка наследования\n\n300 воспроизводимых прогонов. Начало 1/1/1 и 1/1/1. После каждого потомка остаются два лучших растения по Gr + Ga + Re, при равенстве более ровные характеристики. Цель — первый потомок 30/30/30. Симуляция вызывает настоящую функцию generateMutationLine из src/game/hybrids.ts.\n\nЧисло потомков — основной результат. Оценка времени дана для одной свободной клетки, готовых родителей, стартового времени вида 120 секунд и без бонусов способностей. Ожидание мутации оценено как 30 / вероятность, к нему прибавлено среднее время роста одного родителя с учётом Gr. Это модель ожидаемого времени, не точная симуляция кликов, влажности и последовательности посадок. Параллельные клетки ускорят поиск, ручные действия и нехватка ресурсов могут его замедлить.\n\n'+JSON.stringify(result,null,2)+'\n');
 
 

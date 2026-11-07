@@ -1,8 +1,9 @@
+import {readModelSource} from './source-files.mjs';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {stripTypeScriptTypes} from 'node:module';
 const context=vm.createContext({});
-vm.runInContext(stripTypeScriptTypes(['farm.ts','resources.ts','packs.ts'].map(file=>fs.readFileSync('src/'+file,'utf8')).join('\n')),context);
+vm.runInContext(stripTypeScriptTypes(readModelSource()),context);
 const result=vm.runInContext(`
 function seeded(seed){return ()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};}
 function run(re,start,target,seed){

@@ -1,6 +1,7 @@
-import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import {stripTypeScriptTypes} from 'node:module';
+import {readModelSource} from './source-files.mjs';
+import vm from 'node:vm';import assert from 'node:assert/strict';import {stripTypeScriptTypes} from 'node:module';
 const storage={value:null,getItem(){return this.value},setItem(_,value){this.value=value}};
-const context=vm.createContext({assert,console,localStorage:storage});vm.runInContext(stripTypeScriptTypes(['farm.ts','resources.ts','packs.ts','fortune.ts','storage.ts'].map(f=>fs.readFileSync('src/'+f,'utf8')).join('\n')),context);
+const context=vm.createContext({assert,console,localStorage:storage});vm.runInContext(stripTypeScriptTypes(readModelSource()),context);
 vm.runInContext(`
 const starter=newFarm();assert.equal(starter.coins,0);assert.equal(starter.seeds[0],1);assert.equal(total(starter.seeds),1);assert.equal(expansionPrice(starter),1);assert.equal(expand(starter),false);starter.plots[0]={crop:0,planted:0,ready:0};starter.seeds[0]=0;assert.equal(collect(starter,0,1,()=>.5),1);assert.equal(starter.harvestValue[0],5);assert.equal(expand(starter),true);assert.equal(starter.size,2);assert.equal(expansionPrice(starter),15);assert.equal(starter.resources.orbs,0);assert.deepEqual(fieldOrbPrices,[1,15,50,150,400,1000,2500]);
 assert.deepEqual([1,2,3,4,5].map(n=>packOpeningPrice(0,n)),[20,30,45,60,75]);assert.equal(seedPrice(15),2000000);assert.equal(seedPacks.length,4);
