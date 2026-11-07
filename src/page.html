@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ru" data-theme="light" data-accent="0">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
+<title>Всходы — семенная ферма</title>
+<style>/* CSS */</style>
+</head>
+<body>
+<div class="rain" aria-hidden="true"></div>
+<header class="masthead glass">
+  <div class="brand"><span class="brand-icon" aria-hidden="true">✦</span><div><strong>Всходы</strong><small>СЕМЕННАЯ ФЕРМА</small></div></div>
+  <span class="weather" id="weather" data-upgrade-target="weather"></span>
+  <button id="settings-open" class="quiet" aria-label="Настройки" title="Настройки">⚙️</button>
+</header>
+<dialog id="settings-dialog" class="glass"><div class="window-heading"><h2>Настройки</h2><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form></div>  <div class="appearance"><div id="accents" aria-label="Цвет акцента"></div><button id="skin" class="quiet" title="Переключить стиль"></button><button id="theme" class="quiet"></button><label class="glass-control" title="От непрозрачных панелей до более выраженного стекла">Стекло <input type="range" id="glass-unified" min="0" max="100" aria-label="Эффект стекла"></label></div>
+</dialog>
+<main class="workspace">
+  <aside class="left" aria-label="Семена">
+    <section class="glass panel packet"><span class="kicker">ПАКЕТЫ</span><h2><span data-upgrade-target="packs">Магазин</span></h2><button class="primary" id="seed-shop">Открыть магазин</button></section>
+    <section class="glass panel seed-storage"><span class="kicker">СКЛАД</span><div class="seed-stock-heading"><h2 id="seed-stock-title"><span data-upgrade-target="seeds">Семена</span></h2><select id="seed-sort" aria-label="Сортировка семян"><option value="quantity">По количеству</option><option value="rarity">По редкости</option></select></div><p>Выбери семечко и нажми на грядку или перетащи его.</p><div id="seeds"></div></section>
+  </aside>
+  <section class="growing-area" aria-label="Поле">
+    <button type="button" id="resources-open" class="glass wallet" title="Открыть коллекцию"><span>🪙 <b id="coins"></b></span><span>🔮 <b id="orbs">0</b></span><span>💎 <b id="diamond-balance">0</b></span><span title="Очки мутаций — механика появится позже">🧬 <b>0</b></span></button>
+    <div class="field-head"><small id="dry-field-notice" class="glass" role="status" hidden title="Удерживай Ctrl или включи лейку, затем нажми на сухую грядку."></small><span>ПОЛЕ</span><strong id="field-tip" hidden></strong><strong id="dimensions"></strong></div>
+    <div class="field" id="field"></div>
+  </section>
+  <aside class="right" aria-label="Управление фермой">
+    <section class="glass panel"><span class="kicker">УХОД</span>
+      <button class="quiet wide" id="gather" title="Можно удерживать Shift для временного сбора" aria-pressed="false">🧺 Сбор</button><button class="quiet wide" id="water" title="Удерживай Ctrl для временного полива" aria-pressed="false">🚿 Лейка</button><small class="gather-help">Shift — сбор · Ctrl — полив</small>
+    </section>
+    <section class="glass panel"><span class="kicker">УРОЖАЙ</span><button class="quiet wide" id="basket"><span><span id="basket-icon">🧺</span> Корзина</span><b id="counter"></b></button></section>
+    <section class="glass panel" id="upgrade-field"><h2>Расширение поля</h2><p id="expand-note"></p><button class="quiet" id="expand"></button></section><section class="glass panel"><button class="quiet wide" id="hybrids-open">🧬 Гибриды</button><button class="quiet wide" id="extractor-open">⚙️ Экстрактор семян</button><button class="quiet wide" id="diamonds-open">💎 Алмазные улучшения</button><button class="primary" id="upgrades-open">⬆ Улучшения</button></section>
+  </aside>
+</main>
+<footer><span id="save-state"></span><span id="notice" role="status"></span><span>АЛЬФА / 0.3</span></footer>
+<dialog id="pack-dialog" class="glass">
+  <h2><span id="pack-opening-title" data-upgrade-target="packs">Открываем пакет…</span></h2>
+  <div id="reels" aria-label="Рулетки пакета"></div>
+  <section id="pack-summary" aria-labelledby="pack-summary-title">
+    <h3 id="pack-summary-title">Выпавшие семена</h3>
+    <div id="pack-results"></div>
+  </section>
+  <p id="pack-animation-note" role="status"></p><button type="button" class="primary" id="pack-done">Вернуться в магазин</button>
+</dialog>
+<details class="glass save-slots" id="save-slots"><summary>Сохранения</summary><div id="save-slot-list"></div><label><input id="save-slot-cheats" type="checkbox"> Читы для нового сейва</label><p id="save-slot-status" role="status"></p></details>
+<details class="glass debug" hidden><summary>Отладка</summary><label>Время <select id="speed"><option value="1">×1</option><option value="10">×10</option><option value="60">×60</option><option value="300">×300</option></select></label><button class="quiet" id="skip-rain">До дождя</button><label>Поле <select id="debug-size" aria-label="Размер поля"></select></label><button class="quiet" id="clear-plots">Очистить грядки</button><label>Монеты <input type="number" id="debug-amount" min="1" max="1000000000000" value="100"></label><button class="quiet" id="debug-coins">Добавить</button><button class="quiet" id="debug-unlock-crops">Открыть все культуры</button><button class="quiet" id="reset-game">Сбросить весь прогресс</button>
+  <div class="debug-glass">
+    <label>Прозрачность <input type="range" id="glass-transparency" min="0" max="100"><output id="glass-transparency-value"></output></label>
+    <label>Стекло <input type="range" id="glass-strength" min="0" max="100"><output id="glass-strength-value"></output></label>
+  </div>
+</details>
+<dialog id="basket-dialog" class="glass basket">
+  <div class="basket-heading">
+    <h2 class="glass basket-chip">🧺 Корзина</h2>
+    <div class="sorting"><label>Сортировка <select id="basket-sort"><option value="count">Количество</option><option value="rarity">Редкость</option></select></label><select id="basket-direction" aria-label="Направление сортировки корзины"><option value="-1">По убыванию ↓</option><option value="1">По возрастанию ↑</option></select></div><button type="button" class="quiet basket-chip glass" id="sell-basket">Продать всё</button>
+    <span class="glass basket-chip basket-balance">🪙 <b id="basket-coins"></b></span>
+    <form method="dialog"><button class="glass basket-chip" aria-label="Закрыть">×</button></form>
+  </div><p id="basket-empty">Здесь появится собранный урожай.</p><ul id="yields"></ul>
+  <section id="shop" class="glass panel"><strong>🪙 Магазин</strong><p>Перетащи урожай сюда или нажми на карточку. Цена учитывает свойства и дозревание урожая.</p></section>
+</dialog>
+<dialog id="sale-dialog" class="glass">
+  <form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
+  <h2>Продать урожай? <span class="basket-wallet">🪙 <b id="sale-coins"></b></span></h2>
+  <form id="sale"><strong id="sale-title"></strong><p id="sale-hint" role="status"></p>
+    <label id="skip-single-row"><input type="checkbox" id="skip-single"> Больше не спрашивать до закрытия корзины</label>
+    <div class="sale-options">
+      <button type="button" class="quiet" id="sell-one">Продать 1</button><button type="button" class="quiet" id="sell-half">Половина</button><button type="button" class="quiet" id="sell-all">Всё</button>
+      <label id="quantity-row">Своё число <input id="quantity" type="number" min="1" required></label><button class="quiet" id="sell-custom">Продать</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="seed-shop-dialog" class="glass basket">
+  <form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
+  <h2><span id="seed-shop-upgrade-title" data-upgrade-target="packs">Магазин</span> <span class="basket-wallet">🪙 <b id="seed-shop-coins"></b></span></h2>
+  <nav class="shop-tabs" aria-label="Категории магазина">
+    <button class="quiet" id="tab-packs" aria-pressed="true">Пакеты семян</button>
+    <button class="quiet" id="tab-seeds" aria-pressed="false">Семена</button><button class="quiet" id="tab-fortune" aria-pressed="false">Колесо фортуны</button>
+  </nav>
+  <section id="shop-packs"><div id="pack-catalog" class="square-catalog"></div>
+    <div id="pack-details" class="glass panel" hidden><h2 id="pack-title" data-upgrade-target="packs"></h2><p id="pack-note"></p>
+    <nav class="shop-tabs pack-count-tabs" id="pack-slot-picker" aria-label="Количество открытий"><button type="button" class="quiet" data-pack-count="1" aria-pressed="true">1</button><button type="button" class="quiet" data-pack-count="2" aria-pressed="false">2</button><button type="button" class="quiet" data-pack-count="3" aria-pressed="false">3</button><button type="button" class="quiet" data-pack-count="4" aria-pressed="false">4</button><button type="button" class="quiet" data-pack-count="5" aria-pressed="false">5</button></nav><p id="pack-price-total"></p><button class="primary" id="open-pack"></button>
+
+    <details class="pack-odds-disclosure"><summary>Шансы выпадения</summary><ul id="pack-odds"></ul></details></div>
+  </section>
+  <button class="quiet" id="starter-rescue" hidden>🌱 Восстановить стартовый редис</button><section id="shop-seeds" hidden></section><section id="shop-fortune" hidden></section>
+</dialog>
+<dialog id="fortune-dialog" class="glass basket">
+  <div class="window-heading"><h2>Колесо фортуны</h2><span id="fortune-balance" class="basket-wallet"></span><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
+  <nav class="shop-tabs" aria-label="Валюта колеса"><button class="quiet" data-wheel="coins">🪙 Монеты</button><button class="quiet" data-wheel="orbs">🔮 Орбы</button><button class="quiet" data-wheel="diamonds">💎 Алмазы</button></nav></div>
+  <div class="fortune-layout">
+    <div class="fortune-main">
+      <div class="fortune-stage">
+        <svg id="fortune-wheel" viewBox="0 0 400 400" aria-label="Сектора колеса"></svg>
+        <span class="fortune-pointer" aria-hidden="true"></span>
+        <p id="fortune-result" class="glass" role="status" hidden></p>
+      </div>
+      <div id="fortune-choice"></div>
+    </div>
+    <div class="fortune-side">
+  <aside class="glass panel fortune-prizes"><h3>Награды и шансы</h3><p id="fortune-jackpot"></p><p id="fortune-carry"></p><ul id="fortune-odds"></ul></aside>
+  <form id="fortune-form"><label>Ставка <input id="fortune-stake" type="number" min="1" max="1000000000000" value="1" required></label>
+  <div id="fortune-shortcuts"></div>
+    <button type="submit" class="primary" id="fortune-spin">Крутить</button>
+  </form>
+    </div>
+  </div>
+</dialog>
+<dialog id="upgrades-dialog" class="glass basket">
+  <form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
+  <h2>Улучшения <span class="basket-wallet">🪙 <b id="upgrade-coins"></b> · 🔮 <b id="upgrade-orbs">0</b></span></h2>
+  <nav class="shop-tabs" aria-label="Категории улучшений">
+    
+    <button class="quiet" id="upgrade-tab-packs" aria-pressed="true">Пакеты семян</button>
+    <button class="quiet" id="upgrade-tab-seeds" aria-pressed="false">Семена</button><button class="quiet" id="upgrade-tab-weather" aria-pressed="false">Погода</button><button class="quiet" id="upgrade-tab-tools" aria-pressed="false">Инструменты</button><button class="quiet" id="upgrade-tab-discovery" aria-pressed="false">Рулетка видов</button><button class="quiet" id="upgrade-tab-extractor" aria-pressed="false">Экстрактор</button><button class="quiet" id="upgrade-tab-hybrids" aria-pressed="false">Гибриды</button>
+  </nav>
+  
+  <section id="upgrade-packs"><section class="glass panel" id="pack-luck-upgrade"><h2>🍀 Удача пакета</h2><p id="luck-preview"></p><button class="quiet" id="buy-luck"></button></section><div id="pack-upgrade-list"></div></section>
+  <section id="upgrade-seeds" hidden>
+    <div id="upgrade-catalog" aria-label="Культуры"></div>
+
+  </section>
+  <section id="upgrade-weather" hidden><div id="weather-catalog" class="square-catalog"><button id="rain-card" class="quiet square-card"><b>🌧️</b><span>Дождь</span></button></div></section>
+  <section id="upgrade-tools" hidden><div id="convenience-list"></div></section>
+  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section><h2>🔎 Xray</h2><p>Показывает вид и Gr/Ga/Re неизвестного растения. Свойства раскрываются после сбора.</p><p id="xray-price"></p><button class="quiet" id="buy-xray"></button></section><section id="trait-panel" class="glass panel trait-panel" hidden>
+    <button class="quiet close" id="trait-close" aria-label="Закрыть">×</button>
+    <h2 id="trait-title"></h2><p id="crop-rarity-time"></p><p id="trait-lock"></p><p id="crop-ability"></p><div id="trait-list"></div>
+  </section>
+  <section id="weather-panel" class="glass panel trait-panel" hidden>
+    <button class="quiet close" id="weather-close" aria-label="Закрыть">×</button>
+    <h2>🌧️ Дождь</h2>
+    <div class="weather-upgrades">
+      <div class="glass panel"><strong>Откат дождя</strong><p id="weather-cooldown-preview"></p><button class="quiet" id="buy-weather-cooldown"></button></div>
+      <div class="glass panel"><strong>Длительность дождя</strong><p id="weather-duration-preview"></p><button class="quiet" id="buy-weather-duration"></button></div>
+    </div>
+  </section>
+</dialog>
+<dialog id="receipt-dialog" class="glass">
+  <form method="dialog"><button class="quiet close" aria-label="Отмена">×</button></form>
+  <h2>Продать весь урожай?</h2>
+  <ul id="receipt-items" aria-label="Состав продажи"></ul>
+  <p class="receipt-total">К получению <strong id="receipt-total"></strong></p>
+  <button type="button" class="primary" id="receipt-confirm">Подтвердить продажу</button>
+</dialog>
+<dialog id="collection-dialog" class="glass basket">
+<button type="button" class="quiet collection-close" id="collection-close" aria-label="Закрыть коллекцию">×</button>
+<h2 class="collection-title"><span data-upgrade-target="discovery">Коллекция культур</span> <button class="quiet" id="show-sets">Наборы</button><span class="basket-wallet">🪙 <b id="collection-coins"></b></span></h2>
+<p>Открывай виды для всех пакетов. Уровни роста открываются за 10, 20, 40 находок и далее с удвоением порога. Бонусы наборов пока отключены.</p>
+<section id="sets-list" hidden></section><button class="primary" id="discover"></button><div id="discovery-reel" aria-label="Рулетка видов"></div><p id="discovery-result" role="status"></p>
+<div id="collection-grid"></div><section class="glass panel" id="collection-detail" hidden></section></dialog>
+<dialog id="diamonds-dialog" class="glass basket">
+  <div class="window-heading"><h2>💎 Алмазные улучшения</h2><span class="basket-wallet">💎 <b id="diamond-shop-balance">0</b></span><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form></div>
+  <div id="diamond-upgrades"></div>
+</dialog>
+<dialog id="extractor-dialog" class="glass basket">
+<form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
+<h2><span data-upgrade-target="extractor">⚙️ Экстрактор семян</span> <span class="basket-wallet">🪙 <b id="extractor-coins"></b></span></h2>
+<div id="extractor-slots"></div><p id="extractor-last" role="status"></p>
+</dialog>
+<dialog id="extractor-picker" class="glass basket">
+<form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
+<h2>Выбери урожай</h2><div id="extractor-crops" class="square-catalog"></div><p id="extractor-empty"></p>
+<form id="extractor-form" class="glass panel">
+<strong id="extractor-selection"></strong>
+<label>Количество <input id="extractor-count" type="number" min="1" max="1000" value="1" required></label>
+<button type="button" class="quiet" id="extractor-half">Половина</button><button type="button" class="quiet" id="extractor-all">Всё</button>
+<p id="extractor-estimate"></p><button class="primary" id="extractor-start">Начать переработку</button>
+</form>
+
+</dialog>
+<button class="glass processing-toast" id="extraction-toast" hidden><strong id="extraction-toast-label"></strong><small id="extraction-toast-time"></small></button>
+<dialog id="mutation-dialog" class="glass comparison-dialog"><form method="dialog"><button class="quiet close">×</button></form>
+<h2>🧬 Полевая находка</h2><div id="mutation-icon"></div><p id="mutation-info"></p>
+<div id="mutation-genes" class="genetics"></div><div id="mutation-traits"></div><p>Стрелки сравнивают потомка с лучшим значением родителей. Родители показаны слева и справа.</p><aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside>
+<button class="primary" id="mutation-accept">Забрать растение</button><button class="quiet" id="mutation-discard">Удалить находку</button><p id="mutation-result" role="status"></p></dialog>
+<dialog id="hybrids-dialog" class="glass basket"><div class="window-heading">
+<form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
+<h2><span data-upgrade-target="hybrids">🧬 Инвентарь гибридов</span> <span id="hybrid-capacity"></span></h2><div class="sorting"><label>Сортировка <select id="hybrid-sort"><option value="powers">Сила свойств</option><option value="genes">Средняя генетика</option></select></label><label><select id="hybrid-direction"><option value="-1">По убыванию ↓</option><option value="1">По возрастанию ↑</option></select></label></div><button class="quiet" id="hybrid-delete-mode">Удалить</button><span class="basket-wallet">🪙 <b id="hybrid-coins"></b></span></div>
+<input type="search" id="hybrid-search" placeholder="Поиск по названию и свойствам" aria-label="Поиск гибридов"><p id="hybrid-delete-hint" role="status"></p>
+
+<p id="hybrid-empty-message" hidden></p><div id="hybrid-grid"></div></dialog>
+<dialog id="hybrid-detail-dialog" class="glass comparison-dialog">
+<form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
+<div class="detail-heading"><h2 id="hybrid-detail-title"></h2><button class="quiet" id="hybrid-rename">✎</button><button class="quiet" id="hybrid-remove">Удалить</button></div><small id="hybrid-stable-id"></small><form id="hybrid-rename-form" hidden><input id="hybrid-new-name" maxlength="40" aria-label="Название гибрида"><button class="quiet">Сохранить</button></form><div id="hybrid-detail-icon"></div><p id="hybrid-detail-count"></p>
+<p id="hybrid-genetics" class="genetics"></p><div id="hybrid-detail-traits"></div>
+<aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside><button class="primary" id="hybrid-plant">Посадить</button>
+</dialog>
+<div id="hybrid-dock-wrap" class="glass" hidden><button id="dock-close" class="quiet" aria-label="Свернуть или скрыть панель">×</button><button id="dock-handle" aria-label="Открыть панель гибридов">Гибриды</button><div id="hybrid-dock" aria-label="Быстрая посадка гибридов"></div><small class="dock-instruction">Перетяните, чтобы посадить. Нажмите, чтобы открыть инвентарь.</small></div><div class="glass" id="dock-tooltip" role="tooltip" hidden></div><div id="quick-seeds" class="glass" role="group" aria-label="Быстрая посадка" hidden></div><div id="seed-tooltip" class="glass" role="tooltip" hidden></div><dialog id="rot-dialog" class="glass"><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><h2>🍂 Растение сгнило</h2><p id="rot-description"></p><div id="rot-genetics"></div><div id="rot-properties"></div><button class="quiet" id="rot-clear">Убрать остатки</button></dialog><dialog id="resources-dialog" class="glass basket"><div class="window-heading"><h2 class="glass basket-chip"><span id="resource-upgrade-title" data-upgrade-target="discovery">📖 Коллекция</span></h2><span class="basket-wallet glass basket-chip" id="resources-balance"></span><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><nav class="shop-tabs" aria-label="Категории коллекции"><button class="quiet" data-resource-tab="seeds">Семена</button><button class="quiet" data-resource-tab="materials">Предметы</button><button class="quiet" data-resource-tab="cultures">Культуры</button><button class="quiet" data-resource-tab="sets">Наборы</button><button class="quiet" data-resource-tab="stats">Статистика</button></nav></div><section id="resource-cultures"><button id="collection-open" class="primary">📖 Коллекция культур</button><div id="resource-crop-grid"></div></section><div id="resource-grid"></div><section id="resource-stats" hidden></section><p id="resource-note" class="muted"></p></dialog><script>/* JS */</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
