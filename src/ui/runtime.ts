@@ -1,13 +1,82 @@
+type PlayTimeCounter='activePlayMs'|'backgroundPlayMs';
+let playTimeCounter:PlayTimeCounter|null=null;
+let playTimeStartedAt=0;
+const playIdleLimitMs=60_000;
+let playActiveUntil=0;
+const totalPlayTime=()=>(farm.activePlayMs??0)+(farm.backgroundPlayMs??0);
+let lastPlayTimeSave=totalPlayTime();
+let reloadingFarm=false;
+
+function updatePlayTime(nextCounter:PlayTimeCounter|null){
+  const now=Math.floor(performance.now());
+  if(playTimeCounter!==null){
+    const activeMs=playTimeCounter==='activePlayMs'
+      ?Math.max(0,Math.min(now,playActiveUntil)-playTimeStartedAt)
+      :0;
+    farm.activePlayMs=(farm.activePlayMs??0)+activeMs;
+    farm.backgroundPlayMs=(farm.backgroundPlayMs??0)+now-playTimeStartedAt-activeMs;
+  }
+  playTimeStartedAt=now;
+  playTimeCounter=nextCounter;
+  if(nextCounter!=='activePlayMs')playActiveUntil=0;
+}
+
+function recordPlayInput(event:Event){
+  if(!event.isTrusted||reloadingFarm||document.hidden||!document.hasFocus())return;
+  updatePlayTime('activePlayMs');
+  playActiveUntil=playTimeStartedAt+playIdleLimitMs;
+}
+
+function savePlayTime(){
+  const elapsed=totalPlayTime();
+  if(elapsed!==lastPlayTimeSave&&saveFarm(farm))lastPlayTimeSave=elapsed;
+}
+
+function syncPlayTime(){
+  if(reloadingFarm)return;
+  const active=!document.hidden&&document.hasFocus();
+  updatePlayTime(active?'activePlayMs':'backgroundPlayMs');
+  savePlayTime();
+}
+
+function reloadFarm(){
+  reloadingFarm=true;
+  location.reload();
+}
+
+document.addEventListener('visibilitychange',syncPlayTime);
+for(const type of ['pointerdown','keydown','wheel']){
+  document.addEventListener(type,recordPlayInput,{capture:true,passive:true});
+}
+window.addEventListener('focus',syncPlayTime);
+window.addEventListener('blur',()=>{
+  if(reloadingFarm)return;
+  updatePlayTime('backgroundPlayMs');
+  savePlayTime();
+});
+window.addEventListener('pagehide',()=>{
+  if(reloadingFarm)return;
+  updatePlayTime(null);
+  savePlayTime();
+});
+window.addEventListener('pageshow',syncPlayTime);
+syncPlayTime();
+
 const tick = () => {
+  if(reloadingFarm)return;
+  updatePlayTime(playTimeCounter);
   advanceDebug();
+  const weatherChanged=applyRain(farm,nowTime());
   const abilitiesChanged=updatePlantAbilities(farm,nowTime());
   const ripened=updateRipening(farm,nowTime());
   const mutated=checkMutations(farm,nowTime());
-  const weatherChanged=applyRain(farm,nowTime());
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(abilitiesChanged || ripened || mutated || weatherChanged || extracted || speed !== 1)saveFarm(farm);
+  if(abilitiesChanged || ripened || mutated || weatherChanged || extracted || speed !== 1 ||
+    totalPlayTime()-lastPlayTimeSave>=15_000){
+    if(saveFarm(farm))lastPlayTimeSave=totalPlayTime();
+  }
   const selection=document.getSelection();
   if(selection&&!selection.isCollapsed&&selection.anchorNode?.parentElement?.closest('dialog[open]'))renderField(nowTime());
   else render();
@@ -106,7 +175,7 @@ button('seed-sort').onchange=renderSeeds;
 function openQuickSeeds(index:number,tile:HTMLElement){
   const menu=get('quick-seeds');menu.replaceChildren();
   const available=crops.map((_,i)=>i).filter(i=>unlocked(farm,i)&&farm.seeds[i]>0);
-  available.sort((a,b)=>get<HTMLSelectElement>('seed-sort').value==='rarity'?cropRarities[b]-cropRarities[a]:farm.seeds[b]-farm.seeds[a]);
+  available.sort((a,b)=>get<HTMLSelectElement>('seed-sort').value==='rarity'?seedRarityOrder.indexOf(a)-seedRarityOrder.indexOf(b):farm.seeds[b]-farm.seeds[a]);
   for(const i of available){
     const item=document.createElement('button');item.type='button';item.className='quiet';
     item.setAttribute('aria-label',crops[i].name+' · '+number(farm.seeds[i]));

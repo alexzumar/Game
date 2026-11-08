@@ -132,7 +132,8 @@ hybridsDialog.addEventListener('close',finishEnhancementPicker);
 function renderEnhancementSelection(){
  const raw=get<HTMLSelectElement>('enhance-line').value,line=raw===''?undefined:farm.lines[Number(raw)];
  if(!line){enhancementPreview.textContent='';chooseEnhancement.textContent='Выберите гибрид';return;}
- enhancementPreview.textContent=crops[line.crop].symbol+' '+line.name+' · ⚡ Gr '+(line.genes?.gr??1)+' / 💰 Ga '+(line.genes?.ga??1)+' / 🛡️ Re '+(line.genes?.re??1);
+ const caption=crops[line.crop].symbol+' '+line.name+' · ⚡ Gr '+(line.genes?.gr??1)+' / 💰 Ga '+(line.genes?.ga??1)+' / 🛡️ Re '+(line.genes?.re??1);
+ if(enhancementPreview.firstChild?.nodeValue!==caption)enhancementPreview.textContent=caption;
  chooseEnhancement.textContent='Выбран '+line.name+' · сменить';
 }
 renderAlpha();
@@ -174,17 +175,31 @@ function renderFarmStatistics(){
     ['💎 Потрачено алмазов',stats.diamondsSpent]
   ];
   const host=get('resource-stats');
+  const timers=[
+    {id:'total-play-time',label:'⏱ Общее время игры',ms:totalPlayTime()},
+    {id:'active-play-time',label:'⏱ Активное время',ms:farm.activePlayMs}
+  ].map(({id,label,ms})=>{
+    const elapsed=Math.floor((ms??0)/1000);
+    return {id,label,text:Math.floor(elapsed/3600)+' ч '+Math.floor(elapsed/60)%60+' мин '+elapsed%60+' с'};
+  });
   const signature=JSON.stringify(entries);
-  if(host.dataset.signature===signature)return;
+  if(host.dataset.signature===signature){
+    for(const {id,text} of timers){
+      const amount=get(id);
+      if(amount.textContent!==text)amount.textContent=text;
+    }
+    return;
+  }
   host.dataset.signature=signature;
   const list=document.createElement('dl');
-  for(const [label,value] of entries){
+  for(const {id,label,text} of [...timers,...entries.map(([label,value])=>({id:'',label,text:number(value)}))]){
     const row=document.createElement('div');
     row.className='glass panel';
     const name=document.createElement('dt');
     name.textContent=label;
     const amount=document.createElement('dd');
-    amount.textContent=number(value);
+    if(id)amount.id=id;
+    amount.textContent=text;
     row.append(name,amount);
     list.append(row);
   }

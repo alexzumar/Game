@@ -130,7 +130,7 @@ button('debug-unlock-crops').onclick=()=>{
 };
 button('reset-game').onclick=()=>{
   if(discoveryBusy || rolling || !confirm('Удалить весь прогресс, коллекцию и улучшения?'))return;
-  try{if(saveFarm({...newFarm(),saveCheats:farm.saveCheats}))location.reload();}
+  try{if(saveFarm({...newFarm(),saveCheats:farm.saveCheats}))reloadFarm();}
   catch(error){console.error('Ферма: не удалось сбросить прогресс',error);}
 };
 document.querySelectorAll<HTMLDialogElement>('dialog').forEach(dialog=>{

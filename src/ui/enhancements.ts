@@ -16,7 +16,8 @@ function renderAlpha(){
  if(get<HTMLDialogElement>('diamonds-dialog').open)renderDiamondShop();
  get('resource-upgrade-title').dataset.upgradeTarget=resourceCategory==='cultures'?'discovery':resourceCategory==='properties'?'hybrids':resourceCategory==='special'?'tools':'seeds';
  get('orbs').textContent=number(farm.resources.orbs);get('upgrade-orbs').textContent=number(farm.resources.orbs);
- get('resources-balance').textContent='🪙 '+number(farm.coins)+' · 🔮 '+number(farm.resources.orbs)+' · 🧬 0';
+ get('mutation-points').textContent=number(farm.mutationPoints??0);
+ get('resources-balance').textContent='🪙 '+number(farm.coins)+' · 🔮 '+number(farm.resources.orbs)+' · 🧬 '+number(farm.mutationPoints??0);
  if(typeof refinementReady!=='undefined'&&refinementReady)renderResourceCollections();
  const level=farm.resources.duplication,chance=level?1+(level-1)*.1:0;
  get('duplicate-info').textContent='Шанс: '+formatChance(chance)+'% · '+Math.floor(chance/100)+' дополнительных копий гарантированно + '+formatChance(chance%100)+'% ещё одной. Орбы и кристалл не дублируются.';
@@ -39,7 +40,25 @@ function renderEnhancements(){
  const text=document.createElement('p');text.textContent=powerLabel(line,id)+' · успех '+Math.round(enhancementChance(level)*100)+'%';
  const buy=document.createElement('button');buy.className='quiet';buy.textContent=level>=100?'Максимальное усиление':'Усилить · '+material.icon+' 1 (есть '+number(farm.resources.items[material.id]??0)+')';buy.disabled=level>=100||line.powers?.[id]===0||(farm.resources.items[material.id]??0)<1;
  if(line.powers?.[id]===0)buy.textContent='Сначала повысь свойство селекцией';
- buy.onclick=()=>{const result=enhanceProperty(farm,index,id);if(!result)return;get('enhance-result').textContent=result==='success'?'Успех! Усиление +1%.':'Неудача. Один уровень усиления потерян; врождённое свойство сохранено.';commit(get('enhance-result').textContent!);};
+ buy.onclick=()=>{
+  const result=enhanceProperty(farm,index,id);
+  if(!result)return;
+  const message=result==='success'?'Успех! Усиление +1%.':
+    result==='shielded'?'🛡️ Щит сохранил усиление. Материал израсходован.':
+    'Неудача. Усиление снизилось на один уровень.';
+  get('enhance-result').textContent=message;
+  commit(message);
+  if(result==='shielded'){
+    const preview=get('enhancement-preview');
+    preview.querySelector('.enhancement-shield')?.remove();
+    const badge=document.createElement('span');
+    badge.className='enhancement-shield';
+    badge.textContent='🛡️';
+    badge.setAttribute('aria-hidden','true');
+    preview.append(badge);
+    setTimeout(()=>badge.remove(),1100);
+  }
+ };
  row.append(text,buy);
  if(typeof refinementReady!=='undefined'&&refinementReady){const move=document.createElement('button');move.className='quiet transfer-enhancement';move.dataset.property=id;move.textContent='Перенести с другой линии';move.disabled=!farm.lines.some((_,source)=>canTransferEnhancement(farm,source,index,id));move.title='Выбери источник с большим усилением. Обе линии должны быть полностью собраны с грядок.';move.onclick=()=>startEnhancementTransfer(index,id);row.append(move);}
  host.append(row);
@@ -74,11 +93,10 @@ const diamondEffects:Record<DiamondBranch,(level:number)=>string>={
   income:level=>level+'% цены плодов начисляется сразу при сборе.',
   seedReturn:level=>diamondPercent(diamondCurve(level))+' шанс получить обычное семя за грядку.',
   dryGrowth:level=>diamondPercent(diamondCurve(level))+' обычной скорости на сухой грядке.',
-  rainReserve:level=>(25+level)+'% базового роста во влаге после посадки на мокрую грядку.',
-  rainGrowth:level=>'+'+(5+level)+'% скорости роста под дождём.',
   fruit:level=>level+'% дополнительного урожая в пересчёте на один плод за грядку.',
   extract:level=>'Шанс закончить плод раньше растёт каждую секунду до '+diamondPercent(diamondCurve(level))+'.',
-  discount:level=>diamondPercent(.5*(1-.9**level))+' скидки в магазине семян.'
+  discount:level=>diamondPercent(.5*(1-.9**level))+' скидки в магазине семян.',
+  enhancementShield:level=>diamondPercent(enhancementShieldChance(level))+' защитить уровень усиления при неудаче. Материал расходуется.'
 };
 const diamondCards=Object.entries(diamondBranches).map(([id,label])=>{
   const branch=id as DiamondBranch;

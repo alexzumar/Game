@@ -9,13 +9,26 @@ function basePackOdds(){
  for(const tier of cropTiers)tierCounts[tier]++;
  return crops.map((crop,i)=>crop.tier===0?90*inverse[i]/sum:[90,8,1.6,.4][crop.tier]/tierCounts[crop.tier]);
 }
+const packTierOdds=[
+ [99.5795,.4,.02,.0005],
+ [74.895,25,.1,.005],
+ [56.95,8,35,.05],
+ [84,8,4,4]
+];
+const legendaryLuckLimits=[5,6,8];
 function openingOdds(farm:Farm,pack:number,luck=farm.luck){
  if(!seedPacks[pack])return crops.map(()=>0);
  const base=basePackOdds(),tier=pack,t=Math.max(0,luck)/(Math.max(0,luck)+100);
- const start=[92,10,2,.5][tier],limit=[100-12e-7,80,50,[1,2,5][farm.packProgress.luckGate]][tier];
+ const starts=packTierOdds[pack];
+ const start=starts[tier],limit=[100-12e-7,80,50,legendaryLuckLimits[farm.packProgress.luckGate]][tier];
  const members=base.filter((_,i)=>cropTiers[i]===tier);
  const group=start+(limit-start)*t,baseGroup=total(members);
- return base.map((value,i)=>cropTiers[i]===tier?group*((1-t)*value/baseGroup+t/members.length):(100-group)*value/(100-baseGroup));
+ return base.map((value,i)=>{
+  const rarity=cropTiers[i];
+  if(rarity===tier)return group*((1-t)*value/baseGroup+t/members.length);
+  const rarityTotal=total(base.filter((_,crop)=>cropTiers[crop]===rarity));
+  return (100-group)*starts[rarity]/(100-start)*value/rarityTotal;
+ });
 }
 const packSlotLimit=(farm:Farm)=>1+farm.packProgress.slots;
 function packOpeningPrice(pack:number,count:number){return Math.ceil(seedPacks[pack].price*count*(count>1?.75:1));}

@@ -5,8 +5,8 @@ function sow(index:number,crop:number) {
   selected = index;
   seed = crop;
   watering = false;gathering=false;
-  plant(farm,index,crop,now,selectedLine);
   applyRain(farm,now);
+  plant(farm,index,crop,now,selectedLine);
   commit('Семя посажено.');
 }
 button('water').onclick = event => {

@@ -9,6 +9,10 @@ const wheelInfo={
   diamonds:{icon:'💎',name:'Алмазы',minimum:5,reference:20}
 };
 const wheelStakeLimit=1_000_000_000_000;
+function wheelMaterialAmount(stake:number,unit:number){
+  if(stake<unit)return 0;
+  return Math.floor(1+Math.log10(stake/unit));
+}
 const wheelState=(farm:Farm):WheelState=>farm.wheels??={accounts:{},orbBoost:0};
 const wheelSeed=(random=Math.random)=>Math.floor(random()*2**32);
 function wheelAccount(farm:Farm,kind:WheelKind){
@@ -47,15 +51,15 @@ function wheelLayout(farm:Farm,kind:WheelKind,stake:number):WheelPrize[]{
     const crop=common[Math.floor(random()*common.length)]??0,amount=Math.floor(stake/100);
     regular=[
       {type:'seed',crop,amount,locked:amount===0,weight:7,color:colors[0],label:crops[crop].symbol+' Семена · '+crops[crop].name+' ×'+amount},
-      itemPrize(itemAt(0),Math.floor(stake/5000),4,colors[1]),
-      itemPrize(itemAt(1),Math.floor(stake/3000),3,colors[2])
+      itemPrize(itemAt(0),wheelMaterialAmount(stake,5000),4,colors[1]),
+      itemPrize(itemAt(1),wheelMaterialAmount(stake,3000),3,colors[2])
     ];
     rare={...itemPrize('duplication',Math.max(1,Math.floor(stake/info.minimum)),rareWeight,'#b381d9'),locked:rareLocked};
   }else if(kind==='orbs'){
     regular=[
-      itemPrize('set0',Math.floor(stake/40),7,colors[0]),
-      itemPrize('set1',Math.floor(stake/60),4,colors[1]),
-      itemPrize(random()<.25?'set3':'set2',Math.floor(stake/100),3,colors[2])
+      itemPrize('set0',wheelMaterialAmount(stake,40),7,colors[0]),
+      itemPrize('set1',wheelMaterialAmount(stake,60),4,colors[1]),
+      itemPrize(random()<.25?'set3':'set2',wheelMaterialAmount(stake,100),3,colors[2])
     ];
     rare={type:'boost',amount:stake*2,weight:rareWeight,color:'#b381d9',locked:rareLocked,label:'Двойные орбы · запас +'+stake*2};
   }else{

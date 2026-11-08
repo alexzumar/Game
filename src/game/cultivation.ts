@@ -10,8 +10,7 @@ function buyTrait(farm:Farm,crop:number,trait:Trait) {
   farm.levels[crop][trait]++;
   return true;
 }
-const growthTime = (crop:number,level:number) => Math.max(1,Math.round(1000*crops[crop].seconds/1.01**Math.min(100000,level)));
-const moistureTime = (level:number,crop=0) => Math.round(cropTimes[crop]*500*(1+level*.05));
+const growthTime = (crop:number,level:number) => Math.max(1,Math.round(1000*crops[crop].seconds*.975**level));
 function harvestAmount(level:number,random = Math.random,bonus=0) {
   let amount = 1;
   for (let chance = level*.01; chance > 0 && random() < Math.min(1,chance); chance /= 2) amount+=1+Math.floor(bonus)+(random()<bonus%1?1:0);

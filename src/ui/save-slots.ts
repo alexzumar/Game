@@ -30,9 +30,10 @@ function switchSaveSlot(slot:number){
       const cheats=get<HTMLInputElement>('save-slot-cheats').checked;
       if(!saveFarm({...newFarm(),saveCheats:cheats},target))throw new Error('Не удалось создать ферму');
     }
+    syncPlayTime();
     if(slot!==activeSlot&&!saveFarm({...farm,pausedAt:Date.now()}))throw new Error('Не удалось сохранить текущую ферму');
     localStorage.setItem(activeSlotKey,String(slot));
-    location.reload();
+    reloadFarm();
   }catch(error){
     saveSlotStatus.textContent='Не удалось переключить слот.';
     console.error('Ферма: ошибка переключения сохранения',error);
@@ -66,7 +67,10 @@ function bindSaveDeletion(control:HTMLButtonElement,slot:number){
 
 function deleteSaveSlot(slot:number){
   try{
-    if(slot!==activeSlot&&!saveFarm(farm))throw new Error('Не удалось сохранить текущую ферму');
+    if(slot!==activeSlot){
+      syncPlayTime();
+      if(!saveFarm(farm))throw new Error('Не удалось сохранить текущую ферму');
+    }
     const previous=[1,2,3].map(id=>localStorage.getItem(slotKey(id)));
     const activeBefore=localStorage.getItem(activeSlotKey);
     const remaining=previous.filter((raw,index)=>raw!==null&&index!==slot-1);
@@ -89,7 +93,7 @@ function deleteSaveSlot(slot:number){
       else localStorage.setItem(activeSlotKey,activeBefore);
       throw error;
     }
-    location.reload();
+    reloadFarm();
   }catch(error){
     saveSlotStatus.textContent='Не удалось удалить сохранение.';
     console.error('Ферма: ошибка удаления сохранения',error);

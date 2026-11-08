@@ -21,7 +21,7 @@
     <section class="glass panel seed-storage"><span class="kicker">СКЛАД</span><div class="seed-stock-heading"><h2 id="seed-stock-title"><span data-upgrade-target="seeds">Семена</span></h2><select id="seed-sort" aria-label="Сортировка семян"><option value="quantity">По количеству</option><option value="rarity">По редкости</option></select></div><p>Выбери семечко и нажми на грядку или перетащи его.</p><div id="seeds"></div></section>
   </aside>
   <section class="growing-area" aria-label="Поле">
-    <button type="button" id="resources-open" class="glass wallet" title="Открыть коллекцию"><span>🪙 <b id="coins"></b></span><span>🔮 <b id="orbs">0</b></span><span>💎 <b id="diamond-balance">0</b></span><span title="Очки мутаций — механика появится позже">🧬 <b>0</b></span></button>
+    <button type="button" id="resources-open" class="glass wallet" title="Открыть коллекцию"><span>🪙 <b id="coins"></b></span><span>🔮 <b id="orbs">0</b></span><span>💎 <b id="diamond-balance">0</b></span><span title="Очки мутации">🧬 <b id="mutation-points">0</b></span></button>
     <div class="field-head"><small id="dry-field-notice" class="glass" role="status" hidden title="Удерживай Ctrl или включи лейку, затем нажми на сухую грядку."></small><span>ПОЛЕ</span><strong id="field-tip" hidden></strong><strong id="dimensions"></strong></div>
     <div class="field" id="field"></div>
   </section>
@@ -108,11 +108,11 @@
 </dialog>
 <dialog id="upgrades-dialog" class="glass basket">
   <form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
-  <h2>Улучшения <span class="basket-wallet">🪙 <b id="upgrade-coins"></b> · 🔮 <b id="upgrade-orbs">0</b></span></h2>
+  <h2>Улучшения <span class="basket-wallet" id="upgrade-wallet" tabindex="0" aria-describedby="upgrade-material-tip">🪙 <b id="upgrade-coins"></b> · 🔮 <b id="upgrade-orbs">0</b></span></h2>
   <nav class="shop-tabs" aria-label="Категории улучшений">
     
     <button class="quiet" id="upgrade-tab-packs" aria-pressed="true">Пакеты семян</button>
-    <button class="quiet" id="upgrade-tab-seeds" aria-pressed="false">Семена</button><button class="quiet" id="upgrade-tab-weather" aria-pressed="false">Погода</button><button class="quiet" id="upgrade-tab-tools" aria-pressed="false">Инструменты</button><button class="quiet" id="upgrade-tab-discovery" aria-pressed="false">Рулетка видов</button><button class="quiet" id="upgrade-tab-extractor" aria-pressed="false">Экстрактор</button><button class="quiet" id="upgrade-tab-hybrids" aria-pressed="false">Гибриды</button>
+    <button class="quiet" id="upgrade-tab-seeds" aria-pressed="false">Семена</button><button class="quiet" id="upgrade-tab-tools" aria-pressed="false">Инструменты</button><button class="quiet" id="upgrade-tab-discovery" aria-pressed="false">Рулетка видов</button><button class="quiet" id="upgrade-tab-extractor" aria-pressed="false">Экстрактор</button><button class="quiet" id="upgrade-tab-hybrids" aria-pressed="false">Гибриды</button>
   </nav>
   
   <section id="upgrade-packs"><section class="glass panel" id="pack-luck-upgrade"><h2>🍀 Удача пакета</h2><p id="luck-preview"></p><button class="quiet" id="buy-luck"></button></section><div id="pack-upgrade-list"></div></section>
@@ -120,19 +120,10 @@
     <div id="upgrade-catalog" aria-label="Культуры"></div>
 
   </section>
-  <section id="upgrade-weather" hidden><div id="weather-catalog" class="square-catalog"><button id="rain-card" class="quiet square-card"><b>🌧️</b><span>Дождь</span></button></div></section>
   <section id="upgrade-tools" hidden><div id="convenience-list"></div></section>
-  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section><h2>🔎 Xray</h2><p>Показывает вид и Gr/Ga/Re неизвестного растения. Свойства раскрываются после сбора.</p><p id="xray-price"></p><button class="quiet" id="buy-xray"></button></section><section id="trait-panel" class="glass panel trait-panel" hidden>
+  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section><h2>🔎 Xray</h2><p>Показывает вид и Gr/Ga/Re созревшей находки прямо на грядке.</p><p id="xray-price"></p><button class="quiet" id="buy-xray"></button></section><section id="trait-panel" class="glass panel trait-panel" hidden>
     <button class="quiet close" id="trait-close" aria-label="Закрыть">×</button>
     <h2 id="trait-title"></h2><p id="crop-rarity-time"></p><p id="trait-lock"></p><p id="crop-ability"></p><div id="trait-list"></div>
-  </section>
-  <section id="weather-panel" class="glass panel trait-panel" hidden>
-    <button class="quiet close" id="weather-close" aria-label="Закрыть">×</button>
-    <h2>🌧️ Дождь</h2>
-    <div class="weather-upgrades">
-      <div class="glass panel"><strong>Откат дождя</strong><p id="weather-cooldown-preview"></p><button class="quiet" id="buy-weather-cooldown"></button></div>
-      <div class="glass panel"><strong>Длительность дождя</strong><p id="weather-duration-preview"></p><button class="quiet" id="buy-weather-duration"></button></div>
-    </div>
   </section>
 </dialog>
 <dialog id="receipt-dialog" class="glass">
@@ -171,7 +162,7 @@
 <button class="glass processing-toast" id="extraction-toast" hidden><strong id="extraction-toast-label"></strong><small id="extraction-toast-time"></small></button>
 <dialog id="mutation-dialog" class="glass comparison-dialog"><form method="dialog"><button class="quiet close">×</button></form>
 <h2>🧬 Полевая находка</h2><div id="mutation-icon"></div><p id="mutation-info"></p>
-<div id="mutation-genes" class="genetics"></div><div id="mutation-traits"></div><p>Стрелки сравнивают потомка с лучшим значением родителей. Родители показаны слева и справа.</p><aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside>
+<div id="mutation-genes" class="genetics"></div><div id="mutation-traits"></div><p id="mutation-comparison-note">Стрелки сравнивают потомка с лучшим значением родителей. Родители показаны слева и справа.</p><aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside>
 <button class="primary" id="mutation-accept">Забрать растение</button><button class="quiet" id="mutation-discard">Удалить находку</button><p id="mutation-result" role="status"></p></dialog>
 <dialog id="hybrids-dialog" class="glass basket"><div class="window-heading">
 <form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>

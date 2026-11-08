@@ -64,7 +64,7 @@ function render() {
   get("skin").textContent = farm.skin === "glossy" ? "✧ Глянец" : "◈ Классика";
   document.documentElement.dataset.accent = String(farm.accent);
   document.body.classList.toggle('raining',rain);
-  get('weather').textContent = rain ? '🌧️ Дождь · рост +'+(5+diamondLevel(farm,'rainGrowth'))+'% · ещё '+clock((farm.weather.end ?? now)-now) : '☀️ Ясно';
+  get('weather').textContent = rain ? '🌧️ Дождь · расход влаги ×0,5 · рост +5%'+(farm.weather.surged?' · Рывок роста':'')+' · ещё '+clock((farm.weather.end ?? now)-now) : '☀️ Ясно';
   get('theme').textContent = farm.theme === 'light' ? '☾ Тёмная' : '☀ Светлая';
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
@@ -92,7 +92,7 @@ function render() {
   const odds = packOdds(farm,Math.max(0,selectedPack));
   renderSeeds();
   renderTraits();
-  renderWeather();
+  if(typeof upgradeMaterialsReady!=='undefined'&&upgradeMaterialsReady)renderUpgradeMaterials();
   renderConveniences();
   renderCollection();
   renderDiscoveryUpgrades();
@@ -117,7 +117,7 @@ function renderSeeds() {
     row.disabled = locked;
     row.classList.toggle("out-of-stock",!farm.seeds[i]);
     row.draggable = !locked && farm.seeds[i] > 0;
-    row.style.order=String(-(get<HTMLSelectElement>('seed-sort').value==='rarity'?cropRarities[i]:farm.seeds[i]));
+    row.style.order=String(get<HTMLSelectElement>('seed-sort').value==='rarity'?seedRarityOrder.indexOf(i):-farm.seeds[i]);
     row.removeAttribute('title');
     get('seed-note-'+i).textContent = locked ? 'Открой в коллекции' :
       'Урожай · 🪙 '+cropPrices[i]+' за ед.';

@@ -6,14 +6,15 @@ function plant(farm:Farm, index:number, crop:number, now:number,line?:number) {
   farm.plots[index] = {crop, planted:now, ready:null,...(line===undefined?{}:{line})};
   const planted=farm.plots[index]!;
   if(Math.random()<(effectiveGenome(farm,planted).powers.sprout??0)/100){planted.duration=plantGrowthTime(farm,planted);planted.remaining=Math.round(planted.duration*.8);}
-  if(farm.rainSoaked?.[index]){
-    farm.rainSoaked[index]=false;
-    water(farm,planted,now,now+cropTimes[crop]*10*(25+diamondLevel(farm,"rainReserve")));
-  }
   irrigate(farm,planted,now);
   return true;
 }
-function water(farm:Farm,plot:Plant,now:number,until = now+moistureTime(plot.line===undefined?farm.levels[plot.crop].moisture:0,plot.crop)*(1+(effectiveGenome(farm,plot).powers.moisture??0)/100)) {
+function wateringDuration(farm:Farm,plot:Plant,level=plot.line===undefined?farm.levels[plot.crop].moisture:0){
+  const growth=plot.duration??plantGrowthTime(farm,plot);
+  const moisturePower=effectiveGenome(farm,plot).powers.moisture??0;
+  return Math.max(1,Math.round(growth*.25*(1+level*.05)*(1+moisturePower/100)));
+}
+function water(farm:Farm,plot:Plant,now:number,until=now+wateringDuration(farm,plot)) {
   advanceDryGrowth(farm,plot,now);
   if (plot.ready !== null) {
     if (plot.ready <= now || plot.wetUntil === undefined) return false;
@@ -29,7 +30,7 @@ function water(farm:Farm,plot:Plant,now:number,until = now+moistureTime(plot.lin
   plot.ready = now+Math.ceil(plot.remaining ?? plot.duration);
   delete plot.remaining;
   plot.watered = now;
-    plot.wetUntil = until;
+  plot.wetUntil = until;
   return true;
 }
 function buyConvenience(farm:Farm,id:Convenience) {
@@ -108,12 +109,6 @@ function resize(farm:Farm,next:number) {
   const rot=Array<RotRecord|null>(next**2).fill(null);
   farm.rot.forEach((record,i)=>{const row=Math.floor(i/farm.size),column=i%farm.size;if(row<next&&column<next)rot[row*next+column]=record;});
   farm.rot=rot;
-  const rainSoaked=Array<boolean>(next**2).fill(false);
-  farm.rainSoaked?.forEach((wet,index)=>{
-    const row=Math.floor(index/farm.size),column=index%farm.size;
-    if(row<next&&column<next)rainSoaked[row*next+column]=wet;
-  });
-  farm.rainSoaked=rainSoaked;
   farm.size = next;
   farm.plots = plots;
   return true;

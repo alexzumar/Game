@@ -34,6 +34,8 @@ function loadFarm():Farm {
       s.offset=(s.offset??0)-Math.max(0,Date.now()-s.pausedAt);
       delete s.pausedAt;
     }
+    if(s.activePlayMs!==undefined&&!int(s.activePlayMs,0))throw new Error('Повреждено время игры');
+    if(s.backgroundPlayMs!==undefined&&!int(s.backgroundPlayMs,0))throw new Error('Повреждено фоновое время игры');
     if(s.statistics!==undefined){
       for(const name of ['coinsSpent','orbsSpent','diamondsSpent','materialsFound','crystalRolls','crystalDrops']){
         const value=s.statistics?.[name];
@@ -48,6 +50,7 @@ function loadFarm():Farm {
     if(s.harvestValue.length===3)s.harvestValue=s.harvestValue.concat(Array(crops.length-3).fill(0));
     if(!Array.isArray(s.harvestValue)||s.harvestValue.length!==crops.length||!s.harvestValue.every((v:unknown)=>typeof v==="number"&&Number.isFinite(v)&&v>=0))throw new Error("Повреждена стоимость урожая");
     s.relics ??= 0;s.xray ??= false;
+    if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
     if(!int(s.relics,0)||typeof s.xray!=="boolean")throw new Error("Повреждены предметы");
     s.mutationCheck ??= Date.now()+(s.offset??0)+30000;
     if(!int(s.mutationCheck,0))throw new Error("Повреждён таймер селекции");
@@ -91,8 +94,6 @@ function loadFarm():Farm {
         throw new Error('Повреждена очередь экстрактора');
     }
     }
-    if(s.rainSoaked!==undefined&&(!Array.isArray(s.rainSoaked)||s.rainSoaked.length!==s.size**2||s.rainSoaked.some(value=>typeof value!=='boolean')))throw new Error('Повреждена влажность пустых грядок');
-    if(s.rainSoakedThrough!==undefined&&!int(s.rainSoakedThrough,0))throw new Error('Повреждена отметка дождя');
     s.discoveries ??= 0;
     s.discoveryUp ??= {speed:0,slots:0,amount:0};
     s.pendingDiscovery ??= [];
@@ -150,12 +151,15 @@ function loadFarm():Farm {
     if (s.weather.end === undefined) {
       s.weather.end = s.weather.last === null ? null : s.weather.last+120_000+10_000*s.weather.duration;
       if (s.weather.end !== null) {
-        const eligible = Math.max(Date.now()+s.offset,s.weather.end+rainCooldown(s.weather.cooldown));
-        s.weather.next = rainRoll(eligible,s.weather.cooldown);
+        const eligible = Math.max(Date.now()+s.offset,s.weather.end);
+        s.weather.next = rainRoll(eligible);
       }
     }
     if (s.weather.last === null ? s.weather.end !== null :
         !int(s.weather.end,s.weather.last+1,s.weather.next-1)) throw new Error('Повреждена длительность дождя');
+    if(s.weather.surgeAt!==undefined&&(s.weather.last===null||!int(s.weather.surgeAt,s.weather.last+1,s.weather.end)))
+      throw new Error('Повреждена отметка рывка дождя');
+    if(s.weather.surged!==undefined&&typeof s.weather.surged!=='boolean')throw new Error('Повреждено состояние рывка дождя');
     if(s.plots.some((p:Plant|null)=>p?.line!==undefined && (!int(p.line,0,s.lines.length-1)||s.lines[p.line].crop!==p.crop))) throw new Error("Повреждено растение линии");
     if(s.plots.some((p:Plant|null)=>p?.mystery && (!Array.isArray(p.mystery.parents)||p.mystery.parents.length!==2||!p.mystery.parents.every(i=>int(i,0,crops.length-1))||!Array.isArray(p.mystery.traits)||p.mystery.traits.length>10||!p.mystery.traits.every(t=>traitNames[t]))))throw new Error("Повреждена мутация");
     if(s.plots.some((plot:Plant|null)=>plot?.mystery?.genomes && (plot.mystery.genomes.length!==2 || !plot.mystery.genomes.every(validGenome))))throw new Error("Повреждена генетика родителей");
@@ -184,13 +188,20 @@ function loadFarm():Farm {
     const validateEnhancements=(data:Genome|Line)=>{if(data.enhancements&&Object.entries(data.enhancements).some(([id,n])=>!traitNames[id]||!int(n,0,100)))throw new Error('Повреждены усиления');};
     for(const line of s.lines){validateEnhancements(line);for(const parent of line.parents??[])validateEnhancements(parent.genome);}
     for(const plot of s.plots)if(plot?.mystery){if(plot.mystery.preview){validateEnhancements(plot.mystery.preview);plot.mystery.preview.enhancements={};}for(const data of plot.mystery.genomes??[])validateEnhancements(data);}
-    const weatherMigrated=s.weather.intervalVersion!==2;
+    const weatherMigrated=s.weather.intervalVersion!==3;
     if(weatherMigrated){
       const weather=s.weather;
-      if(weather.intervalVersion!==1)s.coins+=5*weather.chance*(weather.chance+1);
-      weather.chance=0;
-      weather.next=rainRoll(Math.max(Date.now()+s.offset,weather.end??0),weather.cooldown);
-      weather.intervalVersion=2;
+      if(weather.intervalVersion===undefined)s.coins+=5*weather.chance*(weather.chance+1);
+      for(const level of [weather.cooldown,weather.duration]){
+        for(let n=0;n<level;n++)s.coins+=weatherPrice(n);
+      }
+      weather.chance=weather.cooldown=weather.duration=0;
+      if(weather.last!==null)weather.end=Math.min(weather.end,weather.last+120_000);
+      weather.next=rainRoll(Math.max(Date.now()+s.offset,weather.end??0));
+      weather.intervalVersion=3;
+      delete s.rainSoaked;
+      delete s.rainSoakedThrough;
+      for(const plot of s.plots)if(plot)delete plot.rainPrepared;
     }
     if(s.wheels!==undefined){
       const wheel=s.wheels;
@@ -203,6 +214,15 @@ function loadFarm():Farm {
     }
     s.diamonds??=newDiamonds();
     const diamonds=s.diamonds;
+    let refundedWeatherDiamonds=false;
+    for(const branch of ['rainReserve','rainGrowth']){
+      const level=diamonds.levels?.[branch];
+      if(level===undefined)continue;
+      if(!int(level,0)||!Number.isFinite(diamondPrice(Math.max(0,level-1))))throw new Error('Повреждён уровень погоды');
+      for(let n=0;n<level;n++)diamonds.balance+=diamondPrice(n);
+      delete diamonds.levels[branch];
+      refundedWeatherDiamonds=true;
+    }
     if(!Number.isInteger(diamonds.balance)||diamonds.balance<0||
       ![diamonds.charge,diamonds.coinCarry,diamonds.discountCarry].every(value=>Number.isFinite(value)&&value>=0&&value<=1)||
       !Array.isArray(diamonds.sets)||diamonds.sets.length!==4||!diamonds.sets.every(value=>typeof value==='boolean')||
@@ -211,7 +231,7 @@ function loadFarm():Farm {
     const awardedSets=awardDiamondSets(s);
     finishDiscovery(s);
     migratePackProgress(s);
-    if(finishPackOpening(s)||weatherMigrated||awardedSets||resumed)saveFarm(s);
+    if(finishPackOpening(s)||weatherMigrated||refundedWeatherDiamonds||awardedSets||resumed)saveFarm(s);
     return s;
   } catch (error) {
     storageError = true;

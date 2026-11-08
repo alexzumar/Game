@@ -5,6 +5,7 @@ let selectedWheel:WheelKind='coins';
 let spinningFortune=false;
 const fortuneResults:Partial<Record<WheelKind,{label:string;chance:number}>>={};
 const fortuneStakes:Partial<Record<WheelKind,number>>={};
+const fortunePercents:Partial<Record<WheelKind,number>>={};
 const svgNamespace='http://www.w3.org/2000/svg';
 
 function fortunePoint(angle:number,radius:number){
@@ -21,6 +22,22 @@ function drawFortuneWheel(svg:SVGSVGElement,prizes:WheelPrize[]){
     sector.setAttribute('d','M 200 200 L '+fortunePoint(angle,192)+' A 192 192 0 '+(sweep>180?1:0)+' 1 '+fortunePoint(end,192)+' Z');
     sector.setAttribute('fill',prize.color);
     svg.append(sector);
+    if(prize.type==='jackpot'&&svg===fortuneWheel){
+      const marker=document.createElementNS(svgNamespace,'path');
+      marker.setAttribute('class','fortune-jackpot-marker');
+      marker.setAttribute('d','M '+fortunePoint(angle+sweep/2,199)+' L '+fortunePoint(angle+sweep/2,213));
+      const title=document.createElementNS(svgNamespace,'title');
+      title.textContent='Джекпот';
+      marker.append(title);
+      svg.append(marker);
+      const label=document.createElementNS(svgNamespace,'text');
+      const [x,y]=fortunePoint(angle+sweep/2,226).split(' ');
+      label.setAttribute('x',x);
+      label.setAttribute('y',y);
+      label.setAttribute('class','fortune-jackpot-label');
+      label.textContent='Джекпот';
+      svg.append(label);
+    }
     const previous=prizes[(index+prizes.length-1)%prizes.length];
     if(prize.weight>=.4&&previous.weight>=.4)boundaries.push(angle);
     angle=end;
@@ -50,7 +67,9 @@ function chooseFortuneWheel(kind:WheelKind){
 
 function renderFortune(){
   const kind=selectedWheel,info=wheelInfo[kind],account=wheelAccount(farm,kind);
-  const balance=wheelBalance(farm,kind),raw=fortuneStake.valueAsNumber;
+  const balance=wheelBalance(farm,kind),percent=fortunePercents[kind];
+  if(!spinningFortune&&percent!==undefined)fortuneStake.value=String(Math.min(wheelStakeLimit,Math.max(1,Math.floor(balance*percent/100))));
+  const raw=fortuneStake.valueAsNumber;
   const valid=Number.isSafeInteger(raw)&&raw>=1&&raw<=wheelStakeLimit;
   const stake=valid?raw:1;
   const state=wheelState(farm);
@@ -125,14 +144,18 @@ for(const percent of [25,50,75,100]){
   shortcut.type='button';
   shortcut.className='quiet';
   shortcut.textContent=percent+'%';
+  shortcut.dataset.fortunePercent=String(percent);
   shortcut.onclick=()=>{
     if(spinningFortune)return;
-    fortuneStake.value=String(Math.min(wheelStakeLimit,Math.max(1,Math.floor(wheelBalance(farm,selectedWheel)*percent/100))));
+    fortunePercents[selectedWheel]=percent;
     renderFortune();
   };
   get('fortune-shortcuts').append(shortcut);
 }
-fortuneStake.oninput=renderFortune;
+fortuneStake.oninput=()=>{
+  delete fortunePercents[selectedWheel];
+  renderFortune();
+};
 fortuneDialog.oncancel=event=>{if(spinningFortune)event.preventDefault();};
 fortuneDialog.addEventListener('click',event=>{
   if(spinningFortune||event.target!==fortuneDialog)return;

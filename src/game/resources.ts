@@ -50,12 +50,15 @@ function transferEnhancement(farm:Farm,source:number,target:number,id:string){
  from.enhancements??={};to.enhancements??={};to.enhancements[id]=from.enhancements[id];from.enhancements[id]=old;return true;
 }
 function enhancementChance(level:number){return Math.max(.45,.99-level*.01);}
-function enhanceProperty(farm:Farm,index:number,id:string,random=Math.random):'success'|'failure'|null{
+function enhanceProperty(farm:Farm,index:number,id:string,random=Math.random):'success'|'failure'|'shielded'|null{
  const line=farm.lines[index];if(!line||!line.traits.includes(id)||line.archived)return null;
  const level=line.enhancements?.[id]??0,key=propertyMaterialId(id);
  if(level>=100||(line.powers?.[id]??1)<=0||(farm.resources.items[key]??0)<1)return null;
  farm.resources.items[key]--;line.enhancements??={};
- const success=random()<enhancementChance(level);line.enhancements[id]=success?level+1:Math.max(0,level-1);
+ const success=random()<enhancementChance(level);
+ const shield=enhancementShieldChance(diamondLevel(farm,'enhancementShield'));
+ if(!success&&level>0&&shield>0&&random()<shield)return 'shielded';
+ line.enhancements[id]=success?level+1:Math.max(0,level-1);
  return success?'success':'failure';
 }
 

@@ -38,7 +38,7 @@ function workAt(stroke:Sweep,x:number,y:number,now:number) {
   stroke.visited.add(index);
   if (stroke.tool === 'collect') {
     if(!isGathering())return false;
-    if(farm.plots[index]?.mystery){takeMystery(index,tile);return true;}
+    if(farm.plots[index]?.mystery){openMutation(index);return true;}
     return collectAnimated(index,now,tile)>0;
   }
   if (stroke.tool === 'plant') return plant(farm,index,stroke.crop,now,selectedLine);

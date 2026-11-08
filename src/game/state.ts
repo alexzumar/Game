@@ -29,10 +29,11 @@ const newExtraction = ():Extraction => ({speed:0,yield:0,job:null,processed:0,pr
 type Farm = {
   wheels?:WheelState;
   pausedAt?:number;
+  activePlayMs?:number;
+  backgroundPlayMs?:number;
   statistics?:FarmStatistics;
   diamonds?:DiamondState;
-  rainSoaked?:boolean[];
-  rainSoakedThrough?:number;
+  mutationPoints?:number;
   saveCheats?:boolean;
   resources:Resources;epoch:number;size:number;plots:(Plant|null)[];seeds:number[];harvest:number[];
   harvestValue:number[];harvestQuality:number[];rot:(RotRecord|null)[];

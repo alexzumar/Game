@@ -100,8 +100,8 @@ function renderLines(){
   get('hybrid-capacity').textContent=used+'/'+farm.hybridSlots;
   get('hybrid-coins').textContent=number(farm.coins);
   const price=hybridExpansionPrice(farm);
-  button('hybrid-expand').disabled=farm.coins<price;
-  button('hybrid-expand').textContent='+5 мест · 🪙 '+number(price);
+  button('hybrid-expand').disabled=(farm.mutationPoints??0)<price;
+  button('hybrid-expand').textContent='+5 мест · 🧬 '+number(price);
   button('hybrid-delete-mode').textContent=deleteMode?(markedHybrids.size?'Удалить ('+markedHybrids.size+')':'Отменить'):'Удалить';
   get('hybrid-delete-hint').textContent=deleteMode?'Выдели семена кликом или протягиванием. Двойное нажатие «Удалить» подтверждает.':'';
   const query=searchHybrids.value.trim().toLocaleLowerCase('ru');
@@ -150,19 +150,32 @@ function renderLines(){
 }
 const mutationDialog=get<HTMLDialogElement>('mutation-dialog');
 let mutationIndex=-1;
+let mutationRevealed=false;
 function openMutation(index:number){
   mutationIndex=index;
   const plot=farm.plots[index];
   if(!plot?.mystery)return;
   const ready=plot.ready!==null&&plot.ready<=nowTime();
-  get('mutation-icon').textContent=crops[plot.crop].symbol;
-  get('mutation-info').textContent='Гибрид '+plot.mystery.parents.map(i=>crops[i].name).join(' × ')+
-    ' · Время роста '+clock(plot.duration!)+(ready?' · Созрел':' · До созревания '+clock(plot.ready!-nowTime()));
+  mutationRevealed=ready;
+  get('mutation-icon').textContent=ready?crops[plot.crop].symbol:'?';
+  get('mutation-info').textContent=ready
+    ?'Гибрид '+plot.mystery.parents.map(i=>crops[i].name).join(' × ')+' · Время роста '+clock(plot.duration??crops[plot.crop].seconds*1000)+' · Созрел'
+    :'Находка ещё растёт. Вид и свойства станут известны после полного созревания.';
   get('mutation-result').textContent='';
-  if(plot.mystery.preview)renderComparison(mutationDialog,plot.mystery.preview,'mutation-genes','mutation-traits');
+  for(const section of mutationDialog.querySelectorAll<HTMLElement>('#mutation-genes,#mutation-traits,#mutation-comparison-note,.parent-panel')){
+    section.hidden=!ready;
+    if(section.id!=='mutation-comparison-note')section.replaceChildren();
+  }
+  if(ready&&plot.mystery.preview)renderComparison(mutationDialog,plot.mystery.preview,'mutation-genes','mutation-traits');
+  button('mutation-accept').hidden=!ready;
   button('mutation-accept').disabled=!ready||hybridCount(farm)>=farm.hybridSlots;
-  if(hybridCount(farm)>=farm.hybridSlots)get('mutation-result').textContent='Инвентарь заполнен. Расширь его или освободи место — находка останется на грядке.';
-  button('mutation-discard').hidden=false;resetDeletePress(button('mutation-discard'));
+  if(ready&&hybridCount(farm)>=farm.hybridSlots)get('mutation-result').textContent='Инвентарь заполнен. Расширь его или освободи место — находка останется на грядке.';
+  const discard=button('mutation-discard');
+  discard.hidden=false;
+  delete discard.dataset.confirmEarly;
+  discard.textContent='Удалить находку';
+  resetDeletePress(discard);
+  if(!ready)discard.removeAttribute('title');
   if(!mutationDialog.open)mutationDialog.showModal();
 }
 button('mutation-accept').onclick=()=>{
@@ -174,11 +187,22 @@ button('mutation-accept').onclick=()=>{
   button('mutation-accept').disabled=true;button('mutation-discard').hidden=true;
   if(result.line.parents)renderComparison(mutationDialog,result.line,'mutation-genes','mutation-traits');
   mutationDialog.close();
-  commit('Новая линия на складе.');
+  commit('Новая линия на складе · 🧬 +'+result.points);
 };
 button('mutation-discard').onclick=()=>{
-  if(!farm.plots[mutationIndex]?.mystery||!confirmDeletePress(button('mutation-discard')))return;
-  farm.plots[mutationIndex]=null;mutationDialog.close();commit('Находка удалена.');
+  if(!farm.plots[mutationIndex]?.mystery)return;
+  const control=button('mutation-discard');
+  if(!mutationRevealed){
+    if(control.dataset.confirmEarly!=='true'){
+      control.dataset.confirmEarly='true';
+      control.textContent='Да, удалить';
+      get('mutation-result').textContent='Находка ещё не созрела. Точно удалить её? Вид и свойства останутся неизвестными.';
+      return;
+    }
+  }else if(!confirmDeletePress(control))return;
+  const points=discardMutation(farm,mutationIndex,nowTime());
+  mutationDialog.close();
+  commit('Находка удалена.'+(points?' 🧬 +'+points:''));
 };
 mutationDialog.addEventListener('click',event=>{
   if(event.target!==mutationDialog)return;
@@ -188,11 +212,6 @@ mutationDialog.addEventListener('click',event=>{
 get<HTMLInputElement>('debug-amount').addEventListener('keydown',event=>{
   if(event.key==='Enter'){event.preventDefault();button('debug-coins').click();}
 });
-function takeMystery(index:number,tile:HTMLElement){
-  const plot=farm.plots[index];if(!plot?.mystery)return;
-  if((plot.ready??Infinity)>nowTime()){notice='Находка ещё растёт.';render();return;}
-  openMutation(index);
-}
 button('buy-xray').onclick=()=>{if(buyXray(farm))commit('Xray открыт.');};
 const dock=get('hybrid-dock'),dockWrap=get('hybrid-dock-wrap'),dockTip=get('dock-tooltip');
 type DockState = 'hidden'|'peek'|'open';

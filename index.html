@@ -346,6 +346,9 @@ body.raining::after{opacity:1}
 .window-heading>.shop-tabs{flex-basis:100%;margin:2px 0 0}
 #collection-dialog .window-heading>.collection-close{position:static;order:4}
 #upgrades-dialog>.window-heading{flex:none;top:0}
+#upgrade-wallet{position:relative}
+#upgrade-material-tip{position:absolute;top:calc(100% + 6px);left:50%;translate:-50% 0;z-index:30;display:flex;flex-wrap:wrap;gap:4px 10px;width:max-content;max-width:min(215px,56vw);padding:8px 10px;border-radius:14px;background:var(--base);color:var(--ink);font-size:.75rem;pointer-events:none}
+#upgrade-material-tip span{white-space:nowrap}
 #upgrades-dialog .window-heading>form{position:static;margin-left:auto}
 #hybrids-dialog{padding-bottom:28px}
 #hybrid-grid{grid-auto-rows:max-content;align-content:start;padding:2px 3px 15px}
@@ -563,6 +566,20 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 .fortune-stage text,.fortune-preview text{fill:#1c3032;font:700 16px system-ui;text-anchor:middle;dominant-baseline:central;pointer-events:none}
 .fortune-hub{fill:#fff3cf;stroke:#6a613f;stroke-width:3}
 .fortune-pointer{position:absolute;top:-6px;left:50%;translate:-50% 0;width:24px;height:30px;background:#ffe09a;clip-path:polygon(0 0,100% 0,50% 100%);pointer-events:none}
+#fortune-wheel{overflow:visible}
+.fortune-jackpot-marker{fill:none;stroke:#ffc646;stroke-width:4;stroke-linecap:round}
+.fortune-stage .fortune-jackpot-label{font-size:10px;paint-order:stroke;stroke:#fff3cf;stroke-width:3px;stroke-linejoin:round}
+button{user-select:none}
+#enhancement-preview{position:relative}
+.enhancement-shield{position:absolute;left:50%;top:0;font-size:2rem;pointer-events:none;animation:enhancement-shield 1s ease-out both}
+@keyframes enhancement-shield{
+  0%{transform:translate(-50%,0) scale(.7);opacity:0}
+  20%{transform:translate(-58%,-15%) rotate(-12deg);opacity:1}
+  40%{transform:translate(-42%,-18%) rotate(12deg)}
+  65%{transform:translate(-50%,-20%) rotate(0);opacity:1}
+  100%{transform:translate(-50%,-45%);opacity:0}
+}
+@media(prefers-reduced-motion:reduce){.enhancement-shield{animation:none;transform:translate(-50%,-20%)}}
 #fortune-form{display:grid;gap:10px}
 #fortune-stake{width:min(100%,185px);margin-left:6px}
 #fortune-shortcuts,#fortune-choice{display:flex;gap:6px;flex-wrap:wrap}
@@ -611,7 +628,7 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
     <section class="glass panel seed-storage"><span class="kicker">СКЛАД</span><div class="seed-stock-heading"><h2 id="seed-stock-title"><span data-upgrade-target="seeds">Семена</span></h2><select id="seed-sort" aria-label="Сортировка семян"><option value="quantity">По количеству</option><option value="rarity">По редкости</option></select></div><p>Выбери семечко и нажми на грядку или перетащи его.</p><div id="seeds"></div></section>
   </aside>
   <section class="growing-area" aria-label="Поле">
-    <button type="button" id="resources-open" class="glass wallet" title="Открыть коллекцию"><span>🪙 <b id="coins"></b></span><span>🔮 <b id="orbs">0</b></span><span>💎 <b id="diamond-balance">0</b></span><span title="Очки мутаций — механика появится позже">🧬 <b>0</b></span></button>
+    <button type="button" id="resources-open" class="glass wallet" title="Открыть коллекцию"><span>🪙 <b id="coins"></b></span><span>🔮 <b id="orbs">0</b></span><span>💎 <b id="diamond-balance">0</b></span><span title="Очки мутации">🧬 <b id="mutation-points">0</b></span></button>
     <div class="field-head"><small id="dry-field-notice" class="glass" role="status" hidden title="Удерживай Ctrl или включи лейку, затем нажми на сухую грядку."></small><span>ПОЛЕ</span><strong id="field-tip" hidden></strong><strong id="dimensions"></strong></div>
     <div class="field" id="field"></div>
   </section>
@@ -698,11 +715,11 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 </dialog>
 <dialog id="upgrades-dialog" class="glass basket">
   <form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
-  <h2>Улучшения <span class="basket-wallet">🪙 <b id="upgrade-coins"></b> · 🔮 <b id="upgrade-orbs">0</b></span></h2>
+  <h2>Улучшения <span class="basket-wallet" id="upgrade-wallet" tabindex="0" aria-describedby="upgrade-material-tip">🪙 <b id="upgrade-coins"></b> · 🔮 <b id="upgrade-orbs">0</b></span></h2>
   <nav class="shop-tabs" aria-label="Категории улучшений">
     
     <button class="quiet" id="upgrade-tab-packs" aria-pressed="true">Пакеты семян</button>
-    <button class="quiet" id="upgrade-tab-seeds" aria-pressed="false">Семена</button><button class="quiet" id="upgrade-tab-weather" aria-pressed="false">Погода</button><button class="quiet" id="upgrade-tab-tools" aria-pressed="false">Инструменты</button><button class="quiet" id="upgrade-tab-discovery" aria-pressed="false">Рулетка видов</button><button class="quiet" id="upgrade-tab-extractor" aria-pressed="false">Экстрактор</button><button class="quiet" id="upgrade-tab-hybrids" aria-pressed="false">Гибриды</button>
+    <button class="quiet" id="upgrade-tab-seeds" aria-pressed="false">Семена</button><button class="quiet" id="upgrade-tab-tools" aria-pressed="false">Инструменты</button><button class="quiet" id="upgrade-tab-discovery" aria-pressed="false">Рулетка видов</button><button class="quiet" id="upgrade-tab-extractor" aria-pressed="false">Экстрактор</button><button class="quiet" id="upgrade-tab-hybrids" aria-pressed="false">Гибриды</button>
   </nav>
   
   <section id="upgrade-packs"><section class="glass panel" id="pack-luck-upgrade"><h2>🍀 Удача пакета</h2><p id="luck-preview"></p><button class="quiet" id="buy-luck"></button></section><div id="pack-upgrade-list"></div></section>
@@ -710,19 +727,10 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
     <div id="upgrade-catalog" aria-label="Культуры"></div>
 
   </section>
-  <section id="upgrade-weather" hidden><div id="weather-catalog" class="square-catalog"><button id="rain-card" class="quiet square-card"><b>🌧️</b><span>Дождь</span></button></div></section>
   <section id="upgrade-tools" hidden><div id="convenience-list"></div></section>
-  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section><h2>🔎 Xray</h2><p>Показывает вид и Gr/Ga/Re неизвестного растения. Свойства раскрываются после сбора.</p><p id="xray-price"></p><button class="quiet" id="buy-xray"></button></section><section id="trait-panel" class="glass panel trait-panel" hidden>
+  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section><h2>🔎 Xray</h2><p>Показывает вид и Gr/Ga/Re созревшей находки прямо на грядке.</p><p id="xray-price"></p><button class="quiet" id="buy-xray"></button></section><section id="trait-panel" class="glass panel trait-panel" hidden>
     <button class="quiet close" id="trait-close" aria-label="Закрыть">×</button>
     <h2 id="trait-title"></h2><p id="crop-rarity-time"></p><p id="trait-lock"></p><p id="crop-ability"></p><div id="trait-list"></div>
-  </section>
-  <section id="weather-panel" class="glass panel trait-panel" hidden>
-    <button class="quiet close" id="weather-close" aria-label="Закрыть">×</button>
-    <h2>🌧️ Дождь</h2>
-    <div class="weather-upgrades">
-      <div class="glass panel"><strong>Откат дождя</strong><p id="weather-cooldown-preview"></p><button class="quiet" id="buy-weather-cooldown"></button></div>
-      <div class="glass panel"><strong>Длительность дождя</strong><p id="weather-duration-preview"></p><button class="quiet" id="buy-weather-duration"></button></div>
-    </div>
   </section>
 </dialog>
 <dialog id="receipt-dialog" class="glass">
@@ -761,7 +769,7 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 <button class="glass processing-toast" id="extraction-toast" hidden><strong id="extraction-toast-label"></strong><small id="extraction-toast-time"></small></button>
 <dialog id="mutation-dialog" class="glass comparison-dialog"><form method="dialog"><button class="quiet close">×</button></form>
 <h2>🧬 Полевая находка</h2><div id="mutation-icon"></div><p id="mutation-info"></p>
-<div id="mutation-genes" class="genetics"></div><div id="mutation-traits"></div><p>Стрелки сравнивают потомка с лучшим значением родителей. Родители показаны слева и справа.</p><aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside>
+<div id="mutation-genes" class="genetics"></div><div id="mutation-traits"></div><p id="mutation-comparison-note">Стрелки сравнивают потомка с лучшим значением родителей. Родители показаны слева и справа.</p><aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside>
 <button class="primary" id="mutation-accept">Забрать растение</button><button class="quiet" id="mutation-discard">Удалить находку</button><p id="mutation-result" role="status"></p></dialog>
 <dialog id="hybrids-dialog" class="glass basket"><div class="window-heading">
 <form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
@@ -941,6 +949,7 @@ const newExtraction = ()            => ({speed:0,yield:0,job:null,processed:0,pr
 
 
 
+
 const total = (counts         ) => counts.reduce((sum,count) => sum + count,0);
 const newFarm = ()      => {
   const now = Date.now();
@@ -961,8 +970,7 @@ function buyTrait(farm     ,crop       ,trait      ) {
   farm.levels[crop][trait]++;
   return true;
 }
-const growthTime = (crop       ,level       ) => Math.max(1,Math.round(1000*crops[crop].seconds/1.01**Math.min(100000,level)));
-const moistureTime = (level       ,crop=0) => Math.round(cropTimes[crop]*500*(1+level*.05));
+const growthTime = (crop       ,level       ) => Math.max(1,Math.round(1000*crops[crop].seconds*.975**level));
 function harvestAmount(level       ,random = Math.random,bonus=0) {
   let amount = 1;
   for (let chance = level*.01; chance > 0 && random() < Math.min(1,chance); chance /= 2) amount+=1+Math.floor(bonus)+(random()<bonus%1?1:0);
@@ -1064,14 +1072,15 @@ function plant(farm     , index       , crop       , now       ,line        ) {
   farm.plots[index] = {crop, planted:now, ready:null,...(line===undefined?{}:{line})};
   const planted=farm.plots[index] ;
   if(Math.random()<(effectiveGenome(farm,planted).powers.sprout??0)/100){planted.duration=plantGrowthTime(farm,planted);planted.remaining=Math.round(planted.duration*.8);}
-  if(farm.rainSoaked?.[index]){
-    farm.rainSoaked[index]=false;
-    water(farm,planted,now,now+cropTimes[crop]*10*(25+diamondLevel(farm,"rainReserve")));
-  }
   irrigate(farm,planted,now);
   return true;
 }
-function water(farm     ,plot      ,now       ,until = now+moistureTime(plot.line===undefined?farm.levels[plot.crop].moisture:0,plot.crop)*(1+(effectiveGenome(farm,plot).powers.moisture??0)/100)) {
+function wateringDuration(farm     ,plot      ,level=plot.line===undefined?farm.levels[plot.crop].moisture:0){
+  const growth=plot.duration??plantGrowthTime(farm,plot);
+  const moisturePower=effectiveGenome(farm,plot).powers.moisture??0;
+  return Math.max(1,Math.round(growth*.25*(1+level*.05)*(1+moisturePower/100)));
+}
+function water(farm     ,plot      ,now       ,until=now+wateringDuration(farm,plot)) {
   advanceDryGrowth(farm,plot,now);
   if (plot.ready !== null) {
     if (plot.ready <= now || plot.wetUntil === undefined) return false;
@@ -1087,7 +1096,7 @@ function water(farm     ,plot      ,now       ,until = now+moistureTime(plot.lin
   plot.ready = now+Math.ceil(plot.remaining ?? plot.duration);
   delete plot.remaining;
   plot.watered = now;
-    plot.wetUntil = until;
+  plot.wetUntil = until;
   return true;
 }
 function buyConvenience(farm     ,id            ) {
@@ -1166,12 +1175,6 @@ function resize(farm     ,next       ) {
   const rot=Array                (next**2).fill(null);
   farm.rot.forEach((record,i)=>{const row=Math.floor(i/farm.size),column=i%farm.size;if(row<next&&column<next)rot[row*next+column]=record;});
   farm.rot=rot;
-  const rainSoaked=Array         (next**2).fill(false);
-  farm.rainSoaked?.forEach((wet,index)=>{
-    const row=Math.floor(index/farm.size),column=index%farm.size;
-    if(row<next&&column<next)rainSoaked[row*next+column]=wet;
-  });
-  farm.rainSoaked=rainSoaked;
   farm.size = next;
   farm.plots = plots;
   return true;
@@ -1186,19 +1189,14 @@ function expand(farm     ) {
 }
 
 
-
-const rainLength = (level       ) => 30_000+10_000*level;
 const weatherMax = 20;
-const rainCooldown = (level       ) => Math.max(30_000,120_000-level*5_000);
 const weatherPrice = (level       ) => Math.ceil(10*(level+1)**2.2);
-const weatherUpgradeMax = (option               ) => option==='cooldown'?18:weatherMax;
 const randomWeatherSeconds = (spread       ,random           ) => Math.floor(random()*(spread+1))*1000;
-function rainRoll(from       ,level       ,random=Math.random) {
-  const dryPause=rainCooldown(level)+randomWeatherSeconds(120,random);
-  const wait=Math.floor(Math.log1p(-random())/Math.log1p(-.01))+1;
-  return from+dryPause+wait*1000;
+function rainRoll(from       ,random=Math.random) {
+  const wait=Math.floor(Math.log1p(-random())/Math.log1p(-.0036))+1;
+  return from+wait*1000;
 }
-const newWeather = (now       )         => ({intervalVersion:2,chance:0,cooldown:0,duration:0,last:null,end:null,next:rainRoll(now,0)});
+const newWeather = (now       )         => ({intervalVersion:3,chance:0,cooldown:0,duration:0,last:null,end:null,next:rainRoll(now)});
 function rainAt(farm     ,now       ) {
   return farm.weather.end !== null && now < farm.weather.end;
 }
@@ -1212,35 +1210,34 @@ function dryPlot(plot      ,now       ) {
 }
 function rainWindow(farm     ,start       ,end       ,now       ) {
   let changed = false;
-  if(now>=start&&(now<end||farm.rainSoakedThrough!==end)){
-    farm.rainSoaked??=farm.plots.map(()=>false);
-    farm.plots.forEach((plot,index)=>{
-      if(!plot&&!farm.rainSoaked [index]){
-        farm.rainSoaked [index]=true;
-        changed=true;
-      }
-    });
-    if(farm.rainSoakedThrough!==end){
-      farm.rainSoakedThrough=end;
-      changed=true;
-    }
-  }
   for (const plot of farm.plots) {
-    if (!plot || plot.planted>=end) continue;
-    const until = end+moistureTime(plot.line===undefined?farm.levels[plot.crop].moisture:0,plot.crop)*(1+(effectiveGenome(farm,plot).powers.moisture??0)/100);
-    const at = Math.max(start,plot.planted,plot.ready === null ? plot.wetUntil ?? 0 : 0);
-    if (at > now || at >= until) continue;
-    changed = dryPlot(plot,at) || changed;
-    changed = water(farm,plot,at,until) || changed;
-    const rainBoost=(5+diamondLevel(farm,"rainGrowth"))/100;
+    if (!plot || plot.mystery || plot.ready===null || plot.wetUntil===undefined) continue;
+    const rainBoost=.05;
     const from=Math.max(start,plot.watered??plot.planted,plot.rainThrough??0);
-    const to=Math.min(now,end);
-    if(plot.ready!==null && to>from && plot.ready>from){
+    const to=Math.min(now,end,from+2*(plot.wetUntil-from));
+    if(to>from && plot.ready>from){
+      plot.wetUntil+=Math.floor((to-start)/2)-Math.floor((from-start)/2);
       plot.ready=Math.ceil(plot.ready<=from+(to-from)*(1+rainBoost)?from+(plot.ready-from)/(1+rainBoost):plot.ready-(to-from)*rainBoost);
       plot.rainThrough=to;changed=true;
     }
   }
   return changed;
+}
+function applyRainWindow(farm     ,start       ,end       ,now       ){
+  const weather=farm.weather;
+  const surge=weather.surgeAt;
+  if(surge===undefined||surge>now)return rainWindow(farm,start,end,now);
+  rainWindow(farm,start,end,surge);
+  delete weather.surgeAt;
+  for(const plot of farm.plots){
+    if(!plot||plot.mystery||plot.ready===null||plot.ready<=surge||
+      (plot.wetUntil??0)<=surge||(plot.watered??plot.planted)>surge)continue;
+    const skipped=Math.max(1,Math.round((plot.ready-surge)*.05));
+    plot.ready=Math.max(surge,plot.ready-skipped);
+    weather.surged=true;
+  }
+  rainWindow(farm,start,end,now);
+  return true;
 }
 function irrigate(farm     ,plot      ,now       ) {
   if(!farm.convenience.irrigation || !farm.automation.irrigation || now>=farm.irrigationUntil)return false;
@@ -1254,12 +1251,16 @@ function irrigate(farm     ,plot      ,now       ) {
 function applyRain(farm     ,now       ) {
   const weather = farm.weather;
   let changed = false;
-  if (weather.last !== null && weather.end !== null) changed = rainWindow(farm,weather.last,weather.end,now);
+  if (weather.last !== null && weather.end !== null) changed = applyRainWindow(farm,weather.last,weather.end,now);
   while (weather.next <= now) {
     weather.last = weather.next;
-    weather.end = weather.last+rainLength(weather.duration)+randomWeatherSeconds(90,Math.random);
-    weather.next = rainRoll(weather.end,weather.cooldown);
-    rainWindow(farm,weather.last,weather.end,now);
+    weather.end = weather.last+30_000+randomWeatherSeconds(90,Math.random);
+    weather.next = rainRoll(weather.end);
+    const surgeDelay=(Math.floor(Math.log1p(-Math.random())/Math.log1p(-.005))+1)*1000;
+    const surgeAt=weather.last+surgeDelay;
+    weather.surgeAt=surgeAt<=weather.end?surgeAt:undefined;
+    weather.surged=false;
+    applyRainWindow(farm,weather.last,weather.end,now);
     changed = true;
   }
   for (const plot of farm.plots) if (plot) {
@@ -1267,16 +1268,6 @@ function applyRain(farm     ,now       ) {
     changed=dryPlot(plot,now)||changed;
   }
   return changed;
-}
-function buyWeather(farm     ,upgrade               ,now       ) {
-  const weather = farm.weather;
-  const level = weather[upgrade];
-  const price = weatherPrice(level);
-  if (level >= weatherUpgradeMax(upgrade) || farm.coins < price) return false;
-  applyRain(farm,now);
-  spendFarmCoins(farm,price);
-  weather[upgrade]++;
-  return true;
 }
 
 
@@ -1391,6 +1382,7 @@ function rentIrrigation(farm     ,now       ) {
 }
 
 const cropRarities = cropTiers.map(tier=>[0,2,3,4][tier]);
+const seedRarityOrder=crops.map((_,index)=>index).sort((a,b)=>cropTiers[b]-cropTiers[a]||cropPrices[b]-cropPrices[a]);
 const rarityColors = ['#C4CCD5','#84D7AC','#7FB7F7','#B29AF4','#F3C66F','#F59991','#F080C5'];
 
 const lineTrait = (farm     ,plot      ,id       ) => plot.line===undefined?0:effectiveGenome(farm,plot).powers[id]??0;
@@ -1431,6 +1423,24 @@ function checkMutations(farm     ,now       ,random=Math.random) {
   }
   return true;
 }
+function mutationReward(line     ){
+  const parents=line.parents??[];
+  if(!parents.length)return 1;
+  const strongerGene=(['gr','ga','re']         ).some(id=>
+    (line.genes?.[id]??1)>Math.max(...parents.map(parent=>parent.genome.genes[id])));
+  const strongerPower=Object.entries(line.powers??{}).some(([id,value])=>
+    parents.some(parent=>(parent.genome.powers[id]??0)>0)&&
+    value>Math.max(...parents.map(parent=>parent.genome.powers[id]??0)));
+  return 1+Number(strongerGene)+Number(strongerPower);
+}
+function discardMutation(farm     ,index       ,now       ){
+  const plot=farm.plots[index];
+  if(!plot?.mystery)return 0;
+  const points=plot.ready!==null&&plot.ready<=now?mutationReward(plot.mystery.preview??generateMutationLine(farm,plot)):0;
+  farm.mutationPoints=(farm.mutationPoints??0)+points;
+  farm.plots[index]=null;
+  return points;
+}
 function acceptMutation(farm     ,index       ,now       ,random=Math.random) {
   const plot=farm.plots[index];
   if(!plot?.mystery || plot.ready===null || plot.ready>now || hybridCount(farm)>=farm.hybridSlots)return null;
@@ -1438,8 +1448,10 @@ function acceptMutation(farm     ,index       ,now       ,random=Math.random) {
   line.enhancements={};
   line.name='Гибрид #'+(farm.lines.length+1);
   farm.lines.push(line);farm.plots[index]=null;
+  const points=mutationReward(line);
+  farm.mutationPoints=(farm.mutationPoints??0)+points;
   if(random()<.001)farm.relics++;
-  return {line,added:line.traits[0]??'growth',replaced:null};
+  return {line,added:line.traits[0]??'growth',replaced:null,points};
 }
 function generateMutationLine(farm     ,plot      ,random=Math.random)      {
   const parents=plot.mystery .genomes??plot.mystery .parents.map(crop=>genome(farm,{crop,planted:0,ready:null}));
@@ -1477,11 +1489,13 @@ function generateMutationLine(farm     ,plot      ,random=Math.random)      {
   return {name:'',crop:plot.crop,traits,powers,genes,enhancements:inheritEnhancements(parents,traits),seeds:1,parents:parents.map((genome,i)=>({name:plot.mystery .parentNames?.[i]??crops[plot.mystery .parents[i]].name,crop:plot.mystery .parents[i],genome:cloneGenome(genome)}))};
 }
 const hybridCount = (farm     ) => farm.lines.filter(line=>!line.archived && line.seeds>0).length;
-const hybridExpansionPrice = (farm     ) => Math.ceil(50*(1+Math.floor((farm.hybridSlots-20)/5))**1.65);
+const hybridExpansionPrice = (farm     ) => Math.ceil(5*(1+Math.floor((farm.hybridSlots-20)/5))**1.65);
 function expandHybridInventory(farm     ) {
   const price=hybridExpansionPrice(farm);
-  if(farm.coins<price)return false;
-  spendFarmCoins(farm,price);farm.hybridSlots+=5;return true;
+  if((farm.mutationPoints??0)<price)return false;
+  farm.mutationPoints=farm.mutationPoints -price;
+  farm.hybridSlots+=5;
+  return true;
 }
 function discardHybrid(farm     ,index       ) {
   const line=farm.lines[index];
@@ -1637,14 +1651,15 @@ const mutationChance = (potential       ) => .08+.32*((Math.max(1,Math.min(30,po
 const diamondBranches = {
   find:'💎 Поиск кристаллов', double:'✨ Двойная находка', charge:'⚡ Кристальный заряд',
   income:'🪙 Монеты при сборе', seedReturn:'🌱 Возврат семян', dryGrowth:'🌿 Рост без полива',
-  rainReserve:'💧 Запас дождевой влаги', rainGrowth:'🌧️ Рост под дождём',
-  fruit:'🧺 Дополнительный плод', extract:'⏱️ Досрочная переработка', discount:'🛒 Скидка на семена'
+  fruit:'🧺 Дополнительный плод', extract:'⏱️ Досрочная переработка', discount:'🛒 Скидка на семена',
+  enhancementShield:'🛡️ Щит усиления'
 }         ;
 
 
 const newDiamonds=()             =>({balance:0,charge:0,coinCarry:0,discountCarry:0,sets:[false,false,false,false],levels:{}});
 const diamondLevel=(farm     ,branch              )=>farm.diamonds?.levels[branch]??0;
 const diamondCurve=(level       )=>1-.99**level;
+const enhancementShieldChance=(level       )=>level>0?1-.95*.98**(level-1):0;
 const diamondPrice=(level       )=>Math.ceil(1.35**level);
 function diamondBonusCount(value       ,random           ){
   if(value<=0)return 0;
@@ -1764,12 +1779,15 @@ function transferEnhancement(farm     ,source       ,target       ,id       ){
  from.enhancements??={};to.enhancements??={};to.enhancements[id]=from.enhancements[id];from.enhancements[id]=old;return true;
 }
 function enhancementChance(level       ){return Math.max(.45,.99-level*.01);}
-function enhanceProperty(farm     ,index       ,id       ,random=Math.random)                         {
+function enhanceProperty(farm     ,index       ,id       ,random=Math.random)                                    {
  const line=farm.lines[index];if(!line||!line.traits.includes(id)||line.archived)return null;
  const level=line.enhancements?.[id]??0,key=propertyMaterialId(id);
  if(level>=100||(line.powers?.[id]??1)<=0||(farm.resources.items[key]??0)<1)return null;
  farm.resources.items[key]--;line.enhancements??={};
- const success=random()<enhancementChance(level);line.enhancements[id]=success?level+1:Math.max(0,level-1);
+ const success=random()<enhancementChance(level);
+ const shield=enhancementShieldChance(diamondLevel(farm,'enhancementShield'));
+ if(!success&&level>0&&shield>0&&random()<shield)return 'shielded';
+ line.enhancements[id]=success?level+1:Math.max(0,level-1);
  return success?'success':'failure';
 }
 
@@ -1808,13 +1826,26 @@ function basePackOdds(){
  for(const tier of cropTiers)tierCounts[tier]++;
  return crops.map((crop,i)=>crop.tier===0?90*inverse[i]/sum:[90,8,1.6,.4][crop.tier]/tierCounts[crop.tier]);
 }
+const packTierOdds=[
+ [99.5795,.4,.02,.0005],
+ [74.895,25,.1,.005],
+ [56.95,8,35,.05],
+ [84,8,4,4]
+];
+const legendaryLuckLimits=[5,6,8];
 function openingOdds(farm     ,pack       ,luck=farm.luck){
  if(!seedPacks[pack])return crops.map(()=>0);
  const base=basePackOdds(),tier=pack,t=Math.max(0,luck)/(Math.max(0,luck)+100);
- const start=[92,10,2,.5][tier],limit=[100-12e-7,80,50,[1,2,5][farm.packProgress.luckGate]][tier];
+ const starts=packTierOdds[pack];
+ const start=starts[tier],limit=[100-12e-7,80,50,legendaryLuckLimits[farm.packProgress.luckGate]][tier];
  const members=base.filter((_,i)=>cropTiers[i]===tier);
  const group=start+(limit-start)*t,baseGroup=total(members);
- return base.map((value,i)=>cropTiers[i]===tier?group*((1-t)*value/baseGroup+t/members.length):(100-group)*value/(100-baseGroup));
+ return base.map((value,i)=>{
+  const rarity=cropTiers[i];
+  if(rarity===tier)return group*((1-t)*value/baseGroup+t/members.length);
+  const rarityTotal=total(base.filter((_,crop)=>cropTiers[crop]===rarity));
+  return (100-group)*starts[rarity]/(100-start)*value/rarityTotal;
+ });
 }
 const packSlotLimit=(farm     )=>1+farm.packProgress.slots;
 function packOpeningPrice(pack       ,count       ){return Math.ceil(seedPacks[pack].price*count*(count>1?.75:1));}
@@ -1888,6 +1919,10 @@ const wheelInfo={
   diamonds:{icon:'💎',name:'Алмазы',minimum:5,reference:20}
 };
 const wheelStakeLimit=1_000_000_000_000;
+function wheelMaterialAmount(stake       ,unit       ){
+  if(stake<unit)return 0;
+  return Math.floor(1+Math.log10(stake/unit));
+}
 const wheelState=(farm     )           =>farm.wheels??={accounts:{},orbBoost:0};
 const wheelSeed=(random=Math.random)=>Math.floor(random()*2**32);
 function wheelAccount(farm     ,kind          ){
@@ -1926,15 +1961,15 @@ function wheelLayout(farm     ,kind          ,stake       )             {
     const crop=common[Math.floor(random()*common.length)]??0,amount=Math.floor(stake/100);
     regular=[
       {type:'seed',crop,amount,locked:amount===0,weight:7,color:colors[0],label:crops[crop].symbol+' Семена · '+crops[crop].name+' ×'+amount},
-      itemPrize(itemAt(0),Math.floor(stake/5000),4,colors[1]),
-      itemPrize(itemAt(1),Math.floor(stake/3000),3,colors[2])
+      itemPrize(itemAt(0),wheelMaterialAmount(stake,5000),4,colors[1]),
+      itemPrize(itemAt(1),wheelMaterialAmount(stake,3000),3,colors[2])
     ];
     rare={...itemPrize('duplication',Math.max(1,Math.floor(stake/info.minimum)),rareWeight,'#b381d9'),locked:rareLocked};
   }else if(kind==='orbs'){
     regular=[
-      itemPrize('set0',Math.floor(stake/40),7,colors[0]),
-      itemPrize('set1',Math.floor(stake/60),4,colors[1]),
-      itemPrize(random()<.25?'set3':'set2',Math.floor(stake/100),3,colors[2])
+      itemPrize('set0',wheelMaterialAmount(stake,40),7,colors[0]),
+      itemPrize('set1',wheelMaterialAmount(stake,60),4,colors[1]),
+      itemPrize(random()<.25?'set3':'set2',wheelMaterialAmount(stake,100),3,colors[2])
     ];
     rare={type:'boost',amount:stake*2,weight:rareWeight,color:'#b381d9',locked:rareLocked,label:'Двойные орбы · запас +'+stake*2};
   }else{
@@ -2031,6 +2066,8 @@ function loadFarm()      {
       s.offset=(s.offset??0)-Math.max(0,Date.now()-s.pausedAt);
       delete s.pausedAt;
     }
+    if(s.activePlayMs!==undefined&&!int(s.activePlayMs,0))throw new Error('Повреждено время игры');
+    if(s.backgroundPlayMs!==undefined&&!int(s.backgroundPlayMs,0))throw new Error('Повреждено фоновое время игры');
     if(s.statistics!==undefined){
       for(const name of ['coinsSpent','orbsSpent','diamondsSpent','materialsFound','crystalRolls','crystalDrops']){
         const value=s.statistics?.[name];
@@ -2045,6 +2082,7 @@ function loadFarm()      {
     if(s.harvestValue.length===3)s.harvestValue=s.harvestValue.concat(Array(crops.length-3).fill(0));
     if(!Array.isArray(s.harvestValue)||s.harvestValue.length!==crops.length||!s.harvestValue.every((v        )=>typeof v==="number"&&Number.isFinite(v)&&v>=0))throw new Error("Повреждена стоимость урожая");
     s.relics ??= 0;s.xray ??= false;
+    if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
     if(!int(s.relics,0)||typeof s.xray!=="boolean")throw new Error("Повреждены предметы");
     s.mutationCheck ??= Date.now()+(s.offset??0)+30000;
     if(!int(s.mutationCheck,0))throw new Error("Повреждён таймер селекции");
@@ -2088,8 +2126,6 @@ function loadFarm()      {
         throw new Error('Повреждена очередь экстрактора');
     }
     }
-    if(s.rainSoaked!==undefined&&(!Array.isArray(s.rainSoaked)||s.rainSoaked.length!==s.size**2||s.rainSoaked.some(value=>typeof value!=='boolean')))throw new Error('Повреждена влажность пустых грядок');
-    if(s.rainSoakedThrough!==undefined&&!int(s.rainSoakedThrough,0))throw new Error('Повреждена отметка дождя');
     s.discoveries ??= 0;
     s.discoveryUp ??= {speed:0,slots:0,amount:0};
     s.pendingDiscovery ??= [];
@@ -2147,12 +2183,15 @@ function loadFarm()      {
     if (s.weather.end === undefined) {
       s.weather.end = s.weather.last === null ? null : s.weather.last+120_000+10_000*s.weather.duration;
       if (s.weather.end !== null) {
-        const eligible = Math.max(Date.now()+s.offset,s.weather.end+rainCooldown(s.weather.cooldown));
-        s.weather.next = rainRoll(eligible,s.weather.cooldown);
+        const eligible = Math.max(Date.now()+s.offset,s.weather.end);
+        s.weather.next = rainRoll(eligible);
       }
     }
     if (s.weather.last === null ? s.weather.end !== null :
         !int(s.weather.end,s.weather.last+1,s.weather.next-1)) throw new Error('Повреждена длительность дождя');
+    if(s.weather.surgeAt!==undefined&&(s.weather.last===null||!int(s.weather.surgeAt,s.weather.last+1,s.weather.end)))
+      throw new Error('Повреждена отметка рывка дождя');
+    if(s.weather.surged!==undefined&&typeof s.weather.surged!=='boolean')throw new Error('Повреждено состояние рывка дождя');
     if(s.plots.some((p           )=>p?.line!==undefined && (!int(p.line,0,s.lines.length-1)||s.lines[p.line].crop!==p.crop))) throw new Error("Повреждено растение линии");
     if(s.plots.some((p           )=>p?.mystery && (!Array.isArray(p.mystery.parents)||p.mystery.parents.length!==2||!p.mystery.parents.every(i=>int(i,0,crops.length-1))||!Array.isArray(p.mystery.traits)||p.mystery.traits.length>10||!p.mystery.traits.every(t=>traitNames[t]))))throw new Error("Повреждена мутация");
     if(s.plots.some((plot           )=>plot?.mystery?.genomes && (plot.mystery.genomes.length!==2 || !plot.mystery.genomes.every(validGenome))))throw new Error("Повреждена генетика родителей");
@@ -2181,13 +2220,20 @@ function loadFarm()      {
     const validateEnhancements=(data            )=>{if(data.enhancements&&Object.entries(data.enhancements).some(([id,n])=>!traitNames[id]||!int(n,0,100)))throw new Error('Повреждены усиления');};
     for(const line of s.lines){validateEnhancements(line);for(const parent of line.parents??[])validateEnhancements(parent.genome);}
     for(const plot of s.plots)if(plot?.mystery){if(plot.mystery.preview){validateEnhancements(plot.mystery.preview);plot.mystery.preview.enhancements={};}for(const data of plot.mystery.genomes??[])validateEnhancements(data);}
-    const weatherMigrated=s.weather.intervalVersion!==2;
+    const weatherMigrated=s.weather.intervalVersion!==3;
     if(weatherMigrated){
       const weather=s.weather;
-      if(weather.intervalVersion!==1)s.coins+=5*weather.chance*(weather.chance+1);
-      weather.chance=0;
-      weather.next=rainRoll(Math.max(Date.now()+s.offset,weather.end??0),weather.cooldown);
-      weather.intervalVersion=2;
+      if(weather.intervalVersion===undefined)s.coins+=5*weather.chance*(weather.chance+1);
+      for(const level of [weather.cooldown,weather.duration]){
+        for(let n=0;n<level;n++)s.coins+=weatherPrice(n);
+      }
+      weather.chance=weather.cooldown=weather.duration=0;
+      if(weather.last!==null)weather.end=Math.min(weather.end,weather.last+120_000);
+      weather.next=rainRoll(Math.max(Date.now()+s.offset,weather.end??0));
+      weather.intervalVersion=3;
+      delete s.rainSoaked;
+      delete s.rainSoakedThrough;
+      for(const plot of s.plots)if(plot)delete plot.rainPrepared;
     }
     if(s.wheels!==undefined){
       const wheel=s.wheels;
@@ -2200,6 +2246,15 @@ function loadFarm()      {
     }
     s.diamonds??=newDiamonds();
     const diamonds=s.diamonds;
+    let refundedWeatherDiamonds=false;
+    for(const branch of ['rainReserve','rainGrowth']){
+      const level=diamonds.levels?.[branch];
+      if(level===undefined)continue;
+      if(!int(level,0)||!Number.isFinite(diamondPrice(Math.max(0,level-1))))throw new Error('Повреждён уровень погоды');
+      for(let n=0;n<level;n++)diamonds.balance+=diamondPrice(n);
+      delete diamonds.levels[branch];
+      refundedWeatherDiamonds=true;
+    }
     if(!Number.isInteger(diamonds.balance)||diamonds.balance<0||
       ![diamonds.charge,diamonds.coinCarry,diamonds.discountCarry].every(value=>Number.isFinite(value)&&value>=0&&value<=1)||
       !Array.isArray(diamonds.sets)||diamonds.sets.length!==4||!diamonds.sets.every(value=>typeof value==='boolean')||
@@ -2208,7 +2263,7 @@ function loadFarm()      {
     const awardedSets=awardDiamondSets(s);
     finishDiscovery(s);
     migratePackProgress(s);
-    if(finishPackOpening(s)||weatherMigrated||awardedSets||resumed)saveFarm(s);
+    if(finishPackOpening(s)||weatherMigrated||refundedWeatherDiamonds||awardedSets||resumed)saveFarm(s);
     return s;
   } catch (error) {
     storageError = true;
@@ -2324,7 +2379,7 @@ function render() {
   get("skin").textContent = farm.skin === "glossy" ? "✧ Глянец" : "◈ Классика";
   document.documentElement.dataset.accent = String(farm.accent);
   document.body.classList.toggle('raining',rain);
-  get('weather').textContent = rain ? '🌧️ Дождь · рост +'+(5+diamondLevel(farm,'rainGrowth'))+'% · ещё '+clock((farm.weather.end ?? now)-now) : '☀️ Ясно';
+  get('weather').textContent = rain ? '🌧️ Дождь · расход влаги ×0,5 · рост +5%'+(farm.weather.surged?' · Рывок роста':'')+' · ещё '+clock((farm.weather.end ?? now)-now) : '☀️ Ясно';
   get('theme').textContent = farm.theme === 'light' ? '☾ Тёмная' : '☀ Светлая';
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
@@ -2352,7 +2407,7 @@ function render() {
   const odds = packOdds(farm,Math.max(0,selectedPack));
   renderSeeds();
   renderTraits();
-  renderWeather();
+  if(typeof upgradeMaterialsReady!=='undefined'&&upgradeMaterialsReady)renderUpgradeMaterials();
   renderConveniences();
   renderCollection();
   renderDiscoveryUpgrades();
@@ -2377,7 +2432,7 @@ function renderSeeds() {
     row.disabled = locked;
     row.classList.toggle("out-of-stock",!farm.seeds[i]);
     row.draggable = !locked && farm.seeds[i] > 0;
-    row.style.order=String(-(get                   ('seed-sort').value==='rarity'?cropRarities[i]:farm.seeds[i]));
+    row.style.order=String(get                   ('seed-sort').value==='rarity'?seedRarityOrder.indexOf(i):-farm.seeds[i]);
     row.removeAttribute('title');
     get('seed-note-'+i).textContent = locked ? 'Открой в коллекции' :
       'Урожай · 🪙 '+cropPrices[i]+' за ед.';
@@ -2395,7 +2450,7 @@ function renderSeeds() {
 
 function renderField(now       ) {
   const field = get('field');
-  const dryCount=rainAt(farm,now)?0:farm.plots.filter(plot=>
+  const dryCount=farm.plots.filter(plot=>
     plot&&!plot.mystery&&(plot.ready===null||(plot.wetUntil!==undefined&&plot.wetUntil<=now&&plot.wetUntil<plot.ready))
   ).length;
   const warning=get('dry-field-notice');
@@ -2419,7 +2474,10 @@ function renderField(now       ) {
         if(plot)get('quick-seeds').hidden=true;
         const now = nowTime();
         if(!plot && farm.rot[index] && seed<0 && !isWatering()){openRot(index);return;}
-        if(plot?.mystery){if(isGathering())takeMystery(index,tile);return;}
+        if(plot?.mystery){
+          if(isGathering()||(!isWatering()&&(plot.ready??Infinity)>now))openMutation(index);
+          return;
+        }
         applyRain(farm,now);
         if (isGathering() && collectAnimated(index,now,tile)) return commit('Урожай на складе.');
         if (isWatering() && plot && water(farm,plot,now)) {
@@ -2455,7 +2513,7 @@ function renderField(now       ) {
     const ready = !!plot && plot.ready !== null && plot.ready <= now;
     tile.setAttribute('aria-pressed',String(index===selected));
     tile.setAttribute('aria-label','Грядка '+(index+1)+(plot?.mystery?' · неизвестное растение':crop ? ' · '+crop.name : ' · пустая'));
-    tile.dataset.wet=String(rainAt(farm,now)||(plot?(plot.wetUntil??0)>now:!!farm.rainSoaked?.[index]));
+    tile.dataset.wet=String((plot?.wetUntil??0)>now);
     tile.dataset.state = !plot ? rot?'rotten':'empty' : ready ? 'ready' : plot.ready === null ? 'dry' : 'growing';
     tile.style.setProperty('--crop',crop?.color ?? 'var(--accent)');
     tile.children[0].textContent = String(index+1);
@@ -2466,7 +2524,7 @@ function renderField(now       ) {
     const icon = !plot ? '' : ready ? crop .symbol : halfway ? '🌱' : '🟤';
     const visual=tile.children[1]               ;
     if(plot?.mystery){
-      delete visual.dataset.art;visual.classList.remove("has-crop-art");visual.textContent=farm.xray?crops[plot.crop].symbol:"?";
+      delete visual.dataset.art;visual.classList.remove("has-crop-art");visual.textContent=farm.xray&&ready?crops[plot.crop].symbol:"?";
       const progress=1-(remaining??duration)/duration;visual.style.setProperty("--mystery-size",String(.4+.6*Math.max(0,Math.min(1,progress))));
     } else if(plot){
       const progress=remaining===undefined?0:1-remaining/duration;
@@ -2483,15 +2541,15 @@ function renderField(now       ) {
   });
   const hint = get('field-tip');
   const hovered = field.children[hoveredPlot];
-  hint.hidden = !get('quick-seeds').hidden || !hovered || (!farm.plots[hoveredPlot] && !farm.rot[hoveredPlot] && !rainAt(farm,now));
+  hint.hidden = !get('quick-seeds').hidden || !hovered || (!farm.plots[hoveredPlot] && !farm.rot[hoveredPlot]);
   hint.classList.toggle('hybrid-tip',!!farm.plots[hoveredPlot]?.line || farm.plots[hoveredPlot]?.line===0);
   if (!hint.hidden) {
     const wetUntil = farm.plots[hoveredPlot]?.wetUntil ?? 0;
     hint.textContent = hovered.children[2].textContent+' · '+hovered.children[3].textContent+
-      (rainAt(farm,now) ? ' · Полито' : wetUntil > now ? ' · 💧 '+clock(wetUntil-now) : '');
+      (wetUntil > now ? ' · 💧 '+clock(wetUntil-now) : '');
     const plot=farm.plots[hoveredPlot];
 
-    if(plot?.mystery && farm.xray && plot.mystery.preview){
+    if(plot?.mystery && (plot.ready??Infinity)<=now && farm.xray && plot.mystery.preview){
       const genes=plot.mystery.preview.genes ;
       hint.textContent=crops[plot.crop].name+' · ⚡ Gr '+genes.gr+' / 💰 Ga '+genes.ga+' / 🛡️ Re '+genes.re+' · '+hovered.children[3].textContent;
     }
@@ -2650,8 +2708,8 @@ function sow(index       ,crop       ) {
   selected = index;
   seed = crop;
   watering = false;gathering=false;
-  plant(farm,index,crop,now,selectedLine);
   applyRain(farm,now);
+  plant(farm,index,crop,now,selectedLine);
   commit('Семя посажено.');
 }
 button('water').onclick = event => {
@@ -3009,7 +3067,7 @@ function workAt(stroke      ,x       ,y       ,now       ) {
   stroke.visited.add(index);
   if (stroke.tool === 'collect') {
     if(!isGathering())return false;
-    if(farm.plots[index]?.mystery){takeMystery(index,tile);return true;}
+    if(farm.plots[index]?.mystery){openMutation(index);return true;}
     return collectAnimated(index,now,tile)>0;
   }
   if (stroke.tool === 'plant') return plant(farm,index,stroke.crop,now,selectedLine);
@@ -3088,11 +3146,48 @@ window.addEventListener('blur',resetTilt);
 canTilt.addEventListener('change',resetTilt);
 
 const upgradesDialog = get                   ('upgrades-dialog');
+const upgradeWallet=get('upgrade-wallet');
+const upgradeMaterialTip=document.createElement('span');
+upgradeMaterialTip.id='upgrade-material-tip';
+upgradeMaterialTip.className='glass';
+upgradeMaterialTip.setAttribute('role','tooltip');
+upgradeMaterialTip.hidden=true;
+upgradeWallet.append(upgradeMaterialTip);
+var upgradeMaterialsReady=true;
+
+function renderUpgradeMaterials(){
+  if(upgradeMaterialTip.hidden||!upgradesDialog.open)return;
+  const items=materials.map(item=>({item,count:farm.resources.items[item.id]??0}))
+    .filter(({count})=>count>0).sort((a,b)=>b.count-a.count);
+  const signature=JSON.stringify(items.map(({item,count})=>[item.id,count]));
+  if(upgradeMaterialTip.dataset.signature===signature)return;
+  upgradeMaterialTip.dataset.signature=signature;
+  upgradeMaterialTip.replaceChildren(...items.map(({item,count})=>{
+    const entry=document.createElement('span');
+    entry.textContent=item.icon+' '+number(count);
+    entry.setAttribute('aria-label',item.name+' '+number(count));
+    return entry;
+  }));
+  if(!items.length)upgradeMaterialTip.textContent='Материалов пока нет';
+}
+function showUpgradeMaterials(){
+  upgradeMaterialTip.hidden=false;
+  delete upgradeMaterialTip.dataset.signature;
+  renderUpgradeMaterials();
+}
+function hideUpgradeMaterials(){upgradeMaterialTip.hidden=true;}
+upgradeWallet.addEventListener('pointerenter',showUpgradeMaterials);
+upgradeWallet.addEventListener('pointerleave',()=>{if(document.activeElement!==upgradeWallet)hideUpgradeMaterials();});
+upgradeWallet.addEventListener('focus',showUpgradeMaterials);
+upgradeWallet.addEventListener('blur',()=>{if(!upgradeWallet.matches(':hover'))hideUpgradeMaterials();});
+upgradesDialog.addEventListener('scroll',hideUpgradeMaterials);
+upgradesDialog.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&!upgradeMaterialTip.hidden){hideUpgradeMaterials();event.preventDefault();}
+});
 button('upgrades-open').onclick = () => upgradesDialog.showModal();
-const upgradeTabs = ['packs','seeds','weather','tools','discovery','extractor','hybrids'];
+const upgradeTabs = ['packs','seeds','tools','discovery','extractor','hybrids'];
 for (const tab of upgradeTabs) button('upgrade-tab-'+tab).onclick = () => {
   get('trait-panel').hidden = true;
-  get('weather-panel').hidden = true;
   for (const category of upgradeTabs) {
     const active = category === tab;
     button('upgrade-tab-'+category).setAttribute('aria-pressed',String(active));
@@ -3100,14 +3195,11 @@ for (const tab of upgradeTabs) button('upgrade-tab-'+tab).onclick = () => {
   }
 };
 const traitPanel = get('trait-panel');
-const weatherPanel = get('weather-panel');
 button('trait-close').onclick = () => {traitPanel.hidden=true;};
-button('weather-close').onclick = () => {weatherPanel.hidden=true;};
-upgradesDialog.onclose = () => {if(upgradesDialog.open)return;traitPanel.hidden=true;weatherPanel.hidden=true;};
+upgradesDialog.onclose = () => {if(upgradesDialog.open)return;traitPanel.hidden=true;hideUpgradeMaterials();};
 upgradesDialog.addEventListener('click',event => {
   if (!(event.target instanceof Element)) return;
   if (!event.target.closest('#trait-panel,#upgrade-catalog button')) traitPanel.hidden=true;
-  if (!event.target.closest('#weather-panel,#weather-catalog button')) weatherPanel.hidden=true;
 });
 let upgradeCrop = 0;
 for (const i of crops.map((_,index)=>index).sort((a,b)=>cropTiers[a]-cropTiers[b]||cropTimes[a]-cropTimes[b])) {
@@ -3165,9 +3257,9 @@ function renderTraits() {
     const price = traitPrice(farm.levels[index][id]);
     const orbs=traitOrbPrice(farm.levels[index][id]);
     const effect = (n       ) => id === 'growth' ? clock(growthTime(index,n)) :
-      id === 'yield' ? formatChance(n)+'%' : clock(moistureTime(n,index));
+      id === 'yield' ? formatChance(n)+'%' : clock(wateringDuration(farm,{crop:index,planted:0,ready:null},n));
     const explanation = id === 'growth' ? ' до сбора после полива' :
-      id === 'yield' ? ' стартового шанса дополнительного урожая' : ' влаги от лейки или после дождя';
+      id === 'yield' ? ' стартового шанса дополнительного урожая' : ' влаги от лейки';
     get('trait-detail-'+id).textContent = 'Ур. '+level+' · '+effect(level)+
       (maxed ? '' : ' → '+effect(level+1))+explanation;
     const buy = button('trait-buy-'+id);
@@ -3184,28 +3276,6 @@ document.addEventListener('pointermove',event => {
   document.body.style.setProperty('--background-x',((event.clientX/window.innerWidth-.5)*150)+'px');
   document.body.style.setProperty('--background-y',((event.clientY/window.innerHeight-.5)*120)+'px');
 });
-button('rain-card').onclick = () => {weatherPanel.hidden=!weatherPanel.hidden; renderWeather();};
-const weatherOptions                  = ['cooldown','duration'];
-for (const option of weatherOptions) button('buy-weather-'+option).onclick = () => {
-  if (buyWeather(farm,option,nowTime())) commit('Погода улучшена.');
-};
-function renderWeather() {
-  button('rain-card').setAttribute('aria-pressed',String(!weatherPanel.hidden));
-  for (const option of weatherOptions) {
-    const level = farm.weather[option];
-    const maxed = level >= weatherUpgradeMax(option);
-    const price = weatherPrice(level);
-    const effect = (n       ) => {
-      const duration=option==='duration';
-      const minimum=duration?rainLength(n):rainCooldown(n);
-      return clock(minimum)+'–'+clock(minimum+(duration?90_000:120_000));
-    };
-    get('weather-'+option+'-preview').textContent = 'Ур. '+level+' · '+effect(level)+(maxed ? '' : ' → '+effect(level+1));
-    const buy = button('buy-weather-'+option);
-    buy.disabled = maxed || farm.coins < price;
-    buy.textContent = maxed ? 'Максимальный уровень' : 'Улучшить · 🪙 '+price;
-  }
-}
 const toolConveniences=conveniences.filter(option=>option.id!=='irrigation'&&option.id!=='replant');
 for(const option of toolConveniences){
   const panel=document.createElement('section');
@@ -3410,7 +3480,7 @@ button('debug-unlock-crops').onclick=()=>{
 };
 button('reset-game').onclick=()=>{
   if(discoveryBusy || rolling || !confirm('Удалить весь прогресс, коллекцию и улучшения?'))return;
-  try{if(saveFarm({...newFarm(),saveCheats:farm.saveCheats}))location.reload();}
+  try{if(saveFarm({...newFarm(),saveCheats:farm.saveCheats}))reloadFarm();}
   catch(error){console.error('Ферма: не удалось сбросить прогресс',error);}
 };
 document.querySelectorAll                   ('dialog').forEach(dialog=>{
@@ -3696,8 +3766,8 @@ function renderLines(){
   get('hybrid-capacity').textContent=used+'/'+farm.hybridSlots;
   get('hybrid-coins').textContent=number(farm.coins);
   const price=hybridExpansionPrice(farm);
-  button('hybrid-expand').disabled=farm.coins<price;
-  button('hybrid-expand').textContent='+5 мест · 🪙 '+number(price);
+  button('hybrid-expand').disabled=(farm.mutationPoints??0)<price;
+  button('hybrid-expand').textContent='+5 мест · 🧬 '+number(price);
   button('hybrid-delete-mode').textContent=deleteMode?(markedHybrids.size?'Удалить ('+markedHybrids.size+')':'Отменить'):'Удалить';
   get('hybrid-delete-hint').textContent=deleteMode?'Выдели семена кликом или протягиванием. Двойное нажатие «Удалить» подтверждает.':'';
   const query=searchHybrids.value.trim().toLocaleLowerCase('ru');
@@ -3746,19 +3816,32 @@ function renderLines(){
 }
 const mutationDialog=get                   ('mutation-dialog');
 let mutationIndex=-1;
+let mutationRevealed=false;
 function openMutation(index       ){
   mutationIndex=index;
   const plot=farm.plots[index];
   if(!plot?.mystery)return;
   const ready=plot.ready!==null&&plot.ready<=nowTime();
-  get('mutation-icon').textContent=crops[plot.crop].symbol;
-  get('mutation-info').textContent='Гибрид '+plot.mystery.parents.map(i=>crops[i].name).join(' × ')+
-    ' · Время роста '+clock(plot.duration )+(ready?' · Созрел':' · До созревания '+clock(plot.ready -nowTime()));
+  mutationRevealed=ready;
+  get('mutation-icon').textContent=ready?crops[plot.crop].symbol:'?';
+  get('mutation-info').textContent=ready
+    ?'Гибрид '+plot.mystery.parents.map(i=>crops[i].name).join(' × ')+' · Время роста '+clock(plot.duration??crops[plot.crop].seconds*1000)+' · Созрел'
+    :'Находка ещё растёт. Вид и свойства станут известны после полного созревания.';
   get('mutation-result').textContent='';
-  if(plot.mystery.preview)renderComparison(mutationDialog,plot.mystery.preview,'mutation-genes','mutation-traits');
+  for(const section of mutationDialog.querySelectorAll             ('#mutation-genes,#mutation-traits,#mutation-comparison-note,.parent-panel')){
+    section.hidden=!ready;
+    if(section.id!=='mutation-comparison-note')section.replaceChildren();
+  }
+  if(ready&&plot.mystery.preview)renderComparison(mutationDialog,plot.mystery.preview,'mutation-genes','mutation-traits');
+  button('mutation-accept').hidden=!ready;
   button('mutation-accept').disabled=!ready||hybridCount(farm)>=farm.hybridSlots;
-  if(hybridCount(farm)>=farm.hybridSlots)get('mutation-result').textContent='Инвентарь заполнен. Расширь его или освободи место — находка останется на грядке.';
-  button('mutation-discard').hidden=false;resetDeletePress(button('mutation-discard'));
+  if(ready&&hybridCount(farm)>=farm.hybridSlots)get('mutation-result').textContent='Инвентарь заполнен. Расширь его или освободи место — находка останется на грядке.';
+  const discard=button('mutation-discard');
+  discard.hidden=false;
+  delete discard.dataset.confirmEarly;
+  discard.textContent='Удалить находку';
+  resetDeletePress(discard);
+  if(!ready)discard.removeAttribute('title');
   if(!mutationDialog.open)mutationDialog.showModal();
 }
 button('mutation-accept').onclick=()=>{
@@ -3770,11 +3853,22 @@ button('mutation-accept').onclick=()=>{
   button('mutation-accept').disabled=true;button('mutation-discard').hidden=true;
   if(result.line.parents)renderComparison(mutationDialog,result.line,'mutation-genes','mutation-traits');
   mutationDialog.close();
-  commit('Новая линия на складе.');
+  commit('Новая линия на складе · 🧬 +'+result.points);
 };
 button('mutation-discard').onclick=()=>{
-  if(!farm.plots[mutationIndex]?.mystery||!confirmDeletePress(button('mutation-discard')))return;
-  farm.plots[mutationIndex]=null;mutationDialog.close();commit('Находка удалена.');
+  if(!farm.plots[mutationIndex]?.mystery)return;
+  const control=button('mutation-discard');
+  if(!mutationRevealed){
+    if(control.dataset.confirmEarly!=='true'){
+      control.dataset.confirmEarly='true';
+      control.textContent='Да, удалить';
+      get('mutation-result').textContent='Находка ещё не созрела. Точно удалить её? Вид и свойства останутся неизвестными.';
+      return;
+    }
+  }else if(!confirmDeletePress(control))return;
+  const points=discardMutation(farm,mutationIndex,nowTime());
+  mutationDialog.close();
+  commit('Находка удалена.'+(points?' 🧬 +'+points:''));
 };
 mutationDialog.addEventListener('click',event=>{
   if(event.target!==mutationDialog)return;
@@ -3784,11 +3878,6 @@ mutationDialog.addEventListener('click',event=>{
 get                  ('debug-amount').addEventListener('keydown',event=>{
   if(event.key==='Enter'){event.preventDefault();button('debug-coins').click();}
 });
-function takeMystery(index       ,tile            ){
-  const plot=farm.plots[index];if(!plot?.mystery)return;
-  if((plot.ready??Infinity)>nowTime()){notice='Находка ещё растёт.';render();return;}
-  openMutation(index);
-}
 button('buy-xray').onclick=()=>{if(buyXray(farm))commit('Xray открыт.');};
 const dock=get('hybrid-dock'),dockWrap=get('hybrid-dock-wrap'),dockTip=get('dock-tooltip');
 
@@ -4102,16 +4191,85 @@ function animateInventoryFold(){
   animation.onfinish=()=>ghost.remove();animation.oncancel=()=>ghost.remove();
 }
 
+
+let playTimeCounter                     =null;
+let playTimeStartedAt=0;
+const playIdleLimitMs=60_000;
+let playActiveUntil=0;
+const totalPlayTime=()=>(farm.activePlayMs??0)+(farm.backgroundPlayMs??0);
+let lastPlayTimeSave=totalPlayTime();
+let reloadingFarm=false;
+
+function updatePlayTime(nextCounter                     ){
+  const now=Math.floor(performance.now());
+  if(playTimeCounter!==null){
+    const activeMs=playTimeCounter==='activePlayMs'
+      ?Math.max(0,Math.min(now,playActiveUntil)-playTimeStartedAt)
+      :0;
+    farm.activePlayMs=(farm.activePlayMs??0)+activeMs;
+    farm.backgroundPlayMs=(farm.backgroundPlayMs??0)+now-playTimeStartedAt-activeMs;
+  }
+  playTimeStartedAt=now;
+  playTimeCounter=nextCounter;
+  if(nextCounter!=='activePlayMs')playActiveUntil=0;
+}
+
+function recordPlayInput(event      ){
+  if(!event.isTrusted||reloadingFarm||document.hidden||!document.hasFocus())return;
+  updatePlayTime('activePlayMs');
+  playActiveUntil=playTimeStartedAt+playIdleLimitMs;
+}
+
+function savePlayTime(){
+  const elapsed=totalPlayTime();
+  if(elapsed!==lastPlayTimeSave&&saveFarm(farm))lastPlayTimeSave=elapsed;
+}
+
+function syncPlayTime(){
+  if(reloadingFarm)return;
+  const active=!document.hidden&&document.hasFocus();
+  updatePlayTime(active?'activePlayMs':'backgroundPlayMs');
+  savePlayTime();
+}
+
+function reloadFarm(){
+  reloadingFarm=true;
+  location.reload();
+}
+
+document.addEventListener('visibilitychange',syncPlayTime);
+for(const type of ['pointerdown','keydown','wheel']){
+  document.addEventListener(type,recordPlayInput,{capture:true,passive:true});
+}
+window.addEventListener('focus',syncPlayTime);
+window.addEventListener('blur',()=>{
+  if(reloadingFarm)return;
+  updatePlayTime('backgroundPlayMs');
+  savePlayTime();
+});
+window.addEventListener('pagehide',()=>{
+  if(reloadingFarm)return;
+  updatePlayTime(null);
+  savePlayTime();
+});
+window.addEventListener('pageshow',syncPlayTime);
+syncPlayTime();
+
 const tick = () => {
+  if(reloadingFarm)return;
+  updatePlayTime(playTimeCounter);
   advanceDebug();
+  const weatherChanged=applyRain(farm,nowTime());
   const abilitiesChanged=updatePlantAbilities(farm,nowTime());
   const ripened=updateRipening(farm,nowTime());
   const mutated=checkMutations(farm,nowTime());
-  const weatherChanged=applyRain(farm,nowTime());
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(abilitiesChanged || ripened || mutated || weatherChanged || extracted || speed !== 1)saveFarm(farm);
+  if(abilitiesChanged || ripened || mutated || weatherChanged || extracted || speed !== 1 ||
+    totalPlayTime()-lastPlayTimeSave>=15_000){
+    if(saveFarm(farm))lastPlayTimeSave=totalPlayTime();
+  }
   const selection=document.getSelection();
   if(selection&&!selection.isCollapsed&&selection.anchorNode?.parentElement?.closest('dialog[open]'))renderField(nowTime());
   else render();
@@ -4210,7 +4368,7 @@ button('seed-sort').onchange=renderSeeds;
 function openQuickSeeds(index       ,tile            ){
   const menu=get('quick-seeds');menu.replaceChildren();
   const available=crops.map((_,i)=>i).filter(i=>unlocked(farm,i)&&farm.seeds[i]>0);
-  available.sort((a,b)=>get                   ('seed-sort').value==='rarity'?cropRarities[b]-cropRarities[a]:farm.seeds[b]-farm.seeds[a]);
+  available.sort((a,b)=>get                   ('seed-sort').value==='rarity'?seedRarityOrder.indexOf(a)-seedRarityOrder.indexOf(b):farm.seeds[b]-farm.seeds[a]);
   for(const i of available){
     const item=document.createElement('button');item.type='button';item.className='quiet';
     item.setAttribute('aria-label',crops[i].name+' · '+number(farm.seeds[i]));
@@ -4261,7 +4419,8 @@ function renderAlpha(){
  if(get                   ('diamonds-dialog').open)renderDiamondShop();
  get('resource-upgrade-title').dataset.upgradeTarget=resourceCategory==='cultures'?'discovery':resourceCategory==='properties'?'hybrids':resourceCategory==='special'?'tools':'seeds';
  get('orbs').textContent=number(farm.resources.orbs);get('upgrade-orbs').textContent=number(farm.resources.orbs);
- get('resources-balance').textContent='🪙 '+number(farm.coins)+' · 🔮 '+number(farm.resources.orbs)+' · 🧬 0';
+ get('mutation-points').textContent=number(farm.mutationPoints??0);
+ get('resources-balance').textContent='🪙 '+number(farm.coins)+' · 🔮 '+number(farm.resources.orbs)+' · 🧬 '+number(farm.mutationPoints??0);
  if(typeof refinementReady!=='undefined'&&refinementReady)renderResourceCollections();
  const level=farm.resources.duplication,chance=level?1+(level-1)*.1:0;
  get('duplicate-info').textContent='Шанс: '+formatChance(chance)+'% · '+Math.floor(chance/100)+' дополнительных копий гарантированно + '+formatChance(chance%100)+'% ещё одной. Орбы и кристалл не дублируются.';
@@ -4284,7 +4443,25 @@ function renderEnhancements(){
  const text=document.createElement('p');text.textContent=powerLabel(line,id)+' · успех '+Math.round(enhancementChance(level)*100)+'%';
  const buy=document.createElement('button');buy.className='quiet';buy.textContent=level>=100?'Максимальное усиление':'Усилить · '+material.icon+' 1 (есть '+number(farm.resources.items[material.id]??0)+')';buy.disabled=level>=100||line.powers?.[id]===0||(farm.resources.items[material.id]??0)<1;
  if(line.powers?.[id]===0)buy.textContent='Сначала повысь свойство селекцией';
- buy.onclick=()=>{const result=enhanceProperty(farm,index,id);if(!result)return;get('enhance-result').textContent=result==='success'?'Успех! Усиление +1%.':'Неудача. Один уровень усиления потерян; врождённое свойство сохранено.';commit(get('enhance-result').textContent );};
+ buy.onclick=()=>{
+  const result=enhanceProperty(farm,index,id);
+  if(!result)return;
+  const message=result==='success'?'Успех! Усиление +1%.':
+    result==='shielded'?'🛡️ Щит сохранил усиление. Материал израсходован.':
+    'Неудача. Усиление снизилось на один уровень.';
+  get('enhance-result').textContent=message;
+  commit(message);
+  if(result==='shielded'){
+    const preview=get('enhancement-preview');
+    preview.querySelector('.enhancement-shield')?.remove();
+    const badge=document.createElement('span');
+    badge.className='enhancement-shield';
+    badge.textContent='🛡️';
+    badge.setAttribute('aria-hidden','true');
+    preview.append(badge);
+    setTimeout(()=>badge.remove(),1100);
+  }
+ };
  row.append(text,buy);
  if(typeof refinementReady!=='undefined'&&refinementReady){const move=document.createElement('button');move.className='quiet transfer-enhancement';move.dataset.property=id;move.textContent='Перенести с другой линии';move.disabled=!farm.lines.some((_,source)=>canTransferEnhancement(farm,source,index,id));move.title='Выбери источник с большим усилением. Обе линии должны быть полностью собраны с грядок.';move.onclick=()=>startEnhancementTransfer(index,id);row.append(move);}
  host.append(row);
@@ -4319,11 +4496,10 @@ const diamondEffects                                             ={
   income:level=>level+'% цены плодов начисляется сразу при сборе.',
   seedReturn:level=>diamondPercent(diamondCurve(level))+' шанс получить обычное семя за грядку.',
   dryGrowth:level=>diamondPercent(diamondCurve(level))+' обычной скорости на сухой грядке.',
-  rainReserve:level=>(25+level)+'% базового роста во влаге после посадки на мокрую грядку.',
-  rainGrowth:level=>'+'+(5+level)+'% скорости роста под дождём.',
   fruit:level=>level+'% дополнительного урожая в пересчёте на один плод за грядку.',
   extract:level=>'Шанс закончить плод раньше растёт каждую секунду до '+diamondPercent(diamondCurve(level))+'.',
-  discount:level=>diamondPercent(.5*(1-.9**level))+' скидки в магазине семян.'
+  discount:level=>diamondPercent(.5*(1-.9**level))+' скидки в магазине семян.',
+  enhancementShield:level=>diamondPercent(enhancementShieldChance(level))+' защитить уровень усиления при неудаче. Материал расходуется.'
 };
 const diamondCards=Object.entries(diamondBranches).map(([id,label])=>{
   const branch=id                 ;
@@ -4494,7 +4670,8 @@ hybridsDialog.addEventListener('close',finishEnhancementPicker);
 function renderEnhancementSelection(){
  const raw=get                   ('enhance-line').value,line=raw===''?undefined:farm.lines[Number(raw)];
  if(!line){enhancementPreview.textContent='';chooseEnhancement.textContent='Выберите гибрид';return;}
- enhancementPreview.textContent=crops[line.crop].symbol+' '+line.name+' · ⚡ Gr '+(line.genes?.gr??1)+' / 💰 Ga '+(line.genes?.ga??1)+' / 🛡️ Re '+(line.genes?.re??1);
+ const caption=crops[line.crop].symbol+' '+line.name+' · ⚡ Gr '+(line.genes?.gr??1)+' / 💰 Ga '+(line.genes?.ga??1)+' / 🛡️ Re '+(line.genes?.re??1);
+ if(enhancementPreview.firstChild?.nodeValue!==caption)enhancementPreview.textContent=caption;
  chooseEnhancement.textContent='Выбран '+line.name+' · сменить';
 }
 renderAlpha();
@@ -4536,17 +4713,31 @@ function renderFarmStatistics(){
     ['💎 Потрачено алмазов',stats.diamondsSpent]
   ];
   const host=get('resource-stats');
+  const timers=[
+    {id:'total-play-time',label:'⏱ Общее время игры',ms:totalPlayTime()},
+    {id:'active-play-time',label:'⏱ Активное время',ms:farm.activePlayMs}
+  ].map(({id,label,ms})=>{
+    const elapsed=Math.floor((ms??0)/1000);
+    return {id,label,text:Math.floor(elapsed/3600)+' ч '+Math.floor(elapsed/60)%60+' мин '+elapsed%60+' с'};
+  });
   const signature=JSON.stringify(entries);
-  if(host.dataset.signature===signature)return;
+  if(host.dataset.signature===signature){
+    for(const {id,text} of timers){
+      const amount=get(id);
+      if(amount.textContent!==text)amount.textContent=text;
+    }
+    return;
+  }
   host.dataset.signature=signature;
   const list=document.createElement('dl');
-  for(const [label,value] of entries){
+  for(const {id,label,text} of [...timers,...entries.map(([label,value])=>({id:'',label,text:number(value)}))]){
     const row=document.createElement('div');
     row.className='glass panel';
     const name=document.createElement('dt');
     name.textContent=label;
     const amount=document.createElement('dd');
-    amount.textContent=number(value);
+    if(id)amount.id=id;
+    amount.textContent=text;
     row.append(name,amount);
     list.append(row);
   }
@@ -4749,7 +4940,7 @@ function renderPackWorkshop(){
  }
  button('pack-buy-'+id).disabled=!canPayPackOffer(offer);button('pack-buy-'+id).textContent=offer.max?'Максимум':packCostText(offer);}
  for(const kind of ['luck']         ){const offer=packGateOffer(farm,kind),max=kind==='luck'?farm.packProgress.luckGate>=2:farm.packProgress.refundGate;
- get('pack-gate-'+kind).textContent=kind==='refund'?'Открывает возврат выше 20%. Достигни возврата 20% и внеси материалы.':farm.packProgress.luckGate===0?'Следующий предел: 2% легендарных суммарно. Требуются все виды семян.':'Следующий предел: 5% легендарных суммарно. Требуются поле 8×8, все виды и 100 000 собранных плодов.';
+ get('pack-gate-'+kind).textContent=max?'Предел легендарной удачи: 8% суммарно.':farm.packProgress.luckGate===0?'Следующий предел: 6% легендарных суммарно. Требуются все виды семян.':'Следующий предел: 8% легендарных суммарно. Требуются поле 8×8, все виды и 100 000 собранных плодов.';
  button('pack-gate-buy-'+kind).textContent=max?'Максимум':packCostText(offer);button('pack-gate-buy-'+kind).disabled=max||!canPayPackOffer(offer);}
  button('starter-rescue').hidden=!needsStarterRescue(farm);
  applyPlantGlows();
@@ -4867,9 +5058,10 @@ function switchSaveSlot(slot       ){
       const cheats=get                  ('save-slot-cheats').checked;
       if(!saveFarm({...newFarm(),saveCheats:cheats},target))throw new Error('Не удалось создать ферму');
     }
+    syncPlayTime();
     if(slot!==activeSlot&&!saveFarm({...farm,pausedAt:Date.now()}))throw new Error('Не удалось сохранить текущую ферму');
     localStorage.setItem(activeSlotKey,String(slot));
-    location.reload();
+    reloadFarm();
   }catch(error){
     saveSlotStatus.textContent='Не удалось переключить слот.';
     console.error('Ферма: ошибка переключения сохранения',error);
@@ -4903,7 +5095,10 @@ function bindSaveDeletion(control                  ,slot       ){
 
 function deleteSaveSlot(slot       ){
   try{
-    if(slot!==activeSlot&&!saveFarm(farm))throw new Error('Не удалось сохранить текущую ферму');
+    if(slot!==activeSlot){
+      syncPlayTime();
+      if(!saveFarm(farm))throw new Error('Не удалось сохранить текущую ферму');
+    }
     const previous=[1,2,3].map(id=>localStorage.getItem(slotKey(id)));
     const activeBefore=localStorage.getItem(activeSlotKey);
     const remaining=previous.filter((raw,index)=>raw!==null&&index!==slot-1);
@@ -4926,7 +5121,7 @@ function deleteSaveSlot(slot       ){
       else localStorage.setItem(activeSlotKey,activeBefore);
       throw error;
     }
-    location.reload();
+    reloadFarm();
   }catch(error){
     saveSlotStatus.textContent='Не удалось удалить сохранение.';
     console.error('Ферма: ошибка удаления сохранения',error);
@@ -4940,6 +5135,7 @@ let selectedWheel          ='coins';
 let spinningFortune=false;
 const fortuneResults                                                        ={};
 const fortuneStakes                                  ={};
+const fortunePercents                                  ={};
 const svgNamespace='http://www.w3.org/2000/svg';
 
 function fortunePoint(angle       ,radius       ){
@@ -4956,6 +5152,22 @@ function drawFortuneWheel(svg              ,prizes             ){
     sector.setAttribute('d','M 200 200 L '+fortunePoint(angle,192)+' A 192 192 0 '+(sweep>180?1:0)+' 1 '+fortunePoint(end,192)+' Z');
     sector.setAttribute('fill',prize.color);
     svg.append(sector);
+    if(prize.type==='jackpot'&&svg===fortuneWheel){
+      const marker=document.createElementNS(svgNamespace,'path');
+      marker.setAttribute('class','fortune-jackpot-marker');
+      marker.setAttribute('d','M '+fortunePoint(angle+sweep/2,199)+' L '+fortunePoint(angle+sweep/2,213));
+      const title=document.createElementNS(svgNamespace,'title');
+      title.textContent='Джекпот';
+      marker.append(title);
+      svg.append(marker);
+      const label=document.createElementNS(svgNamespace,'text');
+      const [x,y]=fortunePoint(angle+sweep/2,226).split(' ');
+      label.setAttribute('x',x);
+      label.setAttribute('y',y);
+      label.setAttribute('class','fortune-jackpot-label');
+      label.textContent='Джекпот';
+      svg.append(label);
+    }
     const previous=prizes[(index+prizes.length-1)%prizes.length];
     if(prize.weight>=.4&&previous.weight>=.4)boundaries.push(angle);
     angle=end;
@@ -4985,7 +5197,9 @@ function chooseFortuneWheel(kind          ){
 
 function renderFortune(){
   const kind=selectedWheel,info=wheelInfo[kind],account=wheelAccount(farm,kind);
-  const balance=wheelBalance(farm,kind),raw=fortuneStake.valueAsNumber;
+  const balance=wheelBalance(farm,kind),percent=fortunePercents[kind];
+  if(!spinningFortune&&percent!==undefined)fortuneStake.value=String(Math.min(wheelStakeLimit,Math.max(1,Math.floor(balance*percent/100))));
+  const raw=fortuneStake.valueAsNumber;
   const valid=Number.isSafeInteger(raw)&&raw>=1&&raw<=wheelStakeLimit;
   const stake=valid?raw:1;
   const state=wheelState(farm);
@@ -5060,14 +5274,18 @@ for(const percent of [25,50,75,100]){
   shortcut.type='button';
   shortcut.className='quiet';
   shortcut.textContent=percent+'%';
+  shortcut.dataset.fortunePercent=String(percent);
   shortcut.onclick=()=>{
     if(spinningFortune)return;
-    fortuneStake.value=String(Math.min(wheelStakeLimit,Math.max(1,Math.floor(wheelBalance(farm,selectedWheel)*percent/100))));
+    fortunePercents[selectedWheel]=percent;
     renderFortune();
   };
   get('fortune-shortcuts').append(shortcut);
 }
-fortuneStake.oninput=renderFortune;
+fortuneStake.oninput=()=>{
+  delete fortunePercents[selectedWheel];
+  renderFortune();
+};
 fortuneDialog.oncancel=event=>{if(spinningFortune)event.preventDefault();};
 fortuneDialog.addEventListener('click',event=>{
   if(spinningFortune||event.target!==fortuneDialog)return;

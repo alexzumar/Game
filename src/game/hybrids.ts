@@ -1,4 +1,5 @@
 const cropRarities = cropTiers.map(tier=>[0,2,3,4][tier]);
+const seedRarityOrder=crops.map((_,index)=>index).sort((a,b)=>cropTiers[b]-cropTiers[a]||cropPrices[b]-cropPrices[a]);
 const rarityColors = ['#C4CCD5','#84D7AC','#7FB7F7','#B29AF4','#F3C66F','#F59991','#F080C5'];
 
 const lineTrait = (farm:Farm,plot:Plant,id:string) => plot.line===undefined?0:effectiveGenome(farm,plot).powers[id]??0;
@@ -39,6 +40,24 @@ function checkMutations(farm:Farm,now:number,random=Math.random) {
   }
   return true;
 }
+function mutationReward(line:Line){
+  const parents=line.parents??[];
+  if(!parents.length)return 1;
+  const strongerGene=(['gr','ga','re'] as const).some(id=>
+    (line.genes?.[id]??1)>Math.max(...parents.map(parent=>parent.genome.genes[id])));
+  const strongerPower=Object.entries(line.powers??{}).some(([id,value])=>
+    parents.some(parent=>(parent.genome.powers[id]??0)>0)&&
+    value>Math.max(...parents.map(parent=>parent.genome.powers[id]??0)));
+  return 1+Number(strongerGene)+Number(strongerPower);
+}
+function discardMutation(farm:Farm,index:number,now:number){
+  const plot=farm.plots[index];
+  if(!plot?.mystery)return 0;
+  const points=plot.ready!==null&&plot.ready<=now?mutationReward(plot.mystery.preview??generateMutationLine(farm,plot)):0;
+  farm.mutationPoints=(farm.mutationPoints??0)+points;
+  farm.plots[index]=null;
+  return points;
+}
 function acceptMutation(farm:Farm,index:number,now:number,random=Math.random) {
   const plot=farm.plots[index];
   if(!plot?.mystery || plot.ready===null || plot.ready>now || hybridCount(farm)>=farm.hybridSlots)return null;
@@ -46,8 +65,10 @@ function acceptMutation(farm:Farm,index:number,now:number,random=Math.random) {
   line.enhancements={};
   line.name='Гибрид #'+(farm.lines.length+1);
   farm.lines.push(line);farm.plots[index]=null;
+  const points=mutationReward(line);
+  farm.mutationPoints=(farm.mutationPoints??0)+points;
   if(random()<.001)farm.relics++;
-  return {line,added:line.traits[0]??'growth',replaced:null};
+  return {line,added:line.traits[0]??'growth',replaced:null,points};
 }
 function generateMutationLine(farm:Farm,plot:Plant,random=Math.random):Line {
   const parents=plot.mystery!.genomes??plot.mystery!.parents.map(crop=>genome(farm,{crop,planted:0,ready:null}));
@@ -85,11 +106,13 @@ function generateMutationLine(farm:Farm,plot:Plant,random=Math.random):Line {
   return {name:'',crop:plot.crop,traits,powers,genes,enhancements:inheritEnhancements(parents,traits),seeds:1,parents:parents.map((genome,i)=>({name:plot.mystery!.parentNames?.[i]??crops[plot.mystery!.parents[i]].name,crop:plot.mystery!.parents[i],genome:cloneGenome(genome)}))};
 }
 const hybridCount = (farm:Farm) => farm.lines.filter(line=>!line.archived && line.seeds>0).length;
-const hybridExpansionPrice = (farm:Farm) => Math.ceil(50*(1+Math.floor((farm.hybridSlots-20)/5))**1.65);
+const hybridExpansionPrice = (farm:Farm) => Math.ceil(5*(1+Math.floor((farm.hybridSlots-20)/5))**1.65);
 function expandHybridInventory(farm:Farm) {
   const price=hybridExpansionPrice(farm);
-  if(farm.coins<price)return false;
-  spendFarmCoins(farm,price);farm.hybridSlots+=5;return true;
+  if((farm.mutationPoints??0)<price)return false;
+  farm.mutationPoints=farm.mutationPoints!-price;
+  farm.hybridSlots+=5;
+  return true;
 }
 function discardHybrid(farm:Farm,index:number) {
   const line=farm.lines[index];

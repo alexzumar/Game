@@ -1,9 +1,46 @@
 const upgradesDialog = get<HTMLDialogElement>('upgrades-dialog');
+const upgradeWallet=get('upgrade-wallet');
+const upgradeMaterialTip=document.createElement('span');
+upgradeMaterialTip.id='upgrade-material-tip';
+upgradeMaterialTip.className='glass';
+upgradeMaterialTip.setAttribute('role','tooltip');
+upgradeMaterialTip.hidden=true;
+upgradeWallet.append(upgradeMaterialTip);
+var upgradeMaterialsReady=true;
+
+function renderUpgradeMaterials(){
+  if(upgradeMaterialTip.hidden||!upgradesDialog.open)return;
+  const items=materials.map(item=>({item,count:farm.resources.items[item.id]??0}))
+    .filter(({count})=>count>0).sort((a,b)=>b.count-a.count);
+  const signature=JSON.stringify(items.map(({item,count})=>[item.id,count]));
+  if(upgradeMaterialTip.dataset.signature===signature)return;
+  upgradeMaterialTip.dataset.signature=signature;
+  upgradeMaterialTip.replaceChildren(...items.map(({item,count})=>{
+    const entry=document.createElement('span');
+    entry.textContent=item.icon+' '+number(count);
+    entry.setAttribute('aria-label',item.name+' '+number(count));
+    return entry;
+  }));
+  if(!items.length)upgradeMaterialTip.textContent='Материалов пока нет';
+}
+function showUpgradeMaterials(){
+  upgradeMaterialTip.hidden=false;
+  delete upgradeMaterialTip.dataset.signature;
+  renderUpgradeMaterials();
+}
+function hideUpgradeMaterials(){upgradeMaterialTip.hidden=true;}
+upgradeWallet.addEventListener('pointerenter',showUpgradeMaterials);
+upgradeWallet.addEventListener('pointerleave',()=>{if(document.activeElement!==upgradeWallet)hideUpgradeMaterials();});
+upgradeWallet.addEventListener('focus',showUpgradeMaterials);
+upgradeWallet.addEventListener('blur',()=>{if(!upgradeWallet.matches(':hover'))hideUpgradeMaterials();});
+upgradesDialog.addEventListener('scroll',hideUpgradeMaterials);
+upgradesDialog.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&!upgradeMaterialTip.hidden){hideUpgradeMaterials();event.preventDefault();}
+});
 button('upgrades-open').onclick = () => upgradesDialog.showModal();
-const upgradeTabs = ['packs','seeds','weather','tools','discovery','extractor','hybrids'];
+const upgradeTabs = ['packs','seeds','tools','discovery','extractor','hybrids'];
 for (const tab of upgradeTabs) button('upgrade-tab-'+tab).onclick = () => {
   get('trait-panel').hidden = true;
-  get('weather-panel').hidden = true;
   for (const category of upgradeTabs) {
     const active = category === tab;
     button('upgrade-tab-'+category).setAttribute('aria-pressed',String(active));
@@ -11,14 +48,11 @@ for (const tab of upgradeTabs) button('upgrade-tab-'+tab).onclick = () => {
   }
 };
 const traitPanel = get('trait-panel');
-const weatherPanel = get('weather-panel');
 button('trait-close').onclick = () => {traitPanel.hidden=true;};
-button('weather-close').onclick = () => {weatherPanel.hidden=true;};
-upgradesDialog.onclose = () => {if(upgradesDialog.open)return;traitPanel.hidden=true;weatherPanel.hidden=true;};
+upgradesDialog.onclose = () => {if(upgradesDialog.open)return;traitPanel.hidden=true;hideUpgradeMaterials();};
 upgradesDialog.addEventListener('click',event => {
   if (!(event.target instanceof Element)) return;
   if (!event.target.closest('#trait-panel,#upgrade-catalog button')) traitPanel.hidden=true;
-  if (!event.target.closest('#weather-panel,#weather-catalog button')) weatherPanel.hidden=true;
 });
 let upgradeCrop = 0;
 for (const i of crops.map((_,index)=>index).sort((a,b)=>cropTiers[a]-cropTiers[b]||cropTimes[a]-cropTimes[b])) {
@@ -76,9 +110,9 @@ function renderTraits() {
     const price = traitPrice(farm.levels[index][id]);
     const orbs=traitOrbPrice(farm.levels[index][id]);
     const effect = (n:number) => id === 'growth' ? clock(growthTime(index,n)) :
-      id === 'yield' ? formatChance(n)+'%' : clock(moistureTime(n,index));
+      id === 'yield' ? formatChance(n)+'%' : clock(wateringDuration(farm,{crop:index,planted:0,ready:null},n));
     const explanation = id === 'growth' ? ' до сбора после полива' :
-      id === 'yield' ? ' стартового шанса дополнительного урожая' : ' влаги от лейки или после дождя';
+      id === 'yield' ? ' стартового шанса дополнительного урожая' : ' влаги от лейки';
     get('trait-detail-'+id).textContent = 'Ур. '+level+' · '+effect(level)+
       (maxed ? '' : ' → '+effect(level+1))+explanation;
     const buy = button('trait-buy-'+id);
@@ -95,28 +129,6 @@ document.addEventListener('pointermove',event => {
   document.body.style.setProperty('--background-x',((event.clientX/window.innerWidth-.5)*150)+'px');
   document.body.style.setProperty('--background-y',((event.clientY/window.innerHeight-.5)*120)+'px');
 });
-button('rain-card').onclick = () => {weatherPanel.hidden=!weatherPanel.hidden; renderWeather();};
-const weatherOptions:WeatherUpgrade[] = ['cooldown','duration'];
-for (const option of weatherOptions) button('buy-weather-'+option).onclick = () => {
-  if (buyWeather(farm,option,nowTime())) commit('Погода улучшена.');
-};
-function renderWeather() {
-  button('rain-card').setAttribute('aria-pressed',String(!weatherPanel.hidden));
-  for (const option of weatherOptions) {
-    const level = farm.weather[option];
-    const maxed = level >= weatherUpgradeMax(option);
-    const price = weatherPrice(level);
-    const effect = (n:number) => {
-      const duration=option==='duration';
-      const minimum=duration?rainLength(n):rainCooldown(n);
-      return clock(minimum)+'–'+clock(minimum+(duration?90_000:120_000));
-    };
-    get('weather-'+option+'-preview').textContent = 'Ур. '+level+' · '+effect(level)+(maxed ? '' : ' → '+effect(level+1));
-    const buy = button('buy-weather-'+option);
-    buy.disabled = maxed || farm.coins < price;
-    buy.textContent = maxed ? 'Максимальный уровень' : 'Улучшить · 🪙 '+price;
-  }
-}
 const toolConveniences=conveniences.filter(option=>option.id!=='irrigation'&&option.id!=='replant');
 for(const option of toolConveniences){
   const panel=document.createElement('section');

@@ -1,6 +1,6 @@
 function renderField(now:number) {
   const field = get('field');
-  const dryCount=rainAt(farm,now)?0:farm.plots.filter(plot=>
+  const dryCount=farm.plots.filter(plot=>
     plot&&!plot.mystery&&(plot.ready===null||(plot.wetUntil!==undefined&&plot.wetUntil<=now&&plot.wetUntil<plot.ready))
   ).length;
   const warning=get('dry-field-notice');
@@ -24,7 +24,10 @@ function renderField(now:number) {
         if(plot)get('quick-seeds').hidden=true;
         const now = nowTime();
         if(!plot && farm.rot[index] && seed<0 && !isWatering()){openRot(index);return;}
-        if(plot?.mystery){if(isGathering())takeMystery(index,tile);return;}
+        if(plot?.mystery){
+          if(isGathering()||(!isWatering()&&(plot.ready??Infinity)>now))openMutation(index);
+          return;
+        }
         applyRain(farm,now);
         if (isGathering() && collectAnimated(index,now,tile)) return commit('Урожай на складе.');
         if (isWatering() && plot && water(farm,plot,now)) {
@@ -60,7 +63,7 @@ function renderField(now:number) {
     const ready = !!plot && plot.ready !== null && plot.ready <= now;
     tile.setAttribute('aria-pressed',String(index===selected));
     tile.setAttribute('aria-label','Грядка '+(index+1)+(plot?.mystery?' · неизвестное растение':crop ? ' · '+crop.name : ' · пустая'));
-    tile.dataset.wet=String(rainAt(farm,now)||(plot?(plot.wetUntil??0)>now:!!farm.rainSoaked?.[index]));
+    tile.dataset.wet=String((plot?.wetUntil??0)>now);
     tile.dataset.state = !plot ? rot?'rotten':'empty' : ready ? 'ready' : plot.ready === null ? 'dry' : 'growing';
     tile.style.setProperty('--crop',crop?.color ?? 'var(--accent)');
     tile.children[0].textContent = String(index+1);
@@ -71,7 +74,7 @@ function renderField(now:number) {
     const icon = !plot ? '' : ready ? crop!.symbol : halfway ? '🌱' : '🟤';
     const visual=tile.children[1] as HTMLElement;
     if(plot?.mystery){
-      delete visual.dataset.art;visual.classList.remove("has-crop-art");visual.textContent=farm.xray?crops[plot.crop].symbol:"?";
+      delete visual.dataset.art;visual.classList.remove("has-crop-art");visual.textContent=farm.xray&&ready?crops[plot.crop].symbol:"?";
       const progress=1-(remaining??duration)/duration;visual.style.setProperty("--mystery-size",String(.4+.6*Math.max(0,Math.min(1,progress))));
     } else if(plot){
       const progress=remaining===undefined?0:1-remaining/duration;
@@ -88,15 +91,15 @@ function renderField(now:number) {
   });
   const hint = get('field-tip');
   const hovered = field.children[hoveredPlot];
-  hint.hidden = !get('quick-seeds').hidden || !hovered || (!farm.plots[hoveredPlot] && !farm.rot[hoveredPlot] && !rainAt(farm,now));
+  hint.hidden = !get('quick-seeds').hidden || !hovered || (!farm.plots[hoveredPlot] && !farm.rot[hoveredPlot]);
   hint.classList.toggle('hybrid-tip',!!farm.plots[hoveredPlot]?.line || farm.plots[hoveredPlot]?.line===0);
   if (!hint.hidden) {
     const wetUntil = farm.plots[hoveredPlot]?.wetUntil ?? 0;
     hint.textContent = hovered.children[2].textContent+' · '+hovered.children[3].textContent+
-      (rainAt(farm,now) ? ' · Полито' : wetUntil > now ? ' · 💧 '+clock(wetUntil-now) : '');
+      (wetUntil > now ? ' · 💧 '+clock(wetUntil-now) : '');
     const plot=farm.plots[hoveredPlot];
 
-    if(plot?.mystery && farm.xray && plot.mystery.preview){
+    if(plot?.mystery && (plot.ready??Infinity)<=now && farm.xray && plot.mystery.preview){
       const genes=plot.mystery.preview.genes!;
       hint.textContent=crops[plot.crop].name+' · ⚡ Gr '+genes.gr+' / 💰 Ga '+genes.ga+' / 🛡️ Re '+genes.re+' · '+hovered.children[3].textContent;
     }
