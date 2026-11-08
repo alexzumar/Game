@@ -70,11 +70,10 @@ const tick = () => {
   const greenhouseChanged=tickGreenhouse(nowTime());
   const abilitiesChanged=updatePlantAbilities(farm,nowTime());
   const ripened=updateRipening(farm,nowTime());
-  const mutated=checkMutations(farm,nowTime());
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(greenhouseChanged || abilitiesChanged || ripened || mutated || weatherChanged || extracted || speed !== 1 ||
+  if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
     if(saveFarm(farm))lastPlayTimeSave=totalPlayTime();
   }

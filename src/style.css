@@ -350,6 +350,8 @@ body.raining::after{opacity:1}
 #upgrade-material-tip span{white-space:nowrap}
 .greenhouse-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit;border:1px solid var(--edge);border-radius:12px}
 .greenhouse-only{display:none}
+html.farm-background{filter:contrast(.85)}
+#mutation-upgrades{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px;margin-bottom:12px}
 body.in-greenhouse{--greenhouse-scene-height:max(100dvh,50vw)}
 body.in-greenhouse::before{background-image:url('assets/greenhouse/clear.png')}
 body.in-greenhouse::after{background-image:url('assets/greenhouse/rain.png')}
@@ -372,6 +374,7 @@ body.in-greenhouse::after{background-image:url('assets/greenhouse/rain.png')}
 .greenhouse-cell:disabled{opacity:.72}
 .greenhouse-cell:not(:disabled):hover{transform:none}
 .greenhouse-cell[data-bed=true]{background:url('assets/greenhouse/bed.png') center / 110% 110%;border-color:transparent}
+.greenhouse-cell[data-bed=true][data-wet=true]{background-image:url('assets/greenhouse/Влажная почва в деревянном лотке.png')}
 .greenhouse-cell[data-trellis=true]::before{content:'';position:absolute;inset:-14% -19% -10%;background:url('assets/greenhouse/trellis.png') center bottom / 100% 100% no-repeat;pointer-events:none}
 .greenhouse-cell>*{position:relative}
 .greenhouse-cell.greenhouse-movable{cursor:grab;z-index:1;animation:greenhouse-bed-pulse 1.3s ease-in-out infinite}
@@ -421,6 +424,13 @@ body>footer{position:fixed;bottom:5px;inset-inline:12px;justify-content:center;p
 dialog>form[method=dialog]{position:absolute;right:16px;top:16px;z-index:6}
 dialog>h2{padding-right:32px}
 #hybrid-detail-dialog .close{margin:0}
+.hybrid-detail-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.hybrid-detail-actions #hybrid-plant{grid-column:1/-1}
+.hybrid-detail-actions button{min-width:0;white-space:normal}
+#hybrid-recycle-dialog{width:min(380px,calc(100% - 24px))}
+#hybrid-recycle-dialog>.hybrid-recycle-actions{position:static;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.hybrid-recycle-actions button{min-width:0;white-space:normal}
+#hybrid-recycle-status:empty{display:none}
 .comparison-dialog{overflow:visible;width:min(440px,calc(100% - 28px))}
 .parent-panel{display:none;position:absolute;top:55px;width:210px;padding:14px;border-radius:18px;border:1px solid var(--line);background:var(--base);box-shadow:0 8px 30px var(--shade);font-size:.76rem}
 .parent-left{right:calc(100% + 12px)}.parent-right{left:calc(100% + 12px)}

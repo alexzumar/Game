@@ -30,9 +30,20 @@ function syncGreenhouseScreen(){
   }else if(hybridCount(farm)===0)setDockState('hidden');
 }
 syncGreenhouseScreen();
-window.addEventListener('hashchange',()=>{syncGreenhouseScreen();render();});
+window.addEventListener('hashchange',()=>{
+  syncGreenhouseScreen();render();
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+    get(greenhouseVisible()?'greenhouse-board':'field').animate(
+      [{opacity:.45,scale:'.985'},{opacity:1,scale:'1'}],{duration:240,easing:'ease-out'});
+  }
+});
+const syncFarmContrast=()=>document.documentElement.classList.toggle('farm-background',document.hidden||!document.hasFocus());
+window.addEventListener('focus',syncFarmContrast);
+window.addEventListener('blur',syncFarmContrast);
+document.addEventListener('visibilitychange',syncFarmContrast);
+syncFarmContrast();
 dockWrap.addEventListener('pointerenter',event=>{
-  if(greenhouseVisible()&&event.pointerType==='mouse')dockWrap.classList.add('greenhouse-dock-expanded');
+  if(greenhouseVisible()&&event.pointerType==='mouse'&&dock.scrollWidth>dock.clientWidth+1)dockWrap.classList.add('greenhouse-dock-expanded');
 });
 dockWrap.addEventListener('pointerleave',()=>dockWrap.classList.remove('greenhouse-dock-expanded'));
 const greenhouseRight=get('greenhouse-expansion').parentElement!;
@@ -48,7 +59,9 @@ window.addEventListener('keydown',event=>{
     greenhouseAltHeld=true;
   }else if(event.code==='KeyM'&&!event.altKey&&!event.ctrlKey&&!event.metaKey){
     event.preventDefault();
-    greenhouseMoveHeld=true;
+    if(event.repeat)return;
+    if(greenhouseTool==='move'){greenhouseTool=null;movingBed=-1;}
+    else greenhouseMoveHeld=true;
   }else return;
   if(!event.repeat){
     get('quick-seeds').hidden=true;
@@ -82,6 +95,7 @@ function tickGreenhouse(now:number){
 function greenhouseBedPrice(area:Greenhouse){
   return Math.ceil(3*(area.beds.filter(Boolean).length-2)**1.4);
 }
+button('greenhouse-research').onclick=()=>{button('upgrades-open').click();button('upgrade-tab-hybrids').click();};
 for(const tool of ['trellis','buy','move'] as const){
   button('greenhouse-'+tool).onclick=()=>{
     greenhouseTool=greenhouseTool===tool?null:tool;
@@ -225,7 +239,7 @@ function renderGreenhouse(now:number){
   const area=farm.greenhouse;
   if(!area)return;
   const candidates=mutationCandidates(farm,area,false)
-    .filter(({neighbors})=>neighbors.filter(plot=>matureMutationParent(plot,now)).length>=2);
+    .filter(({neighbors})=>neighbors.filter(plot=>plot.planted<=now).length>=2);
   get('greenhouse-no-trellis').hidden=!candidates.length||candidates.some(({index})=>area.trellises[index])||
     area.plots.some((plot,index)=>plot?.mystery&&area.trellises[index]);
   get('greenhouse-dry').hidden=!area.plots.some(plot=>plot&&!plot.mystery&&plot.ready===null);
@@ -240,7 +254,8 @@ function renderGreenhouse(now:number){
     const tile=greenhouseGrid.children[index] as HTMLButtonElement;
     const plot=area.plots[index],trellis=area.trellises[index],rot=area.rot[index];
     tile.dataset.bed=String(bed);
-    tile.dataset.trellis=String(trellis);
+    tile.dataset.wet=String(!plot?.mystery&&(plot?.wetUntil??0)>now);
+    tile.dataset.trellis=String(trellis&&!plot?.mystery);
     tile.dataset.mystery=String(!!plot?.mystery);
     tile.setAttribute('aria-pressed',String(movingBed===index));
     tile.disabled=!bed&&!moving&&(greenhouseTool!=='buy'||greenhouseAltHeld);

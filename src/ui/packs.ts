@@ -21,7 +21,7 @@ function renderPackWorkshop(){
  crops.forEach((crop,i)=>{const row=get('odds-'+i);row.hidden=odds[i]<=0;row.textContent=(unlocked(farm,i)?crop.symbol+' '+crop.name:'❔ Неизвестно · '+baseRarityNames[cropTiers[i]])+' · '+preciseChance(odds[i])+'%';row.classList.toggle('unknown-crop',!unlocked(farm,i));});}
  seedPacks.forEach((_,i)=>{get('pack-card-note-'+i).textContent='Упор: '+['обычные','редкие','эпические','легендарные'][i];});
  const chosen=Math.max(0,selectedPack),odds=openingOdds(farm,chosen),target=total(odds.filter((_,i)=>cropTiers[i]===chosen));
- get('luck-preview').textContent='Уровень '+farm.luck+' · '+seedPacks[chosen].name+': '+preciseChance(target)+'% своей редкости.';
+ get('luck-preview').textContent='Уровень '+farm.luck+'. Повышает шанс получить культуру редкости выбранного пакета. Для пакета «'+seedPacks[chosen].name+'» суммарный шанс таких культур сейчас '+preciseChance(target)+'%.';
  button('buy-luck').disabled=farm.coins<luckPrice(farm.luck);button('buy-luck').textContent='🪙 '+number(luckPrice(farm.luck));
  for(const id of ['speed','slots','refund'] as const){const level=farm.packProgress[id],blocked=id==='refund'&&level>=3&&!farm.packProgress.refundGate,offer=blocked?packGateOffer(farm,'refund'):packUpgradeOffer(farm,id);
  get('pack-upgrade-'+id).textContent=id==='speed'?'Уровень '+level+' · '+(packOpeningTime(farm)/1000).toLocaleString('ru-RU')+' с · минимум 0,5 с':id==='slots'?limit+' из 5 слотов.':'Уровень '+level+' · '+packRefundRate(farm)+'% за повторку редкости мешка, 5% за остальные.';

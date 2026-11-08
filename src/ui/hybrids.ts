@@ -25,6 +25,7 @@ function showHybrid(index:number){
   renderComparison(hybridDetail,line,'hybrid-genetics','hybrid-detail-traits');
   hybridDetail.showModal();
   renderEnhancementShortcut();
+  button('hybrid-recycle').disabled=Array.from({length:farm.extraction.slots??1},(_,slot)=>extractionJobs(farm.extraction)[slot]).every(Boolean);
 }
 button('hybrid-plant').onclick=()=>{
   const line=farm.lines[detailLine];if(!line||line.archived||line.seeds<1)return;
@@ -32,6 +33,27 @@ button('hybrid-plant').onclick=()=>{
   inventoryDockNext="open";
   setDockState("open");
   hybridDetail.close();hybridsDialog.close();commit('Выбран '+line.name);
+};
+const recycleDialog=get<HTMLDialogElement>('hybrid-recycle-dialog');
+button('hybrid-recycle').onclick=()=>{
+  const line=farm.lines[detailLine];
+  if(!line||line.archived||line.seeds<1)return;
+  const {points,duration}=hybridRecyclingQuote(line,farm.extraction.speed);
+  get('hybrid-recycle-quote').textContent='Одно семя «'+line.name+'» → 🧬 '+points+' за '+clock(duration)+'.';
+  get('hybrid-recycle-status').textContent='';
+  recycleDialog.showModal();
+};
+button('hybrid-recycle-confirm').onclick=()=>{
+  if(!startHybridRecycling(farm,detailLine,nowTime())){
+    get('hybrid-recycle-status').textContent='Нужно доступное семя и свободный слот экстрактора.';
+    return;
+  }
+  recycleDialog.close();
+  if(selectedLine===detailLine&&farm.lines[detailLine].seeds===0){selectedLine=undefined;seed=-1;}
+  hybridDetail.close();
+  hybridsDialog.close();
+  button('extractor-open').click();
+  commit('Семя гибрида отправлено в экстрактор.');
 };
 button('hybrid-remove').onclick=()=>{
   if(!confirmDeletePress(button('hybrid-remove')))return;
@@ -94,7 +116,39 @@ function finishHybridStroke(event:PointerEvent){
 window.addEventListener('pointerup',finishHybridStroke);
 window.addEventListener('pointercancel',finishHybridStroke);
 let hybridGridSignature="";
+const mutationUpgradeLabels:Record<MutationUpgrade,[string,string]>={
+  interval:['Частота проверок','Каждый уровень сокращает интервал проверок на 6%. Минимум 6 секунд.'],
+  genetics:['Наследование Gr, Ga и Re','На 2 п. п. больше веса сильного родителя и на 1 п. п. выше шанс прибавки к стату за уровень.'],
+  maturity:['Созревание находок','Каждый уровень сокращает время созревания находки на 4%.']
+};
+const mutationUpgradeCards=mutationUpgradeIds.map(id=>{
+  const card=document.createElement('section');card.className='glass panel';
+  const title=document.createElement('h3'),progress=document.createElement('strong'),description=document.createElement('p'),effect=document.createElement('p'),buy=document.createElement('button');
+  [title.textContent,description.textContent]=mutationUpgradeLabels[id];
+  effect.style.whiteSpace='pre-line';
+  buy.className='quiet';
+  buy.onclick=()=>{if(buyMutationUpgrade(farm,id))commit('Селекция улучшена.');};
+  card.append(title,progress,description,effect,buy);get('mutation-upgrades').append(card);
+  return {id,progress,effect,buy};
+});
+function mutationUpgradeEffect(id:MutationUpgrade,level:number){
+  const next=Math.min(level+1,mutationUpgradeMax);
+  const compare=(value:(rank:number)=>string)=>value(level)+(next===level?'':' → '+value(next));
+  const seconds=(ms:number)=>(ms/1000).toLocaleString('ru-RU',{maximumFractionDigits:1})+' с';
+  if(id==='interval')return 'При Re 1 — '+compare(rank=>seconds(upgradedMutationInterval(1,rank)))+
+    '\nПри Re 30 — '+compare(rank=>seconds(upgradedMutationInterval(30,rank)));
+  if(id==='maturity')return 'Максимум для находки — '+compare(rank=>seconds(mutationMaturityDuration(120000,rank)));
+  return 'Вес сильного родителя — '+compare(rank=>formatChance(mutationInheritanceWeight(rank)*100)+'%')+
+    '\nБазовый шанс +1 к стату — '+compare(rank=>formatChance(mutationStatGainChance(rank)*100)+'%');
+}
 function renderLines(){
+  for(const {id,progress,effect,buy} of mutationUpgradeCards){
+    const level=mutationLevel(farm,id),cost=mutationUpgradeCost(level);
+    progress.textContent='Уровень '+level+' из '+mutationUpgradeMax;
+    effect.textContent=mutationUpgradeEffect(id,level);
+    buy.textContent=level===mutationUpgradeMax?'Максимум':'Улучшить · 🧬 '+number(cost);
+    buy.disabled=level===mutationUpgradeMax||(farm.mutationPoints??0)<cost;
+  }
   const used=hybridCount(farm);
   for(const i of markedHybrids)if(farm.lines[i]?.archived||!farm.lines[i]?.seeds)markedHybrids.delete(i);
   get('hybrid-capacity').textContent=used+'/'+farm.hybridSlots;
@@ -320,6 +374,7 @@ function renderDock(){
   group.style.setProperty('--dock-columns',String(Math.max(1,Math.ceil(cards.length/2))));
   group.append(...cards);
   dock.replaceChildren(group);
+  if(cards.length<2)dockWrap.classList.remove("greenhouse-dock-expanded");
 }
 function applyPlantGlows(){
   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);

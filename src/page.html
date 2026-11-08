@@ -12,7 +12,7 @@
   <div class="brand"><span class="brand-icon" aria-hidden="true">✦</span><div><strong>Всходы</strong><small>СЕМЕННАЯ ФЕРМА</small></div></div>
   <span class="weather" id="weather" data-upgrade-target="weather"></span>
   <button id="settings-open" class="quiet" aria-label="Настройки" title="Настройки">⚙️</button>
-  <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🌿 Теплица</a>
+  <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🪴 Теплица</a>
   <a href="#garden" id="garden-link" class="quiet greenhouse-link greenhouse-only">← В сад</a>
 </header>
 <dialog id="settings-dialog" class="glass"><div class="window-heading"><h2>Настройки</h2><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form></div>  <div class="appearance"><div id="accents" aria-label="Цвет акцента"></div><button id="skin" class="quiet" title="Переключить стиль"></button><button id="theme" class="quiet"></button><label class="glass-control" title="От непрозрачных панелей до более выраженного стекла">Стекло <input type="range" id="glass-unified" min="0" max="100" aria-label="Эффект стекла"></label></div>
@@ -45,7 +45,7 @@
       </div>
     </section>
     <section class="glass panel"><span class="kicker">УРОЖАЙ</span><button class="quiet wide" id="basket"><span><span id="basket-icon">🧺</span> Корзина</span><b id="counter"></b></button><button class="quiet wide" id="extractor-open">⚙️ Экстрактор семян</button></section>
-    <section class="glass panel greenhouse-only" id="greenhouse-expansion"><span class="kicker">Грядки</span><button class="quiet wide" id="greenhouse-buy" aria-pressed="false">Новая грядка</button><button class="quiet wide" id="greenhouse-move" aria-pressed="false">Перенос грядок</button></section>
+    <section class="glass panel greenhouse-only" id="greenhouse-expansion"><span class="kicker">Грядки</span><button class="quiet wide" id="greenhouse-buy" aria-pressed="false">Новая грядка</button><button class="quiet wide" id="greenhouse-move" aria-pressed="false">Перенос грядок</button><button class="quiet wide" id="greenhouse-research">🧬 Прокачка селекции</button></section>
     <section class="glass panel" id="upgrade-field"><span class="kicker">Расширение поля</span><p id="expand-note"></p><button class="quiet" id="expand"></button></section><section class="glass panel"><button class="quiet wide" id="hybrids-open">🧬 Гибриды</button><button class="quiet wide" id="diamonds-open">💎 Алмазные улучшения</button><button class="primary" id="upgrades-open">⬆ Улучшения</button></section>
   </aside>
 </main>
@@ -137,7 +137,7 @@
 
   </section>
   <section id="upgrade-tools" hidden><div id="convenience-list"></div></section>
-  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section></section><section id="trait-panel" class="glass panel trait-panel" hidden>
+  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><div id="mutation-upgrades"></div><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section></section><section id="trait-panel" class="glass panel trait-panel" hidden>
     <button class="quiet close" id="trait-close" aria-label="Закрыть">×</button>
     <h2 id="trait-title"></h2><p id="crop-rarity-time"></p><p id="trait-lock"></p><p id="crop-ability"></p><div id="trait-list"></div>
   </section>
@@ -171,6 +171,7 @@
 <strong id="extractor-selection"></strong>
 <label>Количество <input id="extractor-count" type="number" min="1" max="1000" value="1" required></label>
 <button type="button" class="quiet" id="extractor-half">Половина</button><button type="button" class="quiet" id="extractor-all">Всё</button>
+<button type="button" class="quiet" id="extractor-split">Разделить поровну</button>
 <p id="extractor-estimate"></p><button class="primary" id="extractor-start">Начать переработку</button>
 </form>
 
@@ -190,7 +191,21 @@
 <form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
 <div class="detail-heading"><h2 id="hybrid-detail-title"></h2><button class="quiet" id="hybrid-rename">✎</button><button class="quiet" id="hybrid-remove">Удалить</button></div><small id="hybrid-stable-id"></small><form id="hybrid-rename-form" hidden><input id="hybrid-new-name" maxlength="40" aria-label="Название гибрида"><button class="quiet">Сохранить</button></form><div id="hybrid-detail-icon"></div><p id="hybrid-detail-count"></p>
 <p id="hybrid-genetics" class="genetics"></p><div id="hybrid-detail-traits"></div>
-<aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside><button class="primary" id="hybrid-plant">Посадить</button>
+<aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside>
+<div class="hybrid-detail-actions">
+  <button class="primary" id="hybrid-plant">Посадить</button>
+  <button class="quiet" id="hybrid-enhance">✨ Усилить свойства</button>
+  <button class="quiet" id="hybrid-recycle">В экстрактор</button>
+</div>
+</dialog>
+<dialog id="hybrid-recycle-dialog" class="glass" aria-labelledby="hybrid-recycle-title" aria-describedby="hybrid-recycle-quote">
+  <div class="window-heading"><h2 id="hybrid-recycle-title">Переработать семя?</h2></div>
+  <p id="hybrid-recycle-quote"></p>
+  <p id="hybrid-recycle-status" role="status"></p>
+  <form method="dialog" class="hybrid-recycle-actions">
+    <button class="quiet" autofocus>Отмена</button>
+    <button type="button" class="primary" id="hybrid-recycle-confirm">Переработать</button>
+  </form>
 </dialog>
 <div id="hybrid-dock-wrap" class="glass" hidden><button id="dock-close" class="quiet" aria-label="Свернуть или скрыть панель">×</button><button id="dock-handle" aria-label="Открыть панель гибридов">Гибриды</button><div id="hybrid-dock" aria-label="Быстрая посадка гибридов"></div><small class="dock-instruction">Перетяните, чтобы посадить. Нажмите, чтобы открыть инвентарь.</small></div><div class="glass" id="dock-tooltip" role="tooltip" hidden></div><div id="quick-seeds" class="glass" role="group" aria-label="Быстрая посадка" hidden></div><div id="seed-tooltip" class="glass" role="tooltip" hidden></div><dialog id="rot-dialog" class="glass"><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><h2>🍂 Растение сгнило</h2><p id="rot-description"></p><div id="rot-genetics"></div><div id="rot-properties"></div><button class="quiet" id="rot-clear">Убрать остатки</button></dialog><dialog id="resources-dialog" class="glass basket"><div class="window-heading"><h2 class="glass basket-chip"><span id="resource-upgrade-title" data-upgrade-target="discovery">📖 Коллекция</span></h2><span class="basket-wallet glass basket-chip" id="resources-balance"></span><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><nav class="shop-tabs" aria-label="Категории коллекции"><button class="quiet" data-resource-tab="seeds">Семена</button><button class="quiet" data-resource-tab="materials">Предметы</button><button class="quiet" data-resource-tab="cultures">Культуры</button><button class="quiet" data-resource-tab="sets">Наборы</button><button class="quiet" data-resource-tab="stats">Статистика</button></nav></div><section id="resource-cultures"><button id="collection-open" class="primary">📖 Коллекция культур</button><div id="resource-crop-grid"></div></section><div id="resource-grid"></div><section id="resource-stats" hidden></section><p id="resource-note" class="muted"></p></dialog><script>/* JS */</script>
 </body>

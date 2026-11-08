@@ -121,6 +121,7 @@ function renderPlotTooltip(plot:Plant|null|undefined,rot:RotRecord|null|undefine
     if(!ripe&&plot.ready!==null&&(plot.wetUntil??0)>now){
       lines.push(plot.wetUntil!>=plot.ready?'💧 Полито до созревания':'💧 Влаги ещё '+clock(plot.wetUntil!-now));
     }
+    if(!plot.mystery)lines.push("💧 Поливов: "+(plot.wateringCount??0));
     const forecast=!plot.mystery?ripeningInfo(farm,plot):null;
     if(forecast)lines.push('Цена сейчас ×'+forecast.value.toFixed(2)+' → ×'+forecast.nextValue.toFixed(2),
       'Через '+clock(forecast.next-now)+' · риск гнили '+formatChance(forecast.risk*100)+'%');

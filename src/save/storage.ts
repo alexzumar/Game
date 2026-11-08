@@ -49,6 +49,7 @@ function loadFarm():Farm {
     s.harvestValue ??= [...(s.harvest??[])];
     if(s.harvestValue.length===3)s.harvestValue=s.harvestValue.concat(Array(crops.length-3).fill(0));
     if(!Array.isArray(s.harvestValue)||s.harvestValue.length!==crops.length||!s.harvestValue.every((v:unknown)=>typeof v==="number"&&Number.isFinite(v)&&v>=0))throw new Error("Повреждена стоимость урожая");
+    if(s.mutationUpgrades!==undefined&&(!s.mutationUpgrades||typeof s.mutationUpgrades!=='object'||Array.isArray(s.mutationUpgrades)||mutationUpgradeIds.some(id=>!int(s.mutationUpgrades?.[id]??0,0,mutationUpgradeMax))))throw new Error('Повреждена прокачка селекции');
     if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
     s.mutationCheck ??= Date.now()+(s.offset??0)+30000;
     if(!int(s.mutationCheck,0))throw new Error("Повреждён таймер селекции");
@@ -76,6 +77,7 @@ function loadFarm():Farm {
           !int(job.output,0) || !int(job.start,0) || !int(job.end,job.start)))
       throw new Error("Повреждены данные экстрактора");
     if(job) {
+      if(job.recycledHybrid!==undefined&&(typeof job.recycledHybrid!=="string"||job.input!==1||job.output<1))throw new Error("Повреждена переработка гибрида");
       if(job.completionOffsets!==undefined){
         const offsets=job.completionOffsets;
         if(!Array.isArray(offsets)||offsets.length!==job.input||offsets.at(-1)!==job.end-job.start||
@@ -131,6 +133,7 @@ function loadFarm():Farm {
     const counts = (a:unknown) => Array.isArray(a) && a.length === crops.length && a.every(n => int(n,0));
     const validPlot = (p:Plant|null) => p === null || (p && int(p.crop,0,crops.length-1) && int(p.planted,0) &&
           (p.ready === null || int(p.ready,p.planted)) &&
+          (p.wateringCount === undefined || int(p.wateringCount,0)) &&
           (p.watered === undefined || (p.ready !== null && int(p.watered,p.planted,p.ready))) &&
           (p.wetUntil === undefined || int(p.wetUntil,p.planted)) &&
           (p.remaining === undefined || (Number.isFinite(p.remaining)&&p.remaining>0)) &&

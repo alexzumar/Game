@@ -29,10 +29,28 @@ function mutationParentProgress(farm:Farm,plot:Plant,at:number){
   const remaining=plot.ready===null?plot.remaining??duration:plot.ready-growthThrough;
   return Math.max(0,Math.min(1,1-remaining/duration));
 }
+type MutationUpgrade = "interval"|"genetics"|"maturity";
+const mutationUpgradeIds:MutationUpgrade[]=["interval","genetics","maturity"];
+const mutationUpgradeMax=10;
+const mutationLevel=(farm:Farm,id:MutationUpgrade)=>farm.mutationUpgrades?.[id]??0;
+const mutationUpgradePrices=[2,6,15,30,50,80,120,175,250,350];
+const mutationUpgradeCost=(level:number)=>mutationUpgradePrices[level]??Infinity;
+function buyMutationUpgrade(farm:Farm,id:MutationUpgrade){
+  const level=mutationLevel(farm,id),cost=mutationUpgradeCost(level);
+  if(level>=mutationUpgradeMax||(farm.mutationPoints??0)<cost)return false;
+  farm.mutationPoints=(farm.mutationPoints??0)-cost;
+  (farm.mutationUpgrades??={})[id]=level+1;
+  return true;
+}
 const mutationInterval = (re:number) => Math.round(30-20*(re-1)/29)*1000;
+const upgradedMutationInterval=(re:number,level:number)=>Math.max(6000,Math.round(mutationInterval(re)*.94**level));
+const mutationMaturityDuration=(growth:number,level:number)=>Math.max(1,Math.round(Math.min(growth,120000)*.96**level));
+const mutationInheritanceWeight=(level:number)=>.5+.02*level;
+const mutationStatGainChance=(level:number)=>.2+.01*level;
 
 function checkMutations(farm:Farm,now:number,random=Math.random,greenhouse?:Greenhouse) {
-  const area=greenhouse??farm;
+  if(!greenhouse)return false;
+  const area=greenhouse;
   if(now<area.mutationCheck)return false;
   for(let checks=0;area.mutationCheck<=now&&checks<2000;checks++){
   const at=area.mutationCheck;
@@ -50,14 +68,15 @@ function checkMutations(farm:Farm,now:number,random=Math.random,greenhouse?:Gree
     const progress=parents.reduce((sum,p)=>sum+mutationParentProgress(farm,p,at),0)/2;
     if(random()>=mutationChance(potential)*(.2+.8*progress))continue;
     const chosen=parents[random()<.5?0:1];
-    const duration=chosen.duration??growthTime(chosen.crop,collectionGrowth(farm,chosen.crop));
+    const growth=chosen.duration??growthTime(chosen.crop,collectionGrowth(farm,chosen.crop));
+    const duration=mutationMaturityDuration(growth,mutationLevel(farm,"maturity"));
     const inherited=parents.flatMap(p=>p.line===undefined?[]:farm.lines[p.line].traits);
     area.plots[index]={crop:chosen.crop,planted:at,watered:at,ready:at+duration,wetUntil:at+duration,
       duration,mystery:{parentNames:parents.map(p=>p.line===undefined?crops[p.crop].name:farm.lines[p.line].name),genomes:parents.map(p=>genome(farm,p)),parents:parents.map(p=>p.crop),traits:inherited}};
     area.rot[index]=null;
     area.plots[index]!.mystery!.preview=generateMutationLine(farm,area.plots[index]!,random);
   }
-  area.mutationCheck=at+mutationInterval(fastestRe);
+  area.mutationCheck=at+upgradedMutationInterval(fastestRe,mutationLevel(farm,"interval"));
   }
   return true;
 }
@@ -95,9 +114,9 @@ function generateMutationLine(farm:Farm,plot:Plant,random=Math.random):Line {
   const genes:Genes={gr:1,ga:1,re:1};
   for(const id of ['gr','ga','re'] as const){
     const a=parents[0].genes[id],b=parents[1].genes[id],low=Math.min(a,b),high=Math.max(a,b);
-    const value=low+(high-low)*.25;
+    const value=low+(high-low)*mutationInheritanceWeight(mutationLevel(farm,"genetics"));
     let stat=Math.floor(value)+(random()<value%1?1:0);
-    const shift=random();const improvement=.2+(parents.reduce((s,p)=>s+(p.powers.mutation??0),0)/parents.length)/100;if(shift<improvement)stat+=1;else if(shift>.95)stat-=1;
+    const shift=random();const improvement=mutationStatGainChance(mutationLevel(farm,"genetics"))+(parents.reduce((s,p)=>s+(p.powers.mutation??0),0)/parents.length)/100;if(shift<improvement)stat+=1;else if(shift>.95)stat-=1;
     genes[id]=Math.max(1,Math.min(30,stat));
   }
   const powers:Record<string,number>={};

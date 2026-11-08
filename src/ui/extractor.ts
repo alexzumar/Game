@@ -14,7 +14,9 @@ const extractionCards=Array.from({length:3},(_,slot)=>{
   fill.setAttribute('aria-hidden','true');
   card.prepend(fill);
   card.onclick=()=>{
-    if(extractionJobs(farm.extraction)[slot]){
+    const job=extractionJobs(farm.extraction)[slot];
+    if(job?.recycledHybrid!==undefined)return;
+    if(job){
       if(confirm('Остановить эту партию и вернуть оставшиеся плоды?')&&stopExtraction(farm,nowTime(),slot))commit('Остаток урожая возвращён в корзину.');
       return;
     }
@@ -89,15 +91,15 @@ function renderExtraction(){
       card.dataset.batchEnd=current?String(current.end):'';
     }
     card.querySelector('b')!.textContent=current?crops[current.crop].symbol:'+';
-    card.querySelector('span:not(.extractor-fill)')!.textContent=current?crops[current.crop].name+' ×'+(current.input-current.done):'Слот '+(slot+1);
-    card.querySelector('small')!.textContent=current?clock(period-elapsed)+' · 🌱 '+total(current.outputs.slice(0,current.done)):'Добавить урожай';
-    card.title=current?'Нажми, чтобы остановить партию':'Выбрать урожай и количество';
+    card.querySelector('span:not(.extractor-fill)')!.textContent=current?current.recycledHybrid??crops[current.crop].name+' ×'+(current.input-current.done):'Слот '+(slot+1);
+    card.querySelector('small')!.textContent=current?clock(period-elapsed)+(current.recycledHybrid!==undefined?' · 🧬 +'+current.output:' · 🌱 '+total(current.outputs.slice(0,current.done))):'Добавить урожай';
+    card.title=current?(current.recycledHybrid!==undefined?'Утилизация семени':'Нажми, чтобы остановить партию'):'Выбрать урожай и количество';
   });
   const activeJobs=jobs.filter(Boolean);
   const toast=get('extraction-toast');
   toast.hidden=extractionDialog.open||!activeJobs.length;
   get('extraction-toast-label').textContent='⚙️ Партий в работе: '+activeJobs.length;
-  get('extraction-toast-time').textContent=machine.last;
+  get('extraction-toast-time').textContent=activeJobs.length?'До ближайшего результата: '+clock(Math.max(0,Math.min(...activeJobs.map(job=>extractionDeadline(job!,job!.done)))-now)):'';
   get('extractor-last').textContent=machine.last||'Результат появится после обработки первого плода.';
   crops.forEach((crop,i)=>{
     const card=button('extractor-crop-'+i);card.hidden=!farm.harvest[i];
@@ -111,6 +113,9 @@ function renderExtraction(){
   const bonus=extractionRange(machine.yield);
   get('extractor-estimate').textContent=Number.isSafeInteger(count)&&count>0 ?
     'Время: '+clock(extractionTime(machine.speed)*count)+' · от 1 до '+bonus.max+' семян с плода'+(bonus.extra?' · '+formatChance(bonus.extra*100)+'% расширить диапазон до '+(bonus.max+1):'')+' · неудача 1%, последний посевной материал защищён.' : 'Введи целое количество.';
+  const freeSlots=extractionCards.filter((_,slot)=>slot<slots&&!jobs[slot]).length;
+  button('extractor-split').hidden=slots<2;
+  button('extractor-split').disabled=freeSlots<2||available<2;
   button('extractor-start').disabled=!!jobs[selectedExtractionSlot] || !Number.isSafeInteger(count)||count<1||count>Math.min(extractionCapacity,available);
   for(const id of ['speed','yield'] as const){
     const level=machine[id],price=extractionCost(level,id);
@@ -122,6 +127,11 @@ function renderExtraction(){
 extractionInput.oninput=renderExtraction;
 button('extractor-half').onclick=()=>{extractionInput.value=String(Math.max(1,Math.min(extractionCapacity,Math.floor(farm.harvest[extractionCrop]/2))));renderExtraction();};
 button('extractor-all').onclick=()=>{extractionInput.value=String(Math.max(1,Math.min(extractionCapacity,farm.harvest[extractionCrop])));renderExtraction();};
+button('extractor-split').onclick=()=>{
+  if(!splitExtraction(farm,extractionCrop,nowTime()))return;
+  extractionPicker.close();
+  commit('Урожай распределён по свободным слотам.');
+};
 get<HTMLFormElement>('extractor-form').onsubmit=event=>{
   event.preventDefault();
   if(startExtraction(farm,extractionCrop,extractionInput.valueAsNumber,nowTime(),Math.random,selectedExtractionSlot)){extractionPicker.close();commit('Урожай отправлен в экстрактор.');}
@@ -151,17 +161,20 @@ document.querySelectorAll<HTMLElement>('[data-upgrade-target]').forEach(title=>{
 });
 function animateExtractedSeeds(crop:number,count:number) {
   if(count<=0||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  const row=button('seed-'+crop);
+  const inGreenhouse=greenhouseVisible();
+  const row=button(inGreenhouse?'garden-link':'seed-'+crop);
   if(row.hidden)return;
-  const start=get('seed-stock-title').getBoundingClientRect(),end=row.getBoundingClientRect();
+  const start=get(inGreenhouse?'garden-link':'seed-stock-title').getBoundingClientRect(),end=row.getBoundingClientRect();
+  const startX=inGreenhouse?start.right-165:start.right+8;
+  const startY=inGreenhouse?start.bottom+34:start.top+start.height/2;
   const flight=document.createElement('span');flight.className='harvest-flight';
   flight.textContent=crops[crop].symbol+' '+crops[crop].name+' ×'+number(count);
-  flight.style.left=(start.right+8)+'px';flight.style.top=(start.top+start.height/2)+'px';
+  flight.style.left=startX+'px';flight.style.top=startY+'px';
   document.documentElement.append(flight);
   try{
     const animation=flight.animate([
       {transform:'translate(0,-50%)',opacity:1},
-      {transform:'translate('+(end.left+end.width/2-start.right-8)+'px,'+(end.top+end.height/2-start.top-start.height/2)+'px) scale(.6)',opacity:.6}
+      {transform:'translate('+(end.left+end.width/2-startX)+'px,'+(end.top+end.height/2-startY)+'px) scale(.6)',opacity:.6}
     ],{duration:620,easing:'ease-in-out'});
     animation.onfinish=()=>{
       flight.remove();

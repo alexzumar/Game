@@ -356,6 +356,8 @@ body.raining::after{opacity:1}
 #upgrade-material-tip span{white-space:nowrap}
 .greenhouse-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit;border:1px solid var(--edge);border-radius:12px}
 .greenhouse-only{display:none}
+html.farm-background{filter:contrast(.85)}
+#mutation-upgrades{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px;margin-bottom:12px}
 body.in-greenhouse{--greenhouse-scene-height:max(100dvh,50vw)}
 body.in-greenhouse::before{background-image:url('assets/greenhouse/clear.png')}
 body.in-greenhouse::after{background-image:url('assets/greenhouse/rain.png')}
@@ -378,6 +380,7 @@ body.in-greenhouse::after{background-image:url('assets/greenhouse/rain.png')}
 .greenhouse-cell:disabled{opacity:.72}
 .greenhouse-cell:not(:disabled):hover{transform:none}
 .greenhouse-cell[data-bed=true]{background:url('assets/greenhouse/bed.png') center / 110% 110%;border-color:transparent}
+.greenhouse-cell[data-bed=true][data-wet=true]{background-image:url('assets/greenhouse/Влажная почва в деревянном лотке.png')}
 .greenhouse-cell[data-trellis=true]::before{content:'';position:absolute;inset:-14% -19% -10%;background:url('assets/greenhouse/trellis.png') center bottom / 100% 100% no-repeat;pointer-events:none}
 .greenhouse-cell>*{position:relative}
 .greenhouse-cell.greenhouse-movable{cursor:grab;z-index:1;animation:greenhouse-bed-pulse 1.3s ease-in-out infinite}
@@ -427,6 +430,13 @@ body>footer{position:fixed;bottom:5px;inset-inline:12px;justify-content:center;p
 dialog>form[method=dialog]{position:absolute;right:16px;top:16px;z-index:6}
 dialog>h2{padding-right:32px}
 #hybrid-detail-dialog .close{margin:0}
+.hybrid-detail-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.hybrid-detail-actions #hybrid-plant{grid-column:1/-1}
+.hybrid-detail-actions button{min-width:0;white-space:normal}
+#hybrid-recycle-dialog{width:min(380px,calc(100% - 24px))}
+#hybrid-recycle-dialog>.hybrid-recycle-actions{position:static;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.hybrid-recycle-actions button{min-width:0;white-space:normal}
+#hybrid-recycle-status:empty{display:none}
 .comparison-dialog{overflow:visible;width:min(440px,calc(100% - 28px))}
 .parent-panel{display:none;position:absolute;top:55px;width:210px;padding:14px;border-radius:18px;border:1px solid var(--line);background:var(--base);box-shadow:0 8px 30px var(--shade);font-size:.76rem}
 .parent-left{right:calc(100% + 12px)}.parent-right{left:calc(100% + 12px)}
@@ -678,7 +688,7 @@ button{user-select:none}
   <div class="brand"><span class="brand-icon" aria-hidden="true">✦</span><div><strong>Всходы</strong><small>СЕМЕННАЯ ФЕРМА</small></div></div>
   <span class="weather" id="weather" data-upgrade-target="weather"></span>
   <button id="settings-open" class="quiet" aria-label="Настройки" title="Настройки">⚙️</button>
-  <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🌿 Теплица</a>
+  <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🪴 Теплица</a>
   <a href="#garden" id="garden-link" class="quiet greenhouse-link greenhouse-only">← В сад</a>
 </header>
 <dialog id="settings-dialog" class="glass"><div class="window-heading"><h2>Настройки</h2><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form></div>  <div class="appearance"><div id="accents" aria-label="Цвет акцента"></div><button id="skin" class="quiet" title="Переключить стиль"></button><button id="theme" class="quiet"></button><label class="glass-control" title="От непрозрачных панелей до более выраженного стекла">Стекло <input type="range" id="glass-unified" min="0" max="100" aria-label="Эффект стекла"></label></div>
@@ -711,7 +721,7 @@ button{user-select:none}
       </div>
     </section>
     <section class="glass panel"><span class="kicker">УРОЖАЙ</span><button class="quiet wide" id="basket"><span><span id="basket-icon">🧺</span> Корзина</span><b id="counter"></b></button><button class="quiet wide" id="extractor-open">⚙️ Экстрактор семян</button></section>
-    <section class="glass panel greenhouse-only" id="greenhouse-expansion"><span class="kicker">Грядки</span><button class="quiet wide" id="greenhouse-buy" aria-pressed="false">Новая грядка</button><button class="quiet wide" id="greenhouse-move" aria-pressed="false">Перенос грядок</button></section>
+    <section class="glass panel greenhouse-only" id="greenhouse-expansion"><span class="kicker">Грядки</span><button class="quiet wide" id="greenhouse-buy" aria-pressed="false">Новая грядка</button><button class="quiet wide" id="greenhouse-move" aria-pressed="false">Перенос грядок</button><button class="quiet wide" id="greenhouse-research">🧬 Прокачка селекции</button></section>
     <section class="glass panel" id="upgrade-field"><span class="kicker">Расширение поля</span><p id="expand-note"></p><button class="quiet" id="expand"></button></section><section class="glass panel"><button class="quiet wide" id="hybrids-open">🧬 Гибриды</button><button class="quiet wide" id="diamonds-open">💎 Алмазные улучшения</button><button class="primary" id="upgrades-open">⬆ Улучшения</button></section>
   </aside>
 </main>
@@ -803,7 +813,7 @@ button{user-select:none}
 
   </section>
   <section id="upgrade-tools" hidden><div id="convenience-list"></div></section>
-  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section></section><section id="trait-panel" class="glass panel trait-panel" hidden>
+  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><div id="mutation-upgrades"></div><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section></section><section id="trait-panel" class="glass panel trait-panel" hidden>
     <button class="quiet close" id="trait-close" aria-label="Закрыть">×</button>
     <h2 id="trait-title"></h2><p id="crop-rarity-time"></p><p id="trait-lock"></p><p id="crop-ability"></p><div id="trait-list"></div>
   </section>
@@ -837,6 +847,7 @@ button{user-select:none}
 <strong id="extractor-selection"></strong>
 <label>Количество <input id="extractor-count" type="number" min="1" max="1000" value="1" required></label>
 <button type="button" class="quiet" id="extractor-half">Половина</button><button type="button" class="quiet" id="extractor-all">Всё</button>
+<button type="button" class="quiet" id="extractor-split">Разделить поровну</button>
 <p id="extractor-estimate"></p><button class="primary" id="extractor-start">Начать переработку</button>
 </form>
 
@@ -856,7 +867,21 @@ button{user-select:none}
 <form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
 <div class="detail-heading"><h2 id="hybrid-detail-title"></h2><button class="quiet" id="hybrid-rename">✎</button><button class="quiet" id="hybrid-remove">Удалить</button></div><small id="hybrid-stable-id"></small><form id="hybrid-rename-form" hidden><input id="hybrid-new-name" maxlength="40" aria-label="Название гибрида"><button class="quiet">Сохранить</button></form><div id="hybrid-detail-icon"></div><p id="hybrid-detail-count"></p>
 <p id="hybrid-genetics" class="genetics"></p><div id="hybrid-detail-traits"></div>
-<aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside><button class="primary" id="hybrid-plant">Посадить</button>
+<aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside>
+<div class="hybrid-detail-actions">
+  <button class="primary" id="hybrid-plant">Посадить</button>
+  <button class="quiet" id="hybrid-enhance">✨ Усилить свойства</button>
+  <button class="quiet" id="hybrid-recycle">В экстрактор</button>
+</div>
+</dialog>
+<dialog id="hybrid-recycle-dialog" class="glass" aria-labelledby="hybrid-recycle-title" aria-describedby="hybrid-recycle-quote">
+  <div class="window-heading"><h2 id="hybrid-recycle-title">Переработать семя?</h2></div>
+  <p id="hybrid-recycle-quote"></p>
+  <p id="hybrid-recycle-status" role="status"></p>
+  <form method="dialog" class="hybrid-recycle-actions">
+    <button class="quiet" autofocus>Отмена</button>
+    <button type="button" class="primary" id="hybrid-recycle-confirm">Переработать</button>
+  </form>
 </dialog>
 <div id="hybrid-dock-wrap" class="glass" hidden><button id="dock-close" class="quiet" aria-label="Свернуть или скрыть панель">×</button><button id="dock-handle" aria-label="Открыть панель гибридов">Гибриды</button><div id="hybrid-dock" aria-label="Быстрая посадка гибридов"></div><small class="dock-instruction">Перетяните, чтобы посадить. Нажмите, чтобы открыть инвентарь.</small></div><div class="glass" id="dock-tooltip" role="tooltip" hidden></div><div id="quick-seeds" class="glass" role="group" aria-label="Быстрая посадка" hidden></div><div id="seed-tooltip" class="glass" role="tooltip" hidden></div><dialog id="rot-dialog" class="glass"><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><h2>🍂 Растение сгнило</h2><p id="rot-description"></p><div id="rot-genetics"></div><div id="rot-properties"></div><button class="quiet" id="rot-clear">Убрать остатки</button></dialog><dialog id="resources-dialog" class="glass basket"><div class="window-heading"><h2 class="glass basket-chip"><span id="resource-upgrade-title" data-upgrade-target="discovery">📖 Коллекция</span></h2><span class="basket-wallet glass basket-chip" id="resources-balance"></span><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><nav class="shop-tabs" aria-label="Категории коллекции"><button class="quiet" data-resource-tab="seeds">Семена</button><button class="quiet" data-resource-tab="materials">Предметы</button><button class="quiet" data-resource-tab="cultures">Культуры</button><button class="quiet" data-resource-tab="sets">Наборы</button><button class="quiet" data-resource-tab="stats">Статистика</button></nav></div><section id="resource-cultures"><button id="collection-open" class="primary">📖 Коллекция культур</button><div id="resource-crop-grid"></div></section><div id="resource-grid"></div><section id="resource-stats" hidden></section><p id="resource-note" class="muted"></p></dialog><script>// legacySlot is the numeric identity stored in existing saves. Never reuse it.
 
@@ -1035,6 +1060,7 @@ function newGreenhouse(now       )           {
 
 
 
+
 const total = (counts         ) => counts.reduce((sum,count) => sum + count,0);
 const newFarm = ()      => {
   const now = Date.now();
@@ -1173,6 +1199,7 @@ function water(farm     ,plot      ,now       ,until=now+wateringDuration(farm,p
     if (until <= plot.wetUntil) return false;
     plot.watered = now;
     plot.wetUntil = until;
+    plot.wateringCount=(plot.wateringCount??0)+1;
     return true;
   }
   plot.duration ??= plantGrowthTime(farm,plot);
@@ -1183,6 +1210,7 @@ function water(farm     ,plot      ,now       ,until=now+wateringDuration(farm,p
   delete plot.remaining;
   plot.watered = now;
   plot.wetUntil = until;
+  plot.wateringCount=(plot.wateringCount??0)+1;
   return true;
 }
 function buyConvenience(farm     ,id            ) {
@@ -1407,6 +1435,35 @@ function startExtraction(farm     ,crop       ,count       ,now       ,random=Ma
   if(completionOffsets?.[0]===0)finishExtractionSlot(farm,now,slot);
   return true;
 }
+function hybridRecyclingQuote(line     ,speedLevel       ){
+  const genes=line.genes??{gr:1,ga:1,re:1};
+  const strength=genes.gr+genes.ga+genes.re-3+line.traits.length+
+    Math.floor(Math.log2(1+Object.values(line.powers??{}).reduce((sum,value)=>sum+Math.max(0,value),0)));
+  const points=1+Math.floor(strength/6);
+  const duration=Math.round(Math.min(600000,30000+strength*6500)*extractionTime(speedLevel)/extractionTime(0));
+  return {points,duration};
+}
+function startHybridRecycling(farm     ,index       ,now       ){
+  const line=farm.lines[index],machine=farm.extraction;
+  const slot=Array.from({length:machine.slots??1},(_,i)=>i).find(i=>!extractionJobs(machine)[i]);
+  if(!line||line.archived||line.seeds<1||slot===undefined)return false;
+  const {points,duration}=hybridRecyclingQuote(line,machine.speed);
+  line.seeds--;
+  if(line.seeds===0)line.archived=true;
+  setExtractionJob(machine,slot,{recycledHybrid:line.name,crop:line.crop,input:1,output:points,outputs:[points],done:0,start:now,end:now+duration});
+  return true;
+}
+function splitExtraction(farm     ,crop       ,now       ){
+  const slots=Array.from({length:farm.extraction.slots??1},(_,i)=>i).filter(i=>!extractionJobs(farm.extraction)[i]);
+  const count=Math.min(farm.harvest[crop],extractionCapacity*slots.length);
+  if(slots.length<2||count<2)return false;
+  const batches=Math.min(count,slots.length);
+  for(let i=0;i<batches;i++){
+    const portion=Math.floor(count/batches)+Number(i<count%batches);
+    if(!startExtraction(farm,crop,portion,now,Math.random,slots[i]))return i>0;
+  }
+  return true;
+}
 function finishExtraction(farm     ,now       ) {
   let changed=false;
   for(let slot=0;slot<(farm.extraction.slots??1);slot++){
@@ -1420,6 +1477,13 @@ function extractionDeadline(job              ,index       ){
 function finishExtractionSlot(farm     ,now       ,slot       ){
   const machine=farm.extraction,job=extractionJobs(machine)[slot];
   if(!job)return false;
+  if(job.recycledHybrid!==undefined){
+    if(now<job.end)return false;
+    farm.mutationPoints=(farm.mutationPoints??0)+job.output;
+    machine.last=job.recycledHybrid+' → 🧬 +'+job.output;
+    setExtractionJob(machine,slot,null);
+    return true;
+  }
   let completed=job.done;
   while(completed<job.input&&extractionDeadline(job,completed)<=now)completed++;
   if(completed<=job.done)return false;
@@ -1438,7 +1502,7 @@ function finishExtractionSlot(farm     ,now       ,slot       ){
 function stopExtraction(farm     ,now       ,slot=0) {
   finishExtractionSlot(farm,now,slot);
   const job=extractionJobs(farm.extraction)[slot];
-  if(!job)return false;
+  if(!job||job.recycledHybrid!==undefined)return false;
   farm.harvest[job.crop]+=job.input-job.done;
   farm.harvestValue[job.crop]+=(job.input-job.done)*(job.unitValue??cropPrices[job.crop]);
   farm.harvestQuality[job.crop]+=(job.quality??0)*(job.input-job.done);
@@ -1497,10 +1561,28 @@ function mutationParentProgress(farm     ,plot      ,at       ){
   const remaining=plot.ready===null?plot.remaining??duration:plot.ready-growthThrough;
   return Math.max(0,Math.min(1,1-remaining/duration));
 }
+
+const mutationUpgradeIds                  =["interval","genetics","maturity"];
+const mutationUpgradeMax=10;
+const mutationLevel=(farm     ,id                )=>farm.mutationUpgrades?.[id]??0;
+const mutationUpgradePrices=[2,6,15,30,50,80,120,175,250,350];
+const mutationUpgradeCost=(level       )=>mutationUpgradePrices[level]??Infinity;
+function buyMutationUpgrade(farm     ,id                ){
+  const level=mutationLevel(farm,id),cost=mutationUpgradeCost(level);
+  if(level>=mutationUpgradeMax||(farm.mutationPoints??0)<cost)return false;
+  farm.mutationPoints=(farm.mutationPoints??0)-cost;
+  (farm.mutationUpgrades??={})[id]=level+1;
+  return true;
+}
 const mutationInterval = (re       ) => Math.round(30-20*(re-1)/29)*1000;
+const upgradedMutationInterval=(re       ,level       )=>Math.max(6000,Math.round(mutationInterval(re)*.94**level));
+const mutationMaturityDuration=(growth       ,level       )=>Math.max(1,Math.round(Math.min(growth,120000)*.96**level));
+const mutationInheritanceWeight=(level       )=>.5+.02*level;
+const mutationStatGainChance=(level       )=>.2+.01*level;
 
 function checkMutations(farm     ,now       ,random=Math.random,greenhouse            ) {
-  const area=greenhouse??farm;
+  if(!greenhouse)return false;
+  const area=greenhouse;
   if(now<area.mutationCheck)return false;
   for(let checks=0;area.mutationCheck<=now&&checks<2000;checks++){
   const at=area.mutationCheck;
@@ -1518,14 +1600,15 @@ function checkMutations(farm     ,now       ,random=Math.random,greenhouse      
     const progress=parents.reduce((sum,p)=>sum+mutationParentProgress(farm,p,at),0)/2;
     if(random()>=mutationChance(potential)*(.2+.8*progress))continue;
     const chosen=parents[random()<.5?0:1];
-    const duration=chosen.duration??growthTime(chosen.crop,collectionGrowth(farm,chosen.crop));
+    const growth=chosen.duration??growthTime(chosen.crop,collectionGrowth(farm,chosen.crop));
+    const duration=mutationMaturityDuration(growth,mutationLevel(farm,"maturity"));
     const inherited=parents.flatMap(p=>p.line===undefined?[]:farm.lines[p.line].traits);
     area.plots[index]={crop:chosen.crop,planted:at,watered:at,ready:at+duration,wetUntil:at+duration,
       duration,mystery:{parentNames:parents.map(p=>p.line===undefined?crops[p.crop].name:farm.lines[p.line].name),genomes:parents.map(p=>genome(farm,p)),parents:parents.map(p=>p.crop),traits:inherited}};
     area.rot[index]=null;
     area.plots[index] .mystery .preview=generateMutationLine(farm,area.plots[index] ,random);
   }
-  area.mutationCheck=at+mutationInterval(fastestRe);
+  area.mutationCheck=at+upgradedMutationInterval(fastestRe,mutationLevel(farm,"interval"));
   }
   return true;
 }
@@ -1563,9 +1646,9 @@ function generateMutationLine(farm     ,plot      ,random=Math.random)      {
   const genes      ={gr:1,ga:1,re:1};
   for(const id of ['gr','ga','re']         ){
     const a=parents[0].genes[id],b=parents[1].genes[id],low=Math.min(a,b),high=Math.max(a,b);
-    const value=low+(high-low)*.25;
+    const value=low+(high-low)*mutationInheritanceWeight(mutationLevel(farm,"genetics"));
     let stat=Math.floor(value)+(random()<value%1?1:0);
-    const shift=random();const improvement=.2+(parents.reduce((s,p)=>s+(p.powers.mutation??0),0)/parents.length)/100;if(shift<improvement)stat+=1;else if(shift>.95)stat-=1;
+    const shift=random();const improvement=mutationStatGainChance(mutationLevel(farm,"genetics"))+(parents.reduce((s,p)=>s+(p.powers.mutation??0),0)/parents.length)/100;if(shift<improvement)stat+=1;else if(shift>.95)stat-=1;
     genes[id]=Math.max(1,Math.min(30,stat));
   }
   const powers                      ={};
@@ -1745,7 +1828,7 @@ function cloneGenome(data       )       {return {genes:{...data.genes},powers:{.
 
 
 
-const mutationChance = (potential       ) => .08+.32*((Math.max(1,Math.min(30,potential))-1)/29)**2;
+const mutationChance = (potential       ) => .24+.26*((Math.max(1,Math.min(30,potential))-1)/29)**2;
 
 const diamondBranches = {
   find:'💎 Поиск кристаллов', double:'✨ Двойная находка', charge:'⚡ Кристальный заряд',
@@ -2215,6 +2298,7 @@ function loadFarm()      {
     s.harvestValue ??= [...(s.harvest??[])];
     if(s.harvestValue.length===3)s.harvestValue=s.harvestValue.concat(Array(crops.length-3).fill(0));
     if(!Array.isArray(s.harvestValue)||s.harvestValue.length!==crops.length||!s.harvestValue.every((v        )=>typeof v==="number"&&Number.isFinite(v)&&v>=0))throw new Error("Повреждена стоимость урожая");
+    if(s.mutationUpgrades!==undefined&&(!s.mutationUpgrades||typeof s.mutationUpgrades!=='object'||Array.isArray(s.mutationUpgrades)||mutationUpgradeIds.some(id=>!int(s.mutationUpgrades?.[id]??0,0,mutationUpgradeMax))))throw new Error('Повреждена прокачка селекции');
     if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
     s.mutationCheck ??= Date.now()+(s.offset??0)+30000;
     if(!int(s.mutationCheck,0))throw new Error("Повреждён таймер селекции");
@@ -2242,6 +2326,7 @@ function loadFarm()      {
           !int(job.output,0) || !int(job.start,0) || !int(job.end,job.start)))
       throw new Error("Повреждены данные экстрактора");
     if(job) {
+      if(job.recycledHybrid!==undefined&&(typeof job.recycledHybrid!=="string"||job.input!==1||job.output<1))throw new Error("Повреждена переработка гибрида");
       if(job.completionOffsets!==undefined){
         const offsets=job.completionOffsets;
         if(!Array.isArray(offsets)||offsets.length!==job.input||offsets.at(-1)!==job.end-job.start||
@@ -2297,6 +2382,7 @@ function loadFarm()      {
     const counts = (a        ) => Array.isArray(a) && a.length === crops.length && a.every(n => int(n,0));
     const validPlot = (p           ) => p === null || (p && int(p.crop,0,crops.length-1) && int(p.planted,0) &&
           (p.ready === null || int(p.ready,p.planted)) &&
+          (p.wateringCount === undefined || int(p.wateringCount,0)) &&
           (p.watered === undefined || (p.ready !== null && int(p.watered,p.planted,p.ready))) &&
           (p.wetUntil === undefined || int(p.wetUntil,p.planted)) &&
           (p.remaining === undefined || (Number.isFinite(p.remaining)&&p.remaining>0)) &&
@@ -2730,6 +2816,7 @@ function renderPlotTooltip(plot                     ,rot                        
     if(!ripe&&plot.ready!==null&&(plot.wetUntil??0)>now){
       lines.push(plot.wetUntil >=plot.ready?'💧 Полито до созревания':'💧 Влаги ещё '+clock(plot.wetUntil -now));
     }
+    if(!plot.mystery)lines.push("💧 Поливов: "+(plot.wateringCount??0));
     const forecast=!plot.mystery?ripeningInfo(farm,plot):null;
     if(forecast)lines.push('Цена сейчас ×'+forecast.value.toFixed(2)+' → ×'+forecast.nextValue.toFixed(2),
       'Через '+clock(forecast.next-now)+' · риск гнили '+formatChance(forecast.risk*100)+'%');
@@ -3713,7 +3800,9 @@ const extractionCards=Array.from({length:3},(_,slot)=>{
   fill.setAttribute('aria-hidden','true');
   card.prepend(fill);
   card.onclick=()=>{
-    if(extractionJobs(farm.extraction)[slot]){
+    const job=extractionJobs(farm.extraction)[slot];
+    if(job?.recycledHybrid!==undefined)return;
+    if(job){
       if(confirm('Остановить эту партию и вернуть оставшиеся плоды?')&&stopExtraction(farm,nowTime(),slot))commit('Остаток урожая возвращён в корзину.');
       return;
     }
@@ -3788,15 +3877,15 @@ function renderExtraction(){
       card.dataset.batchEnd=current?String(current.end):'';
     }
     card.querySelector('b') .textContent=current?crops[current.crop].symbol:'+';
-    card.querySelector('span:not(.extractor-fill)') .textContent=current?crops[current.crop].name+' ×'+(current.input-current.done):'Слот '+(slot+1);
-    card.querySelector('small') .textContent=current?clock(period-elapsed)+' · 🌱 '+total(current.outputs.slice(0,current.done)):'Добавить урожай';
-    card.title=current?'Нажми, чтобы остановить партию':'Выбрать урожай и количество';
+    card.querySelector('span:not(.extractor-fill)') .textContent=current?current.recycledHybrid??crops[current.crop].name+' ×'+(current.input-current.done):'Слот '+(slot+1);
+    card.querySelector('small') .textContent=current?clock(period-elapsed)+(current.recycledHybrid!==undefined?' · 🧬 +'+current.output:' · 🌱 '+total(current.outputs.slice(0,current.done))):'Добавить урожай';
+    card.title=current?(current.recycledHybrid!==undefined?'Утилизация семени':'Нажми, чтобы остановить партию'):'Выбрать урожай и количество';
   });
   const activeJobs=jobs.filter(Boolean);
   const toast=get('extraction-toast');
   toast.hidden=extractionDialog.open||!activeJobs.length;
   get('extraction-toast-label').textContent='⚙️ Партий в работе: '+activeJobs.length;
-  get('extraction-toast-time').textContent=machine.last;
+  get('extraction-toast-time').textContent=activeJobs.length?'До ближайшего результата: '+clock(Math.max(0,Math.min(...activeJobs.map(job=>extractionDeadline(job ,job .done)))-now)):'';
   get('extractor-last').textContent=machine.last||'Результат появится после обработки первого плода.';
   crops.forEach((crop,i)=>{
     const card=button('extractor-crop-'+i);card.hidden=!farm.harvest[i];
@@ -3810,6 +3899,9 @@ function renderExtraction(){
   const bonus=extractionRange(machine.yield);
   get('extractor-estimate').textContent=Number.isSafeInteger(count)&&count>0 ?
     'Время: '+clock(extractionTime(machine.speed)*count)+' · от 1 до '+bonus.max+' семян с плода'+(bonus.extra?' · '+formatChance(bonus.extra*100)+'% расширить диапазон до '+(bonus.max+1):'')+' · неудача 1%, последний посевной материал защищён.' : 'Введи целое количество.';
+  const freeSlots=extractionCards.filter((_,slot)=>slot<slots&&!jobs[slot]).length;
+  button('extractor-split').hidden=slots<2;
+  button('extractor-split').disabled=freeSlots<2||available<2;
   button('extractor-start').disabled=!!jobs[selectedExtractionSlot] || !Number.isSafeInteger(count)||count<1||count>Math.min(extractionCapacity,available);
   for(const id of ['speed','yield']         ){
     const level=machine[id],price=extractionCost(level,id);
@@ -3821,6 +3913,11 @@ function renderExtraction(){
 extractionInput.oninput=renderExtraction;
 button('extractor-half').onclick=()=>{extractionInput.value=String(Math.max(1,Math.min(extractionCapacity,Math.floor(farm.harvest[extractionCrop]/2))));renderExtraction();};
 button('extractor-all').onclick=()=>{extractionInput.value=String(Math.max(1,Math.min(extractionCapacity,farm.harvest[extractionCrop])));renderExtraction();};
+button('extractor-split').onclick=()=>{
+  if(!splitExtraction(farm,extractionCrop,nowTime()))return;
+  extractionPicker.close();
+  commit('Урожай распределён по свободным слотам.');
+};
 get                 ('extractor-form').onsubmit=event=>{
   event.preventDefault();
   if(startExtraction(farm,extractionCrop,extractionInput.valueAsNumber,nowTime(),Math.random,selectedExtractionSlot)){extractionPicker.close();commit('Урожай отправлен в экстрактор.');}
@@ -3850,17 +3947,20 @@ document.querySelectorAll             ('[data-upgrade-target]').forEach(title=>{
 });
 function animateExtractedSeeds(crop       ,count       ) {
   if(count<=0||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  const row=button('seed-'+crop);
+  const inGreenhouse=greenhouseVisible();
+  const row=button(inGreenhouse?'garden-link':'seed-'+crop);
   if(row.hidden)return;
-  const start=get('seed-stock-title').getBoundingClientRect(),end=row.getBoundingClientRect();
+  const start=get(inGreenhouse?'garden-link':'seed-stock-title').getBoundingClientRect(),end=row.getBoundingClientRect();
+  const startX=inGreenhouse?start.right-165:start.right+8;
+  const startY=inGreenhouse?start.bottom+34:start.top+start.height/2;
   const flight=document.createElement('span');flight.className='harvest-flight';
   flight.textContent=crops[crop].symbol+' '+crops[crop].name+' ×'+number(count);
-  flight.style.left=(start.right+8)+'px';flight.style.top=(start.top+start.height/2)+'px';
+  flight.style.left=startX+'px';flight.style.top=startY+'px';
   document.documentElement.append(flight);
   try{
     const animation=flight.animate([
       {transform:'translate(0,-50%)',opacity:1},
-      {transform:'translate('+(end.left+end.width/2-start.right-8)+'px,'+(end.top+end.height/2-start.top-start.height/2)+'px) scale(.6)',opacity:.6}
+      {transform:'translate('+(end.left+end.width/2-startX)+'px,'+(end.top+end.height/2-startY)+'px) scale(.6)',opacity:.6}
     ],{duration:620,easing:'ease-in-out'});
     animation.onfinish=()=>{
       flight.remove();
@@ -3897,6 +3997,7 @@ function showHybrid(index       ){
   renderComparison(hybridDetail,line,'hybrid-genetics','hybrid-detail-traits');
   hybridDetail.showModal();
   renderEnhancementShortcut();
+  button('hybrid-recycle').disabled=Array.from({length:farm.extraction.slots??1},(_,slot)=>extractionJobs(farm.extraction)[slot]).every(Boolean);
 }
 button('hybrid-plant').onclick=()=>{
   const line=farm.lines[detailLine];if(!line||line.archived||line.seeds<1)return;
@@ -3904,6 +4005,27 @@ button('hybrid-plant').onclick=()=>{
   inventoryDockNext="open";
   setDockState("open");
   hybridDetail.close();hybridsDialog.close();commit('Выбран '+line.name);
+};
+const recycleDialog=get                   ('hybrid-recycle-dialog');
+button('hybrid-recycle').onclick=()=>{
+  const line=farm.lines[detailLine];
+  if(!line||line.archived||line.seeds<1)return;
+  const {points,duration}=hybridRecyclingQuote(line,farm.extraction.speed);
+  get('hybrid-recycle-quote').textContent='Одно семя «'+line.name+'» → 🧬 '+points+' за '+clock(duration)+'.';
+  get('hybrid-recycle-status').textContent='';
+  recycleDialog.showModal();
+};
+button('hybrid-recycle-confirm').onclick=()=>{
+  if(!startHybridRecycling(farm,detailLine,nowTime())){
+    get('hybrid-recycle-status').textContent='Нужно доступное семя и свободный слот экстрактора.';
+    return;
+  }
+  recycleDialog.close();
+  if(selectedLine===detailLine&&farm.lines[detailLine].seeds===0){selectedLine=undefined;seed=-1;}
+  hybridDetail.close();
+  hybridsDialog.close();
+  button('extractor-open').click();
+  commit('Семя гибрида отправлено в экстрактор.');
 };
 button('hybrid-remove').onclick=()=>{
   if(!confirmDeletePress(button('hybrid-remove')))return;
@@ -3966,7 +4088,39 @@ function finishHybridStroke(event             ){
 window.addEventListener('pointerup',finishHybridStroke);
 window.addEventListener('pointercancel',finishHybridStroke);
 let hybridGridSignature="";
+const mutationUpgradeLabels                                        ={
+  interval:['Частота проверок','Каждый уровень сокращает интервал проверок на 6%. Минимум 6 секунд.'],
+  genetics:['Наследование Gr, Ga и Re','На 2 п. п. больше веса сильного родителя и на 1 п. п. выше шанс прибавки к стату за уровень.'],
+  maturity:['Созревание находок','Каждый уровень сокращает время созревания находки на 4%.']
+};
+const mutationUpgradeCards=mutationUpgradeIds.map(id=>{
+  const card=document.createElement('section');card.className='glass panel';
+  const title=document.createElement('h3'),progress=document.createElement('strong'),description=document.createElement('p'),effect=document.createElement('p'),buy=document.createElement('button');
+  [title.textContent,description.textContent]=mutationUpgradeLabels[id];
+  effect.style.whiteSpace='pre-line';
+  buy.className='quiet';
+  buy.onclick=()=>{if(buyMutationUpgrade(farm,id))commit('Селекция улучшена.');};
+  card.append(title,progress,description,effect,buy);get('mutation-upgrades').append(card);
+  return {id,progress,effect,buy};
+});
+function mutationUpgradeEffect(id                ,level       ){
+  const next=Math.min(level+1,mutationUpgradeMax);
+  const compare=(value                      )=>value(level)+(next===level?'':' → '+value(next));
+  const seconds=(ms       )=>(ms/1000).toLocaleString('ru-RU',{maximumFractionDigits:1})+' с';
+  if(id==='interval')return 'При Re 1 — '+compare(rank=>seconds(upgradedMutationInterval(1,rank)))+
+    '\nПри Re 30 — '+compare(rank=>seconds(upgradedMutationInterval(30,rank)));
+  if(id==='maturity')return 'Максимум для находки — '+compare(rank=>seconds(mutationMaturityDuration(120000,rank)));
+  return 'Вес сильного родителя — '+compare(rank=>formatChance(mutationInheritanceWeight(rank)*100)+'%')+
+    '\nБазовый шанс +1 к стату — '+compare(rank=>formatChance(mutationStatGainChance(rank)*100)+'%');
+}
 function renderLines(){
+  for(const {id,progress,effect,buy} of mutationUpgradeCards){
+    const level=mutationLevel(farm,id),cost=mutationUpgradeCost(level);
+    progress.textContent='Уровень '+level+' из '+mutationUpgradeMax;
+    effect.textContent=mutationUpgradeEffect(id,level);
+    buy.textContent=level===mutationUpgradeMax?'Максимум':'Улучшить · 🧬 '+number(cost);
+    buy.disabled=level===mutationUpgradeMax||(farm.mutationPoints??0)<cost;
+  }
   const used=hybridCount(farm);
   for(const i of markedHybrids)if(farm.lines[i]?.archived||!farm.lines[i]?.seeds)markedHybrids.delete(i);
   get('hybrid-capacity').textContent=used+'/'+farm.hybridSlots;
@@ -4192,6 +4346,7 @@ function renderDock(){
   group.style.setProperty('--dock-columns',String(Math.max(1,Math.ceil(cards.length/2))));
   group.append(...cards);
   dock.replaceChildren(group);
+  if(cards.length<2)dockWrap.classList.remove("greenhouse-dock-expanded");
 }
 function applyPlantGlows(){
   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
@@ -4435,9 +4590,20 @@ function syncGreenhouseScreen(){
   }else if(hybridCount(farm)===0)setDockState('hidden');
 }
 syncGreenhouseScreen();
-window.addEventListener('hashchange',()=>{syncGreenhouseScreen();render();});
+window.addEventListener('hashchange',()=>{
+  syncGreenhouseScreen();render();
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+    get(greenhouseVisible()?'greenhouse-board':'field').animate(
+      [{opacity:.45,scale:'.985'},{opacity:1,scale:'1'}],{duration:240,easing:'ease-out'});
+  }
+});
+const syncFarmContrast=()=>document.documentElement.classList.toggle('farm-background',document.hidden||!document.hasFocus());
+window.addEventListener('focus',syncFarmContrast);
+window.addEventListener('blur',syncFarmContrast);
+document.addEventListener('visibilitychange',syncFarmContrast);
+syncFarmContrast();
 dockWrap.addEventListener('pointerenter',event=>{
-  if(greenhouseVisible()&&event.pointerType==='mouse')dockWrap.classList.add('greenhouse-dock-expanded');
+  if(greenhouseVisible()&&event.pointerType==='mouse'&&dock.scrollWidth>dock.clientWidth+1)dockWrap.classList.add('greenhouse-dock-expanded');
 });
 dockWrap.addEventListener('pointerleave',()=>dockWrap.classList.remove('greenhouse-dock-expanded'));
 const greenhouseRight=get('greenhouse-expansion').parentElement ;
@@ -4453,7 +4619,9 @@ window.addEventListener('keydown',event=>{
     greenhouseAltHeld=true;
   }else if(event.code==='KeyM'&&!event.altKey&&!event.ctrlKey&&!event.metaKey){
     event.preventDefault();
-    greenhouseMoveHeld=true;
+    if(event.repeat)return;
+    if(greenhouseTool==='move'){greenhouseTool=null;movingBed=-1;}
+    else greenhouseMoveHeld=true;
   }else return;
   if(!event.repeat){
     get('quick-seeds').hidden=true;
@@ -4487,6 +4655,7 @@ function tickGreenhouse(now       ){
 function greenhouseBedPrice(area           ){
   return Math.ceil(3*(area.beds.filter(Boolean).length-2)**1.4);
 }
+button('greenhouse-research').onclick=()=>{button('upgrades-open').click();button('upgrade-tab-hybrids').click();};
 for(const tool of ['trellis','buy','move']         ){
   button('greenhouse-'+tool).onclick=()=>{
     greenhouseTool=greenhouseTool===tool?null:tool;
@@ -4630,7 +4799,7 @@ function renderGreenhouse(now       ){
   const area=farm.greenhouse;
   if(!area)return;
   const candidates=mutationCandidates(farm,area,false)
-    .filter(({neighbors})=>neighbors.filter(plot=>matureMutationParent(plot,now)).length>=2);
+    .filter(({neighbors})=>neighbors.filter(plot=>plot.planted<=now).length>=2);
   get('greenhouse-no-trellis').hidden=!candidates.length||candidates.some(({index})=>area.trellises[index])||
     area.plots.some((plot,index)=>plot?.mystery&&area.trellises[index]);
   get('greenhouse-dry').hidden=!area.plots.some(plot=>plot&&!plot.mystery&&plot.ready===null);
@@ -4645,7 +4814,8 @@ function renderGreenhouse(now       ){
     const tile=greenhouseGrid.children[index]                     ;
     const plot=area.plots[index],trellis=area.trellises[index],rot=area.rot[index];
     tile.dataset.bed=String(bed);
-    tile.dataset.trellis=String(trellis);
+    tile.dataset.wet=String(!plot?.mystery&&(plot?.wetUntil??0)>now);
+    tile.dataset.trellis=String(trellis&&!plot?.mystery);
     tile.dataset.mystery=String(!!plot?.mystery);
     tile.setAttribute('aria-pressed',String(movingBed===index));
     tile.disabled=!bed&&!moving&&(greenhouseTool!=='buy'||greenhouseAltHeld);
@@ -4755,11 +4925,10 @@ const tick = () => {
   const greenhouseChanged=tickGreenhouse(nowTime());
   const abilitiesChanged=updatePlantAbilities(farm,nowTime());
   const ripened=updateRipening(farm,nowTime());
-  const mutated=checkMutations(farm,nowTime());
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(greenhouseChanged || abilitiesChanged || ripened || mutated || weatherChanged || extracted || speed !== 1 ||
+  if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
     if(saveFarm(farm))lastPlayTimeSave=totalPlayTime();
   }
@@ -4989,8 +5158,7 @@ function renderEnhancements(){
  }
 }
 function renderEnhancementShortcut(){
- let action=document.getElementById('hybrid-enhance');if(!action){action=document.createElement('button');action.id='hybrid-enhance';action.className='quiet';action.textContent='✨ Усилить свойства';get('hybrid-detail-traits').after(action);}
- action.onclick=()=>openEnhancement(detailLine);
+ button('hybrid-enhance').onclick=()=>openEnhancement(detailLine);
 }
 renderAlpha();
 
@@ -5449,7 +5617,7 @@ function renderPackWorkshop(){
  crops.forEach((crop,i)=>{const row=get('odds-'+i);row.hidden=odds[i]<=0;row.textContent=(unlocked(farm,i)?crop.symbol+' '+crop.name:'❔ Неизвестно · '+baseRarityNames[cropTiers[i]])+' · '+preciseChance(odds[i])+'%';row.classList.toggle('unknown-crop',!unlocked(farm,i));});}
  seedPacks.forEach((_,i)=>{get('pack-card-note-'+i).textContent='Упор: '+['обычные','редкие','эпические','легендарные'][i];});
  const chosen=Math.max(0,selectedPack),odds=openingOdds(farm,chosen),target=total(odds.filter((_,i)=>cropTiers[i]===chosen));
- get('luck-preview').textContent='Уровень '+farm.luck+' · '+seedPacks[chosen].name+': '+preciseChance(target)+'% своей редкости.';
+ get('luck-preview').textContent='Уровень '+farm.luck+'. Повышает шанс получить культуру редкости выбранного пакета. Для пакета «'+seedPacks[chosen].name+'» суммарный шанс таких культур сейчас '+preciseChance(target)+'%.';
  button('buy-luck').disabled=farm.coins<luckPrice(farm.luck);button('buy-luck').textContent='🪙 '+number(luckPrice(farm.luck));
  for(const id of ['speed','slots','refund']         ){const level=farm.packProgress[id],blocked=id==='refund'&&level>=3&&!farm.packProgress.refundGate,offer=blocked?packGateOffer(farm,'refund'):packUpgradeOffer(farm,id);
  get('pack-upgrade-'+id).textContent=id==='speed'?'Уровень '+level+' · '+(packOpeningTime(farm)/1000).toLocaleString('ru-RU')+' с · минимум 0,5 с':id==='slots'?limit+' из 5 слотов.':'Уровень '+level+' · '+packRefundRate(farm)+'% за повторку редкости мешка, 5% за остальные.';

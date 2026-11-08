@@ -77,8 +77,7 @@ function renderEnhancements(){
  }
 }
 function renderEnhancementShortcut(){
- let action=document.getElementById('hybrid-enhance');if(!action){action=document.createElement('button');action.id='hybrid-enhance';action.className='quiet';action.textContent='✨ Усилить свойства';get('hybrid-detail-traits').after(action);}
- action.onclick=()=>openEnhancement(detailLine);
+ button('hybrid-enhance').onclick=()=>openEnhancement(detailLine);
 }
 renderAlpha();
 

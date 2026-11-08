@@ -21,6 +21,7 @@ function water(farm:Farm,plot:Plant,now:number,until=now+wateringDuration(farm,p
     if (until <= plot.wetUntil) return false;
     plot.watered = now;
     plot.wetUntil = until;
+    plot.wateringCount=(plot.wateringCount??0)+1;
     return true;
   }
   plot.duration ??= plantGrowthTime(farm,plot);
@@ -31,6 +32,7 @@ function water(farm:Farm,plot:Plant,now:number,until=now+wateringDuration(farm,p
   delete plot.remaining;
   plot.watered = now;
   plot.wetUntil = until;
+  plot.wateringCount=(plot.wateringCount??0)+1;
   return true;
 }
 function buyConvenience(farm:Farm,id:Convenience) {

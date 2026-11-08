@@ -4,7 +4,7 @@ type ParentRecord = {name:string;crop:number;genome:Genome};
 type RotRecord = {line?:number;crop:number;at:number;checks:number;risk:number;value:number;name:string;genome:Genome};
 type Line = {enhancements?:Record<string,number>;parents?:ParentRecord[];genes?:Genes;powers?:Record<string,number>;archived?:boolean;name:string;crop:number;traits:string[];seeds:number};
 type Mystery = {parentNames?:string[];preview?:Line;genomes?:Genome[];parents:number[];traits:string[]};
-type Plant = {abilityThrough?:number;dryThrough?:number;boostCheck?:number;ripening?:{next:number;checks:number;value:number};rainThrough?:number;mystery?:Mystery;line?:number;crop:number; planted:number; ready:number|null; watered?:number; wetUntil?:number; remaining?:number; duration?:number};
+type Plant = {wateringCount?:number;abilityThrough?:number;dryThrough?:number;boostCheck?:number;ripening?:{next:number;checks:number;value:number};rainThrough?:number;mystery?:Mystery;line?:number;crop:number; planted:number; ready:number|null; watered?:number; wetUntil?:number; remaining?:number; duration?:number};
 const traits = [
   {id:'growth', label:'⚡ Скорость роста'},
   {id:'yield', label:'🧺 Урожайность'},
@@ -23,7 +23,7 @@ const conveniences = [
 type Convenience = typeof conveniences[number]['id'];
 const emptyConveniences = ():Record<Convenience,boolean> => ({sowAll:false,waterAll:false,irrigation:false,replant:false});
 const defaultGlass = () => ({transparency:30,strength:60});
-type ExtractionJob = {completionOffsets?:number[];unitValue?:number;quality?:number;crop:number;input:number;output:number;outputs:number[];done:number;start:number;end:number};
+type ExtractionJob = {recycledHybrid?:string;completionOffsets?:number[];unitValue?:number;quality?:number;crop:number;input:number;output:number;outputs:number[];done:number;start:number;end:number};
 type Extraction = {extraJobs?: (ExtractionJob|null)[];slots?:number;history?:{crop:number;input:number;seeds:number}[];speed:number;yield:number;job:ExtractionJob|null;processed:number;produced:number;last:string};
 const newExtraction = ():Extraction => ({speed:0,yield:0,job:null,processed:0,produced:0,last:""});
 type PlotArea={plots:(Plant|null)[];rot:(RotRecord|null)[]};
@@ -44,6 +44,7 @@ type Farm = {
   statistics?:FarmStatistics;
   diamonds?:DiamondState;
   mutationPoints?:number;
+  mutationUpgrades?: Partial<Record<MutationUpgrade,number>>;
   saveCheats?:boolean;
   resources:Resources;epoch:number;size:number;plots:(Plant|null)[];seeds:number[];harvest:number[];
   harvestValue:number[];harvestQuality:number[];rot:(RotRecord|null)[];

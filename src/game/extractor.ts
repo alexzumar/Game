@@ -50,6 +50,35 @@ function startExtraction(farm:Farm,crop:number,count:number,now:number,random=Ma
   if(completionOffsets?.[0]===0)finishExtractionSlot(farm,now,slot);
   return true;
 }
+function hybridRecyclingQuote(line:Line,speedLevel:number){
+  const genes=line.genes??{gr:1,ga:1,re:1};
+  const strength=genes.gr+genes.ga+genes.re-3+line.traits.length+
+    Math.floor(Math.log2(1+Object.values(line.powers??{}).reduce((sum,value)=>sum+Math.max(0,value),0)));
+  const points=1+Math.floor(strength/6);
+  const duration=Math.round(Math.min(600000,30000+strength*6500)*extractionTime(speedLevel)/extractionTime(0));
+  return {points,duration};
+}
+function startHybridRecycling(farm:Farm,index:number,now:number){
+  const line=farm.lines[index],machine=farm.extraction;
+  const slot=Array.from({length:machine.slots??1},(_,i)=>i).find(i=>!extractionJobs(machine)[i]);
+  if(!line||line.archived||line.seeds<1||slot===undefined)return false;
+  const {points,duration}=hybridRecyclingQuote(line,machine.speed);
+  line.seeds--;
+  if(line.seeds===0)line.archived=true;
+  setExtractionJob(machine,slot,{recycledHybrid:line.name,crop:line.crop,input:1,output:points,outputs:[points],done:0,start:now,end:now+duration});
+  return true;
+}
+function splitExtraction(farm:Farm,crop:number,now:number){
+  const slots=Array.from({length:farm.extraction.slots??1},(_,i)=>i).filter(i=>!extractionJobs(farm.extraction)[i]);
+  const count=Math.min(farm.harvest[crop],extractionCapacity*slots.length);
+  if(slots.length<2||count<2)return false;
+  const batches=Math.min(count,slots.length);
+  for(let i=0;i<batches;i++){
+    const portion=Math.floor(count/batches)+Number(i<count%batches);
+    if(!startExtraction(farm,crop,portion,now,Math.random,slots[i]))return i>0;
+  }
+  return true;
+}
 function finishExtraction(farm:Farm,now:number) {
   let changed=false;
   for(let slot=0;slot<(farm.extraction.slots??1);slot++){
@@ -63,6 +92,13 @@ function extractionDeadline(job:ExtractionJob,index:number){
 function finishExtractionSlot(farm:Farm,now:number,slot:number){
   const machine=farm.extraction,job=extractionJobs(machine)[slot];
   if(!job)return false;
+  if(job.recycledHybrid!==undefined){
+    if(now<job.end)return false;
+    farm.mutationPoints=(farm.mutationPoints??0)+job.output;
+    machine.last=job.recycledHybrid+' → 🧬 +'+job.output;
+    setExtractionJob(machine,slot,null);
+    return true;
+  }
   let completed=job.done;
   while(completed<job.input&&extractionDeadline(job,completed)<=now)completed++;
   if(completed<=job.done)return false;
@@ -81,7 +117,7 @@ function finishExtractionSlot(farm:Farm,now:number,slot:number){
 function stopExtraction(farm:Farm,now:number,slot=0) {
   finishExtractionSlot(farm,now,slot);
   const job=extractionJobs(farm.extraction)[slot];
-  if(!job)return false;
+  if(!job||job.recycledHybrid!==undefined)return false;
   farm.harvest[job.crop]+=job.input-job.done;
   farm.harvestValue[job.crop]+=(job.input-job.done)*(job.unitValue??cropPrices[job.crop]);
   farm.harvestQuality[job.crop]+=(job.quality??0)*(job.input-job.done);

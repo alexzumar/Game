@@ -81,4 +81,4 @@ function cloneGenome(data:Genome):Genome{return {genes:{...data.genes},powers:{.
 
 
 
-const mutationChance = (potential:number) => .08+.32*((Math.max(1,Math.min(30,potential))-1)/29)**2;
+const mutationChance = (potential:number) => .24+.26*((Math.max(1,Math.min(30,potential))-1)/29)**2;
