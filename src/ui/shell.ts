@@ -69,7 +69,7 @@ function render() {
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
   get('counter').textContent = number(total(farm.harvest));
-  get('save-state').textContent = storageError ? 'Ошибка сохранения' : 'Сохранение на устройстве';
+  get('save-state').textContent = storageError ? 'Ошибка сохранения' : '';
   get('notice').textContent = notice;
   get('basket-coins').textContent = number(farm.coins);
   get('basket-empty').hidden = total(farm.harvest) > 0;
@@ -99,9 +99,10 @@ function render() {
   renderExtraction();
   renderLines();
   renderDock();
-  if(typeof mutationDialog!=="undefined" && mutationDialog.open && farm.plots[mutationIndex]?.mystery)button("mutation-accept").disabled=(farm.plots[mutationIndex]!.ready??Infinity)>nowTime()||hybridCount(farm)>=farm.hybridSlots;
+  if(typeof mutationDialog!=="undefined" && mutationDialog.open && mutationArea.plots[mutationIndex]?.mystery)button("mutation-accept").disabled=(mutationArea.plots[mutationIndex]!.ready??Infinity)>nowTime()||hybridCount(farm)>=farm.hybridSlots;
   renderShop(odds);
-  renderField(now);
+  if(document.body.classList.contains('in-greenhouse'))renderGreenhouse(now);
+  else renderField(now);
   applyPlantGlows();
   if(typeof alphaReady!=='undefined'&&alphaReady)renderAlpha();
   if(typeof packsUiReady!=='undefined'&&packsUiReady)renderPackWorkshop();

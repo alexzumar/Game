@@ -150,10 +150,12 @@ function renderLines(){
 }
 const mutationDialog=get<HTMLDialogElement>('mutation-dialog');
 let mutationIndex=-1;
+let mutationArea:PlotArea=farm;
 let mutationRevealed=false;
-function openMutation(index:number){
+function openMutation(index:number,area:PlotArea=farm){
+  mutationArea=area;
   mutationIndex=index;
-  const plot=farm.plots[index];
+  const plot=mutationArea.plots[index];
   if(!plot?.mystery)return;
   const ready=plot.ready!==null&&plot.ready<=nowTime();
   mutationRevealed=ready;
@@ -179,7 +181,7 @@ function openMutation(index:number){
   if(!mutationDialog.open)mutationDialog.showModal();
 }
 button('mutation-accept').onclick=()=>{
-  const result=acceptMutation(farm,mutationIndex,nowTime());
+  const result=acceptMutation(farm,mutationIndex,nowTime(),Math.random,mutationArea);
   if(!result)return;
   get('mutation-result').textContent='Получено семя линии. '+(result.replaced?
     'Заменено: '+traitNames[result.replaced]+' → '+traitNames[result.added]:
@@ -190,7 +192,7 @@ button('mutation-accept').onclick=()=>{
   commit('Новая линия на складе · 🧬 +'+result.points);
 };
 button('mutation-discard').onclick=()=>{
-  if(!farm.plots[mutationIndex]?.mystery)return;
+  if(!mutationArea.plots[mutationIndex]?.mystery)return;
   const control=button('mutation-discard');
   if(!mutationRevealed){
     if(control.dataset.confirmEarly!=='true'){
@@ -200,7 +202,7 @@ button('mutation-discard').onclick=()=>{
       return;
     }
   }else if(!confirmDeletePress(control))return;
-  const points=discardMutation(farm,mutationIndex,nowTime());
+  const points=discardMutation(farm,mutationIndex,nowTime(),mutationArea);
   mutationDialog.close();
   commit('Находка удалена.'+(points?' 🧬 +'+points:''));
 };
@@ -249,7 +251,7 @@ document.addEventListener('pointermove',event=>{
   const bounds=dockWrap.getBoundingClientRect();
   const y=event.clientY,x=event.clientX;
   const safety=64;
-  if(!sweep&&(x<bounds.left-safety||x>bounds.right+safety||y<bounds.top-safety||y>bounds.bottom+safety)){setDockState('peek');return;}
+  if(!document.body.classList.contains('in-greenhouse')&&!sweep&&(x<bounds.left-safety||x>bounds.right+safety||y<bounds.top-safety||y>bounds.bottom+safety)){setDockState('peek');return;}
   if(y<bounds.top||y>bounds.bottom||x<bounds.left-24||x>bounds.right+24){stopDock();return;}
   if(event.target instanceof Element && event.target.closest('#dock-close')){stopDock();return;}
   const left=x<bounds.left+35,right=x>bounds.right-35;
@@ -261,7 +263,7 @@ document.addEventListener('pointermove',event=>{
 });
 dockWrap.onpointerleave=()=>{clearTimeout(dockHoverTimer);dockTip.hidden=true;hideDockMagnifier();};
 dock.addEventListener('wheel',event=>{if(dock.scrollWidth<=dock.clientWidth)return;event.preventDefault();dock.scrollLeft+=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;},{passive:false});
-window.addEventListener('blur',()=>{if(dockState==='open')setDockState('peek');else stopDock();});
+window.addEventListener('blur',()=>{if(!document.body.classList.contains('in-greenhouse')&&dockState==='open')setDockState('peek');else stopDock();});
 let dockMagnifier:HTMLElement|null=null;
 function hideDockMagnifier(){
   dockMagnifier?.remove();dockMagnifier=null;
@@ -282,7 +284,8 @@ function renderDock(){
   button('buy-xray').disabled=farm.xray||farm.coins<xrayCost||farm.relics<xrayRelics;
   button('buy-xray').textContent=farm.xray?'Открыто':'Открыть Xray';
   const signature=get<HTMLSelectElement>('hybrid-sort').value+';'+get<HTMLSelectElement>('hybrid-direction').value+';'+farm.lines.map((line,i)=>!line.archived&&line.seeds>0?i+':'+line.seeds:'').join('|');
-  if(hybridCount(farm)===0 && dockState!=='hidden')setDockState('hidden');
+  if(document.body.classList.contains('in-greenhouse')&&dockState!=='open')setDockState('open');
+  if(!document.body.classList.contains('in-greenhouse')&&hybridCount(farm)===0 && dockState!=='hidden')setDockState('hidden');
   dockWrap.hidden=dockState==='hidden'||hybridsDialog.open;
   if(signature===dockSignature)return;
   dockSignature=signature;dockTip.hidden=true;hideDockMagnifier();
@@ -322,7 +325,7 @@ function applyPlantGlows(){
   const texts:Text[]=[];
   while(walker.nextNode()){
     const text=walker.currentNode as Text;
-    if(text.parentElement?.closest('#field,script,style,textarea,option,.plant-glow,.muted-crop,.resource-locked')||!text.textContent)continue;
+    if(text.parentElement?.closest('#field,#greenhouse-grid,script,style,textarea,option,.plant-glow,.muted-crop,.resource-locked')||!text.textContent)continue;
     if(crops.some(crop=>text.textContent!.includes(crop.symbol)))texts.push(text);
   }
   const symbols=[...new Set(crops.map(crop=>crop.symbol))].sort((a,b)=>b.length-a.length);
@@ -463,15 +466,17 @@ get<HTMLFormElement>('hybrid-rename-form').onsubmit=event=>{
 };
 const rotDialog=get<HTMLDialogElement>('rot-dialog');
 let rotIndex=-1;
-function openRot(index:number){
-  const report=farm.rot[index];if(!report)return;rotIndex=index;
+let rotArea:PlotArea=farm;
+function openRot(index:number,area:PlotArea=farm){
+  rotArea=area;
+  const report=rotArea.rot[index];if(!report)return;rotIndex=index;
   get('rot-description').textContent=report.name+' · погибло на проверке '+report.checks+
     ' · риск был '+formatChance(report.risk*100)+'% · стоимость на момент гибели ×'+report.value.toFixed(2);
   get('rot-genetics').textContent=report.line===undefined?'': '⚡ Gr '+report.genome.genes.gr+' / 💰 Ga '+report.genome.genes.ga+' / 🛡️ Re '+report.genome.genes.re;
   get('rot-properties').textContent=Object.entries(report.genome.powers).map(([id,value])=>powerLabel({name:'',crop:report.crop,seeds:0,traits:[id],powers:{[id]:value}},id)).join(' · ');
   if(!rotDialog.open)rotDialog.showModal();
 }
-button('rot-clear').onclick=()=>{farm.rot[rotIndex]=null;rotDialog.close();commit('Остатки убраны.');};
+button('rot-clear').onclick=()=>{rotArea.rot[rotIndex]=null;rotDialog.close();commit('Остатки убраны.');};
 rotDialog.addEventListener('click',event=>{
   if(event.target!==rotDialog)return;const r=rotDialog.getBoundingClientRect();
   if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)rotDialog.close();

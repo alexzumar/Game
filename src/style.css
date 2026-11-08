@@ -341,8 +341,43 @@ body.raining::after{opacity:1}
 #collection-dialog .window-heading>.collection-close{position:static;order:4}
 #upgrades-dialog>.window-heading{flex:none;top:0}
 #upgrade-wallet{position:relative}
-#upgrade-material-tip{position:absolute;top:calc(100% + 6px);left:50%;translate:-50% 0;z-index:30;display:flex;flex-wrap:wrap;gap:4px 10px;width:max-content;max-width:min(215px,56vw);padding:8px 10px;border-radius:14px;background:var(--base);color:var(--ink);font-size:.75rem;pointer-events:none}
+#upgrades-dialog>.window-heading>h2{z-index:2}
+#upgrade-material-tip{position:absolute;top:calc(100% + 6px);left:50%;translate:-50% 0;z-index:30;display:flex;flex-wrap:wrap;gap:6px 12px;width:max-content;max-width:min(254px,64vw);padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--base);box-shadow:0 8px 26px var(--shade);color:var(--ink);font-size:.85rem;pointer-events:none}
 #upgrade-material-tip span{white-space:nowrap}
+.greenhouse-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit;border:1px solid var(--edge);border-radius:12px}
+.greenhouse-only{display:none}
+body.in-greenhouse{--greenhouse-scene-height:max(100dvh,50vw)}
+body.in-greenhouse::before{background-image:url('assets/greenhouse/clear.png')}
+body.in-greenhouse::after{background-image:url('assets/greenhouse/rain.png')}
+.in-greenhouse .rain,.in-greenhouse #greenhouse-link,.in-greenhouse #field,.in-greenhouse .field-head,
+.in-greenhouse #upgrade-field,.in-greenhouse .left>section:not(#greenhouse-pots){display:none}
+.in-greenhouse #garden-link{display:inline-flex}
+.in-greenhouse #greenhouse-pots,.in-greenhouse #greenhouse-tools,.in-greenhouse #greenhouse-board{display:block}
+#greenhouse-pots img{width:33.333%;aspect-ratio:1;object-fit:contain;vertical-align:middle}
+#greenhouse-tools{margin-top:8px}
+#greenhouse-tools button+button{margin-top:5px}
+#greenhouse-tools [aria-pressed=true]{background:var(--accent);color:#21372b}
+#greenhouse-board{position:fixed;top:calc(50% - var(--greenhouse-scene-height) * .034);left:50%;translate:-50% 0;width:min(94vw,var(--greenhouse-scene-height) * .98);z-index:1}
+#greenhouse-grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));height:min(31vw,var(--greenhouse-scene-height) * .32);gap:clamp(2px,.35vw,7px)}
+#greenhouse-notices{position:absolute;bottom:calc(100% + 10px);inset-inline:0;display:flex;justify-content:center;gap:8px;text-align:center}
+#greenhouse-notices small{padding:4px 9px}
+.greenhouse-cell{display:grid;align-content:center;justify-items:center;min-width:0;min-height:0;padding:0;color:#fff9eb;text-shadow:0 1px 3px #26150c;border:1px dashed #72431e99;border-radius:7px;background:transparent;overflow:hidden}
+.greenhouse-cell:disabled{opacity:.72}
+.greenhouse-cell:not(:disabled):hover{transform:none}
+.greenhouse-cell[data-bed=true]{background:url('assets/greenhouse/bed.png') center / 110% 110%;border-color:transparent}
+.greenhouse-cell[data-trellis=true]{background-image:url('assets/greenhouse/trellis.png'),url('assets/greenhouse/bed.png');background-size:100% 100%,110% 110%}
+.greenhouse-cell[aria-pressed=true]{outline:2px solid var(--accent)}
+.greenhouse-cell[data-mystery=true]{box-shadow:inset 0 0 10px #c695f0}
+.greenhouse-cell strong{font-size:clamp(.85rem,2.6vw,2.65rem);line-height:1}
+.greenhouse-cell small{font-size:clamp(.48rem,.8vw,.68rem)}
+.in-greenhouse #dock-close{display:none}
+.in-greenhouse #hybrid-dock-wrap{top:min(calc(50% + var(--greenhouse-scene-height) * .326),calc(100dvh - 145px));bottom:auto;width:min(94vw,var(--greenhouse-scene-height) * .98)}
+.in-greenhouse #hybrid-dock{display:grid;grid-template-rows:repeat(2,54px);grid-auto-flow:column;grid-auto-columns:115px;padding:0 4px 3px}
+.in-greenhouse .dock-hybrid{width:auto;min-height:0;padding:3px;gap:0}
+.in-greenhouse .dock-hybrid b{font-size:1.1rem}
+body:has(>footer){padding-bottom:clamp(12px,2.4vw,32px)}
+body>footer{position:fixed;bottom:5px;inset-inline:12px;justify-content:center;pointer-events:none}
+@media(max-width:760px){.in-greenhouse .workspace{grid-template-rows:auto 1fr}.in-greenhouse .left,.in-greenhouse .right{margin-top:4px}#greenhouse-board{top:50%}}
 #upgrades-dialog .window-heading>form{position:static;margin-left:auto}
 #hybrids-dialog{padding-bottom:28px}
 #hybrid-grid{grid-auto-rows:max-content;align-content:start;padding:2px 3px 15px}

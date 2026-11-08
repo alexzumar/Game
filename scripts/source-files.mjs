@@ -11,7 +11,7 @@ export const modelFiles = [
 
 export const uiFiles = [
   'ui/shell.ts', 'ui/field.ts', 'ui/seed-reels.ts', 'ui/field-actions.ts', 'ui/basket.ts', 'ui/debug.ts', 'ui/shop.ts', 'ui/field-input.ts',
-  'ui/upgrades.ts', 'ui/legacy-collection.ts', 'ui/extractor.ts', 'ui/hybrids.ts', 'ui/runtime.ts',
+  'ui/upgrades.ts', 'ui/legacy-collection.ts', 'ui/extractor.ts', 'ui/hybrids.ts', 'ui/greenhouse.ts', 'ui/runtime.ts',
   'ui/enhancements.ts', 'ui/collection.ts', 'ui/purchases.ts', 'ui/header-frost.ts',
   'ui/segmented-tabs.ts', 'ui/packs.ts', 'ui/save-slots.ts', 'ui/fortune.ts',
 ];

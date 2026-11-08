@@ -1,6 +1,6 @@
-function updateRipening(farm:Farm,now:number,random=Math.random){
+function updateRipening(farm:Farm,now:number,random=Math.random,area:PlotArea=farm){
   let changed=false;
-  farm.plots.forEach((plot,index)=>{
+  area.plots.forEach((plot,index)=>{
     if(!plot||plot.mystery||plot.ready===null||plot.ready>now)return;
     const powers=effectiveGenome(farm,plot).powers;
     if(powers.value===undefined&&powers.stability===undefined)return;
@@ -10,8 +10,8 @@ function updateRipening(farm:Farm,now:number,random=Math.random){
       ripe.checks++;
       const risk=rotRisk(powers,ripe.checks);
       if(random()<risk){
-        farm.rot[index]={...(plot.line===undefined?{}:{line:plot.line}),crop:plot.crop,at:ripe.next,checks:ripe.checks,risk,value:ripe.value,name:plot.line===undefined?crops[plot.crop].name:farm.lines[plot.line].name,genome:cloneGenome(genome(farm,plot))};
-        farm.plots[index]=null;changed=true;break;
+        area.rot[index]={...(plot.line===undefined?{}:{line:plot.line}),crop:plot.crop,at:ripe.next,checks:ripe.checks,risk,value:ripe.value,name:plot.line===undefined?crops[plot.crop].name:farm.lines[plot.line].name,genome:cloneGenome(genome(farm,plot))};
+        area.plots[index]=null;changed=true;break;
       }
       ripe.value*=1+(powers.value??0)/100;
       ripe.next+=40000+Math.floor(random()*40001);
@@ -34,16 +34,16 @@ function advanceDryGrowth(farm:Farm,plot:Plant,now:number){
   if(plot.remaining===0){plot.ready=now;plot.wetUntil=now;delete plot.remaining;}
   return now>from;
 }
-function updatePlantAbilities(farm:Farm,now:number,random=Math.random){
+function updatePlantAbilities(farm:Farm,now:number,random=Math.random,area:PlotArea=farm){
   let changed=false;
-  for(const plot of farm.plots){
+  for(const plot of area.plots){
     if(!plot||plot.mystery)continue;
     changed=advanceDryGrowth(farm,plot,now)||changed;
     if(plot.ready===null||plot.ready<=now)continue;
     const powers=effectiveGenome(farm,plot).powers;
     const from=plot.abilityThrough??plot.watered??plot.planted;
     const end=Math.min(now,plot.wetUntil??now,plot.ready);
-    const rainStart=farm.weather.last??0,rainEnd=farm.weather.end??0;
+    const rainStart=area===farm?farm.weather.last??0:0,rainEnd=area===farm?farm.weather.end??0:0;
     const rainy=Math.max(0,Math.min(end,rainEnd)-Math.max(from,rainStart));
     const sunny=Math.max(0,end-from-rainy);
     if(powers.sunshine && sunny>0){plot.ready=Math.max(now,plot.ready-sunny*powers.sunshine/100);changed=true;}

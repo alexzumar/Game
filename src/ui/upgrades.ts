@@ -2,7 +2,6 @@ const upgradesDialog = get<HTMLDialogElement>('upgrades-dialog');
 const upgradeWallet=get('upgrade-wallet');
 const upgradeMaterialTip=document.createElement('span');
 upgradeMaterialTip.id='upgrade-material-tip';
-upgradeMaterialTip.className='glass';
 upgradeMaterialTip.setAttribute('role','tooltip');
 upgradeMaterialTip.hidden=true;
 upgradeWallet.append(upgradeMaterialTip);
@@ -23,21 +22,23 @@ function renderUpgradeMaterials(){
   }));
   if(!items.length)upgradeMaterialTip.textContent='Материалов пока нет';
 }
-function showUpgradeMaterials(){
+function showUpgradeMaterials(event:PointerEvent){
+  if(event.pointerType!=='mouse'||!upgradesDialog.open||!upgradeMaterialTip.hidden)return;
   upgradeMaterialTip.hidden=false;
   delete upgradeMaterialTip.dataset.signature;
   renderUpgradeMaterials();
 }
 function hideUpgradeMaterials(){upgradeMaterialTip.hidden=true;}
-upgradeWallet.addEventListener('pointerenter',showUpgradeMaterials);
-upgradeWallet.addEventListener('pointerleave',()=>{if(document.activeElement!==upgradeWallet)hideUpgradeMaterials();});
-upgradeWallet.addEventListener('focus',showUpgradeMaterials);
-upgradeWallet.addEventListener('blur',()=>{if(!upgradeWallet.matches(':hover'))hideUpgradeMaterials();});
+upgradeWallet.addEventListener('pointermove',showUpgradeMaterials);
+upgradeWallet.addEventListener('pointerleave',hideUpgradeMaterials);
 upgradesDialog.addEventListener('scroll',hideUpgradeMaterials);
 upgradesDialog.addEventListener('keydown',event=>{
   if(event.key==='Escape'&&!upgradeMaterialTip.hidden){hideUpgradeMaterials();event.preventDefault();}
 });
-button('upgrades-open').onclick = () => upgradesDialog.showModal();
+button('upgrades-open').onclick = () => {
+  hideUpgradeMaterials();
+  upgradesDialog.showModal();
+};
 const upgradeTabs = ['packs','seeds','tools','discovery','extractor','hybrids'];
 for (const tab of upgradeTabs) button('upgrade-tab-'+tab).onclick = () => {
   get('trait-panel').hidden = true;

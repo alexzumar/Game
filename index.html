@@ -347,8 +347,43 @@ body.raining::after{opacity:1}
 #collection-dialog .window-heading>.collection-close{position:static;order:4}
 #upgrades-dialog>.window-heading{flex:none;top:0}
 #upgrade-wallet{position:relative}
-#upgrade-material-tip{position:absolute;top:calc(100% + 6px);left:50%;translate:-50% 0;z-index:30;display:flex;flex-wrap:wrap;gap:4px 10px;width:max-content;max-width:min(215px,56vw);padding:8px 10px;border-radius:14px;background:var(--base);color:var(--ink);font-size:.75rem;pointer-events:none}
+#upgrades-dialog>.window-heading>h2{z-index:2}
+#upgrade-material-tip{position:absolute;top:calc(100% + 6px);left:50%;translate:-50% 0;z-index:30;display:flex;flex-wrap:wrap;gap:6px 12px;width:max-content;max-width:min(254px,64vw);padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--base);box-shadow:0 8px 26px var(--shade);color:var(--ink);font-size:.85rem;pointer-events:none}
 #upgrade-material-tip span{white-space:nowrap}
+.greenhouse-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit;border:1px solid var(--edge);border-radius:12px}
+.greenhouse-only{display:none}
+body.in-greenhouse{--greenhouse-scene-height:max(100dvh,50vw)}
+body.in-greenhouse::before{background-image:url('assets/greenhouse/clear.png')}
+body.in-greenhouse::after{background-image:url('assets/greenhouse/rain.png')}
+.in-greenhouse .rain,.in-greenhouse #greenhouse-link,.in-greenhouse #field,.in-greenhouse .field-head,
+.in-greenhouse #upgrade-field,.in-greenhouse .left>section:not(#greenhouse-pots){display:none}
+.in-greenhouse #garden-link{display:inline-flex}
+.in-greenhouse #greenhouse-pots,.in-greenhouse #greenhouse-tools,.in-greenhouse #greenhouse-board{display:block}
+#greenhouse-pots img{width:33.333%;aspect-ratio:1;object-fit:contain;vertical-align:middle}
+#greenhouse-tools{margin-top:8px}
+#greenhouse-tools button+button{margin-top:5px}
+#greenhouse-tools [aria-pressed=true]{background:var(--accent);color:#21372b}
+#greenhouse-board{position:fixed;top:calc(50% - var(--greenhouse-scene-height) * .034);left:50%;translate:-50% 0;width:min(94vw,var(--greenhouse-scene-height) * .98);z-index:1}
+#greenhouse-grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));height:min(31vw,var(--greenhouse-scene-height) * .32);gap:clamp(2px,.35vw,7px)}
+#greenhouse-notices{position:absolute;bottom:calc(100% + 10px);inset-inline:0;display:flex;justify-content:center;gap:8px;text-align:center}
+#greenhouse-notices small{padding:4px 9px}
+.greenhouse-cell{display:grid;align-content:center;justify-items:center;min-width:0;min-height:0;padding:0;color:#fff9eb;text-shadow:0 1px 3px #26150c;border:1px dashed #72431e99;border-radius:7px;background:transparent;overflow:hidden}
+.greenhouse-cell:disabled{opacity:.72}
+.greenhouse-cell:not(:disabled):hover{transform:none}
+.greenhouse-cell[data-bed=true]{background:url('assets/greenhouse/bed.png') center / 110% 110%;border-color:transparent}
+.greenhouse-cell[data-trellis=true]{background-image:url('assets/greenhouse/trellis.png'),url('assets/greenhouse/bed.png');background-size:100% 100%,110% 110%}
+.greenhouse-cell[aria-pressed=true]{outline:2px solid var(--accent)}
+.greenhouse-cell[data-mystery=true]{box-shadow:inset 0 0 10px #c695f0}
+.greenhouse-cell strong{font-size:clamp(.85rem,2.6vw,2.65rem);line-height:1}
+.greenhouse-cell small{font-size:clamp(.48rem,.8vw,.68rem)}
+.in-greenhouse #dock-close{display:none}
+.in-greenhouse #hybrid-dock-wrap{top:min(calc(50% + var(--greenhouse-scene-height) * .326),calc(100dvh - 145px));bottom:auto;width:min(94vw,var(--greenhouse-scene-height) * .98)}
+.in-greenhouse #hybrid-dock{display:grid;grid-template-rows:repeat(2,54px);grid-auto-flow:column;grid-auto-columns:115px;padding:0 4px 3px}
+.in-greenhouse .dock-hybrid{width:auto;min-height:0;padding:3px;gap:0}
+.in-greenhouse .dock-hybrid b{font-size:1.1rem}
+body:has(>footer){padding-bottom:clamp(12px,2.4vw,32px)}
+body>footer{position:fixed;bottom:5px;inset-inline:12px;justify-content:center;pointer-events:none}
+@media(max-width:760px){.in-greenhouse .workspace{grid-template-rows:auto 1fr}.in-greenhouse .left,.in-greenhouse .right{margin-top:4px}#greenhouse-board{top:50%}}
 #upgrades-dialog .window-heading>form{position:static;margin-left:auto}
 #hybrids-dialog{padding-bottom:28px}
 #hybrid-grid{grid-auto-rows:max-content;align-content:start;padding:2px 3px 15px}
@@ -619,28 +654,44 @@ button{user-select:none}
   <div class="brand"><span class="brand-icon" aria-hidden="true">✦</span><div><strong>Всходы</strong><small>СЕМЕННАЯ ФЕРМА</small></div></div>
   <span class="weather" id="weather" data-upgrade-target="weather"></span>
   <button id="settings-open" class="quiet" aria-label="Настройки" title="Настройки">⚙️</button>
+  <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🌿 Теплица</a>
+  <a href="#garden" id="garden-link" class="quiet greenhouse-link greenhouse-only">← В сад</a>
 </header>
 <dialog id="settings-dialog" class="glass"><div class="window-heading"><h2>Настройки</h2><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form></div>  <div class="appearance"><div id="accents" aria-label="Цвет акцента"></div><button id="skin" class="quiet" title="Переключить стиль"></button><button id="theme" class="quiet"></button><label class="glass-control" title="От непрозрачных панелей до более выраженного стекла">Стекло <input type="range" id="glass-unified" min="0" max="100" aria-label="Эффект стекла"></label></div>
+<p>Альфа 0.3</p>
 </dialog>
 <main class="workspace">
   <aside class="left" aria-label="Семена">
     <section class="glass panel packet"><span class="kicker">ПАКЕТЫ</span><h2><span data-upgrade-target="packs">Магазин</span></h2><button class="primary" id="seed-shop">Открыть магазин</button></section>
     <section class="glass panel seed-storage"><span class="kicker">СКЛАД</span><div class="seed-stock-heading"><h2 id="seed-stock-title"><span data-upgrade-target="seeds">Семена</span></h2><select id="seed-sort" aria-label="Сортировка семян"><option value="quantity">По количеству</option><option value="rarity">По редкости</option></select></div><p>Выбери семечко и нажми на грядку или перетащи его.</p><div id="seeds"></div></section>
+    <section class="glass panel greenhouse-only" id="greenhouse-pots" aria-label="Горшки">
+      <h2>Горшки</h2>
+      <img src="assets/greenhouse/pot.png" alt=""><img src="assets/greenhouse/pot.png" alt=""><img src="assets/greenhouse/pot.png" alt="">
+    </section>
   </aside>
   <section class="growing-area" aria-label="Поле">
     <button type="button" id="resources-open" class="glass wallet" title="Открыть коллекцию"><span>🪙 <b id="coins"></b></span><span>🔮 <b id="orbs">0</b></span><span>💎 <b id="diamond-balance">0</b></span><span title="Очки мутации">🧬 <b id="mutation-points">0</b></span></button>
     <div class="field-head"><small id="dry-field-notice" class="glass" role="status" hidden title="Удерживай Ctrl или включи лейку, затем нажми на сухую грядку."></small><span>ПОЛЕ</span><strong id="field-tip" hidden></strong><strong id="dimensions"></strong></div>
     <div class="field" id="field"></div>
+    <section id="greenhouse-board" class="greenhouse-only" aria-label="Грядки теплицы">
+      <div id="greenhouse-notices"><small id="greenhouse-dry" class="glass" hidden>Нужен полив</small><small id="greenhouse-no-trellis" class="glass">Не установлена шпалера</small></div>
+      <div id="greenhouse-grid"></div>
+    </section>
   </section>
   <aside class="right" aria-label="Управление фермой">
     <section class="glass panel"><span class="kicker">УХОД</span>
       <button class="quiet wide" id="gather" title="Можно удерживать Shift для временного сбора" aria-pressed="false">🧺 Сбор</button><button class="quiet wide" id="water" title="Удерживай Ctrl для временного полива" aria-pressed="false">🚿 Лейка</button><small class="gather-help">Shift — сбор · Ctrl — полив</small>
+      <div class="greenhouse-only" id="greenhouse-tools">
+        <button class="quiet wide" id="greenhouse-trellis" aria-pressed="false">Шпалера</button>
+        <button class="quiet wide" id="greenhouse-move" aria-pressed="false">Перенос грядок</button>
+        <button class="quiet wide" id="greenhouse-buy" aria-pressed="false">Новая грядка</button>
+      </div>
     </section>
     <section class="glass panel"><span class="kicker">УРОЖАЙ</span><button class="quiet wide" id="basket"><span><span id="basket-icon">🧺</span> Корзина</span><b id="counter"></b></button></section>
     <section class="glass panel" id="upgrade-field"><h2>Расширение поля</h2><p id="expand-note"></p><button class="quiet" id="expand"></button></section><section class="glass panel"><button class="quiet wide" id="hybrids-open">🧬 Гибриды</button><button class="quiet wide" id="extractor-open">⚙️ Экстрактор семян</button><button class="quiet wide" id="diamonds-open">💎 Алмазные улучшения</button><button class="primary" id="upgrades-open">⬆ Улучшения</button></section>
   </aside>
 </main>
-<footer><span id="save-state"></span><span id="notice" role="status"></span><span>АЛЬФА / 0.3</span></footer>
+<footer><span id="save-state"></span><span id="notice" role="status"></span></footer>
 <dialog id="pack-dialog" class="glass">
   <h2><span id="pack-opening-title" data-upgrade-target="packs">Открываем пакет…</span></h2>
   <div id="reels" aria-label="Рулетки пакета"></div>
@@ -715,7 +766,7 @@ button{user-select:none}
 </dialog>
 <dialog id="upgrades-dialog" class="glass basket">
   <form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form>
-  <h2>Улучшения <span class="basket-wallet" id="upgrade-wallet" tabindex="0" aria-describedby="upgrade-material-tip">🪙 <b id="upgrade-coins"></b> · 🔮 <b id="upgrade-orbs">0</b></span></h2>
+  <h2>Улучшения <span class="basket-wallet" id="upgrade-wallet" aria-describedby="upgrade-material-tip">🪙 <b id="upgrade-coins"></b> · 🔮 <b id="upgrade-orbs">0</b></span></h2>
   <nav class="shop-tabs" aria-label="Категории улучшений">
     
     <button class="quiet" id="upgrade-tab-packs" aria-pressed="true">Пакеты семян</button>
@@ -931,6 +982,16 @@ const defaultGlass = () => ({transparency:30,strength:60});
 const newExtraction = ()            => ({speed:0,yield:0,job:null,processed:0,produced:0,last:""});
 
 
+const greenhouseWidth=10;
+const greenhouseCells=30;
+function newGreenhouse(now       )           {
+  return {beds:Array.from({length:greenhouseCells},(_,i)=>i>=13&&i<=15),
+    trellises:Array(greenhouseCells).fill(false),plots:Array(greenhouseCells).fill(null),
+    rot:Array(greenhouseCells).fill(null),mutationCheck:now+30000};
+}
+
+
+
 
 
 
@@ -1034,10 +1095,10 @@ function roll(odds         ,random = Math.random) {
   return last;
 }
 const seedPacks = [
-  {name:'Обычный',icon:'⬜',slots:1,price:20,size:1,boost:1},
-  {name:'Редкий',icon:'🟦',slots:1,price:500,size:1,boost:1},
-  {name:'Эпический',icon:'🟪',slots:1,price:10000,size:1,boost:1},
-  {name:'Легендарный',icon:'🟨',slots:1,price:50000,size:1,boost:1},
+  {name:'Обычный',icon:'⬜',slots:1,price:20,orbs:0,size:1,boost:1},
+  {name:'Редкий',icon:'🟦',slots:1,price:250,orbs:5,size:1,boost:1},
+  {name:'Эпический',icon:'🟪',slots:1,price:10000,orbs:25,size:1,boost:1},
+  {name:'Легендарный',icon:'🟨',slots:1,price:250000,orbs:100,size:1,boost:1},
 ];
 
 const seedPrice = (crop       ) => cropPrices[crop]*2;
@@ -1064,13 +1125,13 @@ const cascadeMax=100;
 const packResultLimit=64;
 function openPack(farm     ,index       ,count=1,random=Math.random) {return beginPackOpening(farm,index,count,random);}
 
-function plant(farm     , index       , crop       , now       ,line        ) {
-  if (!unlocked(farm,crop) || index < 0 || index >= farm.plots.length || farm.plots[index] || !(line===undefined?farm.seeds[crop]>0:farm.lines[line]?.seeds>0)) return false;
+function plant(farm     , index       , crop       , now       ,line        ,area         =farm) {
+  if (!unlocked(farm,crop) || index < 0 || index >= area.plots.length || area.plots[index] || !(line===undefined?farm.seeds[crop]>0:farm.lines[line]?.seeds>0)) return false;
   if(line!==undefined){const seedLine=farm.lines[line];if(!seedLine||seedLine.archived||seedLine.crop!==crop||seedLine.seeds<1)return false;seedLine.seeds--;}
   else farm.seeds[crop]--;
-  farm.rot[index]=null;
-  farm.plots[index] = {crop, planted:now, ready:null,...(line===undefined?{}:{line})};
-  const planted=farm.plots[index] ;
+  area.rot[index]=null;
+  area.plots[index] = {crop, planted:now, ready:null,...(line===undefined?{}:{line})};
+  const planted=area.plots[index] ;
   if(Math.random()<(effectiveGenome(farm,planted).powers.sprout??0)/100){planted.duration=plantGrowthTime(farm,planted);planted.remaining=Math.round(planted.duration*.8);}
   irrigate(farm,planted,now);
   return true;
@@ -1126,8 +1187,8 @@ function waterAll(farm     ,now       ) {
 function remainingGrowth(plot      ,now       ) {
   return plot.ready === null ? plot.remaining : Math.max(0,plot.ready-now);
 }
-function collect(farm     ,index       ,now       ,random=Math.random) {
-  const plot = farm.plots[index];
+function collect(farm     ,index       ,now       ,random=Math.random,area         =farm) {
+  const plot = area.plots[index];
   if (!plot || plot.mystery || plot.ready === null || plot.ready > now || (plot.wetUntil !== undefined && plot.wetUntil < plot.ready)) return 0;
   const powers=effectiveGenome(farm,plot).powers;
   const amount = (plot.line===undefined?harvestAmount(farm.levels[plot.crop].yield+farm.collection.filter(value=>value>0).length-1,random,(powers.head??0)/100):genome(farm,plot).genes.ga+harvestAmount(genome(farm,plot).genes.ga-1,random,(powers.head??0)/100)-1);
@@ -1149,16 +1210,16 @@ function collect(farm     ,index       ,now       ,random=Math.random) {
   if(random()<(powers.pod??0)/100){if(plot.line===undefined)farm.seeds[plot.crop]+=2;else farm.lines[plot.line].seeds+=2;}
   farm.collected += finalAmount;
   if(random()<.001)farm.relics++;
-  farm.plots[index] = null;
+  area.plots[index] = null;
   const renew=random()<(powers.renew??0)/100;
   const secondCut=random()<(powers.cut??0)/100;
   if(renew||secondCut||random()<Math.min(1,(powers.regrow??0)/100)) {
     if(plot.line!==undefined)farm.lines[plot.line].seeds--;
-    farm.plots[index]={crop:plot.crop,planted:now,ready:null,...(plot.line===undefined?{}:{line:plot.line})};
-    const planted=farm.plots[index] ;
+    area.plots[index]={crop:plot.crop,planted:now,ready:null,...(plot.line===undefined?{}:{line:plot.line})};
+    const planted=area.plots[index] ;
     if(renew){planted.duration=plantGrowthTime(farm,planted);planted.remaining=Math.round(planted.duration*.5);}
     irrigate(farm,planted,now);
-  } else if(farm.convenience.replant && farm.automation.replant && farm.replantCrop===plot.crop) plant(farm,index,plot.crop,now,plot.line);
+  } else if(farm.convenience.replant && farm.automation.replant && farm.replantCrop===plot.crop) plant(farm,index,plot.crop,now,plot.line,area);
   return finalAmount;
 }
 const maxSize = 8;
@@ -1301,7 +1362,7 @@ function startExtraction(farm     ,crop       ,count       ,now       ,random=Ma
     const max=bonus.max+(random()<bonus.extra?1:0);
     return 1+Math.min(max-1,Math.floor(random()*max));
   });
-  if(!outputs.some(Boolean)&&farm.seeds[crop]===0&&!farm.plots.some(plot=>plot?.crop===crop)&&farm.harvest[crop]===count){const max=bonus.max+(random()<bonus.extra?1:0);outputs[outputs.length-1]=1+Math.min(max-1,Math.floor(random()*max));}
+  if(!outputs.some(Boolean)&&farm.seeds[crop]===0&&![...farm.plots,...(farm.greenhouse?.plots??[])].some(plot=>plot?.crop===crop)&&farm.harvest[crop]===count){const max=bonus.max+(random()<bonus.extra?1:0);outputs[outputs.length-1]=1+Math.min(max-1,Math.floor(random()*max));}
   const output=total(outputs);
   const period=extractionTime(machine.speed);
   const early=diamondCurve(diamondLevel(farm,'extract'));
@@ -1389,22 +1450,25 @@ const lineTrait = (farm     ,plot      ,id       ) => plot.line===undefined?0:ef
 
 
 
-function mutationCandidates(farm     ) {
-  return farm.plots.flatMap((plot,index)=>{
-    if(plot)return [];
-    const row=Math.floor(index/farm.size),col=index%farm.size;
+function mutationCandidates(farm     ,greenhouse            ) {
+  const {plots}=greenhouse??farm;
+  const width=greenhouse?greenhouseWidth:farm.size;
+  return plots.flatMap((plot,index)=>{
+    if(plot||(greenhouse&&(!greenhouse.beds[index]||!greenhouse.trellises[index])))return [];
+    const row=Math.floor(index/width),col=index%width;
     const neighbors=[[row-1,col],[row+1,col],[row,col-1],[row,col+1]]
-      .filter(([r,c])=>r>=0&&c>=0&&r<farm.size&&c<farm.size)
-      .map(([r,c])=>farm.plots[r*farm.size+c]).filter((p)           =>!!p&&!p.mystery);
+      .filter(([r,c])=>r>=0&&c>=0&&r<plots.length/width&&c<width)
+      .map(([r,c])=>plots[r*width+c]).filter((p)           =>!!p&&!p.mystery);
     return neighbors.length>=2?[{index,neighbors}]:[];
   });
 }
-function checkMutations(farm     ,now       ,random=Math.random) {
-  if(now<farm.mutationCheck)return false;
-  for(let checks=0;farm.mutationCheck<=now&&checks<2000;checks++){
-  const at=farm.mutationCheck;
-  farm.mutationCheck+=30000;
-  for(const candidate of mutationCandidates(farm)) {
+function checkMutations(farm     ,now       ,random=Math.random,greenhouse            ) {
+  const area=greenhouse??farm;
+  if(now<area.mutationCheck)return false;
+  for(let checks=0;area.mutationCheck<=now&&checks<2000;checks++){
+  const at=area.mutationCheck;
+  area.mutationCheck+=30000;
+  for(const candidate of mutationCandidates(farm,greenhouse)) {
     const index=candidate.index,neighbors=candidate.neighbors.filter(p=>p.planted<=at && p.ready!==null && p.ready<=at && (p.wetUntil===undefined||p.wetUntil>=p.ready));
     if(neighbors.length<2)continue;
     const potential=neighbors.reduce((sum,p)=>sum+Math.min(30,genome(farm,p).genes.re+(effectiveGenome(farm,p).powers.resistance??0)),0)/neighbors.length;
@@ -1415,10 +1479,10 @@ function checkMutations(farm     ,now       ,random=Math.random) {
     const chosen=parents[random()<.5?0:1];
     const duration=chosen.duration??growthTime(chosen.crop,collectionGrowth(farm,chosen.crop));
     const inherited=parents.flatMap(p=>p.line===undefined?[]:farm.lines[p.line].traits);
-    farm.plots[index]={crop:chosen.crop,planted:at,watered:at,ready:at+duration,wetUntil:at+duration,
+    area.plots[index]={crop:chosen.crop,planted:at,watered:at,ready:at+duration,wetUntil:at+duration,
       duration,mystery:{parentNames:parents.map(p=>p.line===undefined?crops[p.crop].name:farm.lines[p.line].name),genomes:parents.map(p=>genome(farm,p)),parents:parents.map(p=>p.crop),traits:inherited}};
-    farm.rot[index]=null;
-    farm.plots[index] .mystery .preview=generateMutationLine(farm,farm.plots[index] ,random);
+    area.rot[index]=null;
+    area.plots[index] .mystery .preview=generateMutationLine(farm,area.plots[index] ,random);
   }
   }
   return true;
@@ -1433,21 +1497,21 @@ function mutationReward(line     ){
     value>Math.max(...parents.map(parent=>parent.genome.powers[id]??0)));
   return 1+Number(strongerGene)+Number(strongerPower);
 }
-function discardMutation(farm     ,index       ,now       ){
-  const plot=farm.plots[index];
+function discardMutation(farm     ,index       ,now       ,area         =farm){
+  const plot=area.plots[index];
   if(!plot?.mystery)return 0;
   const points=plot.ready!==null&&plot.ready<=now?mutationReward(plot.mystery.preview??generateMutationLine(farm,plot)):0;
   farm.mutationPoints=(farm.mutationPoints??0)+points;
-  farm.plots[index]=null;
+  area.plots[index]=null;
   return points;
 }
-function acceptMutation(farm     ,index       ,now       ,random=Math.random) {
-  const plot=farm.plots[index];
+function acceptMutation(farm     ,index       ,now       ,random=Math.random,area         =farm) {
+  const plot=area.plots[index];
   if(!plot?.mystery || plot.ready===null || plot.ready>now || hybridCount(farm)>=farm.hybridSlots)return null;
   const line=plot.mystery.preview??generateMutationLine(farm,plot,random);
   line.enhancements={};
   line.name='Гибрид #'+(farm.lines.length+1);
-  farm.lines.push(line);farm.plots[index]=null;
+  farm.lines.push(line);area.plots[index]=null;
   const points=mutationReward(line);
   farm.mutationPoints=(farm.mutationPoints??0)+points;
   if(random()<.001)farm.relics++;
@@ -1563,9 +1627,9 @@ function removeProduce(farm     ,crop       ,count       ){
   return value;
 }
 
-function updateRipening(farm     ,now       ,random=Math.random){
+function updateRipening(farm     ,now       ,random=Math.random,area         =farm){
   let changed=false;
-  farm.plots.forEach((plot,index)=>{
+  area.plots.forEach((plot,index)=>{
     if(!plot||plot.mystery||plot.ready===null||plot.ready>now)return;
     const powers=effectiveGenome(farm,plot).powers;
     if(powers.value===undefined&&powers.stability===undefined)return;
@@ -1575,8 +1639,8 @@ function updateRipening(farm     ,now       ,random=Math.random){
       ripe.checks++;
       const risk=rotRisk(powers,ripe.checks);
       if(random()<risk){
-        farm.rot[index]={...(plot.line===undefined?{}:{line:plot.line}),crop:plot.crop,at:ripe.next,checks:ripe.checks,risk,value:ripe.value,name:plot.line===undefined?crops[plot.crop].name:farm.lines[plot.line].name,genome:cloneGenome(genome(farm,plot))};
-        farm.plots[index]=null;changed=true;break;
+        area.rot[index]={...(plot.line===undefined?{}:{line:plot.line}),crop:plot.crop,at:ripe.next,checks:ripe.checks,risk,value:ripe.value,name:plot.line===undefined?crops[plot.crop].name:farm.lines[plot.line].name,genome:cloneGenome(genome(farm,plot))};
+        area.plots[index]=null;changed=true;break;
       }
       ripe.value*=1+(powers.value??0)/100;
       ripe.next+=40000+Math.floor(random()*40001);
@@ -1599,16 +1663,16 @@ function advanceDryGrowth(farm     ,plot      ,now       ){
   if(plot.remaining===0){plot.ready=now;plot.wetUntil=now;delete plot.remaining;}
   return now>from;
 }
-function updatePlantAbilities(farm     ,now       ,random=Math.random){
+function updatePlantAbilities(farm     ,now       ,random=Math.random,area         =farm){
   let changed=false;
-  for(const plot of farm.plots){
+  for(const plot of area.plots){
     if(!plot||plot.mystery)continue;
     changed=advanceDryGrowth(farm,plot,now)||changed;
     if(plot.ready===null||plot.ready<=now)continue;
     const powers=effectiveGenome(farm,plot).powers;
     const from=plot.abilityThrough??plot.watered??plot.planted;
     const end=Math.min(now,plot.wetUntil??now,plot.ready);
-    const rainStart=farm.weather.last??0,rainEnd=farm.weather.end??0;
+    const rainStart=area===farm?farm.weather.last??0:0,rainEnd=area===farm?farm.weather.end??0:0;
     const rainy=Math.max(0,Math.min(end,rainEnd)-Math.max(from,rainStart));
     const sunny=Math.max(0,end-from-rainy);
     if(powers.sunshine && sunny>0){plot.ready=Math.max(now,plot.ready-sunny*powers.sunshine/100);changed=true;}
@@ -1771,7 +1835,7 @@ function inheritEnhancements(_parents         ,_traits         )                
 function canTransferEnhancement(farm     ,source       ,target       ,id       ){
  const from=farm.lines[source],to=farm.lines[target];
  return source!==target&&!!from&&!!to&&!from.archived&&!to.archived&&from.seeds>0&&to.seeds>0&&from.traits.includes(id)&&to.traits.includes(id)&&(to.powers?.[id]??1)>0&&
- (from.enhancements?.[id]??0)>(to.enhancements?.[id]??0)&&!farm.plots.some(plot=>plot?.line===source||plot?.line===target);
+ (from.enhancements?.[id]??0)>(to.enhancements?.[id]??0)&&![...farm.plots,...(farm.greenhouse?.plots??[])].some(plot=>plot?.line===source||plot?.line===target);
 }
 function transferEnhancement(farm     ,source       ,target       ,id       ){
  if(!canTransferEnhancement(farm,source,target,id))return false;
@@ -1819,7 +1883,6 @@ const propertyMaterialId=(id       )=>'property:'+(id==='yield'?'bounty':id==='c
 
 
 const newPackProgress=()             =>({version:1,speed:0,slots:0,refund:0,luckGate:0,refundGate:false,refundUnits:0,pending:null});
-const orbRewards=[1,4,16,64];
 function basePackOdds(){
  const inverse=crops.map((_,i)=>cropTiers[i]===0?1/cropPrices[i]:0),sum=total(inverse);
  const tierCounts=[0,0,0,0];
@@ -1827,9 +1890,9 @@ function basePackOdds(){
  return crops.map((crop,i)=>crop.tier===0?90*inverse[i]/sum:[90,8,1.6,.4][crop.tier]/tierCounts[crop.tier]);
 }
 const packTierOdds=[
- [99.5795,.4,.02,.0005],
- [74.895,25,.1,.005],
- [56.95,8,35,.05],
+ [99.7975,.2,.002,.0005],
+ [74.98995,25,.01,.00005],
+ [56.995,8,35,.005],
  [84,8,4,4]
 ];
 const legendaryLuckLimits=[5,6,8];
@@ -1849,25 +1912,29 @@ function openingOdds(farm     ,pack       ,luck=farm.luck){
 }
 const packSlotLimit=(farm     )=>1+farm.packProgress.slots;
 function packOpeningPrice(pack       ,count       ){return Math.ceil(seedPacks[pack].price*count*(count>1?.75:1));}
+function packOpeningCost(pack       ,count       ){
+ return {coins:packOpeningPrice(pack,count),orbs:seedPacks[pack].orbs*count,items:{}};
+}
 const packOpeningTime=(farm     )=>Math.max(500,Math.round(2800/1.06**farm.packProgress.speed));
 const packRefundRate=(farm     )=>5+5*farm.packProgress.refund;
 function beginPackOpening(farm     ,index       ,count       ,random=Math.random){
  if(!seedPacks[index]||farm.packProgress.pending||!Number.isInteger(count)||count<1||count>packSlotLimit(farm))return [];
- const paid=packOpeningPrice(index,count);if(farm.coins<paid)return [];
+ const cost=packOpeningCost(index,count);
+ if(!payPackCost(farm,{...cost,condition:true}))return [];
  const odds=openingOdds(farm,index),known=farm.collection.map(Boolean);
  const entries=Array.from({length:count},()=>{const crop=roll(odds,random),first=!known[crop];known[crop]=true;return {crop,first};});
- spendFarmCoins(farm,paid);farm.packProgress.pending={pack:index,paid,entries};farm.opened++;farm.lastPack=entries.map(item=>item.crop);return [...farm.lastPack];
+ farm.packProgress.pending={pack:index,paid:cost.coins,entries};farm.opened++;farm.lastPack=entries.map(item=>item.crop);return [...farm.lastPack];
 }
 function finishPackOpening(farm     ){
  const pending=farm.packProgress.pending;if(!pending)return null;
- let orbs=0,units=farm.packProgress.refundUnits,newKinds=0;
+ let units=farm.packProgress.refundUnits,newKinds=0;
  for(const entry of pending.entries){
   if(entry.first){farm.collection[entry.crop]=Math.max(1,farm.collection[entry.crop]);farm.seeds[entry.crop]++;newKinds++;}
-  else{orbs+=orbRewards[cropTiers[entry.crop]];const rate=cropTiers[entry.crop]===pending.pack?packRefundRate(farm):5;units+=pending.paid*rate*(60/pending.entries.length);}
+  else{const rate=cropTiers[entry.crop]===pending.pack?packRefundRate(farm):5;units+=pending.paid*rate*(60/pending.entries.length);}
  }
  const returned=Math.floor(units/6000);farm.packProgress.refundUnits=units%6000;
- farm.coins+=returned;farm.resources.orbs+=orbs;farm.packProgress.pending=null;
- return {...pending,orbs,returned,newKinds};
+ farm.coins+=returned;farm.packProgress.pending=null;
+ return {...pending,returned,newKinds};
 }
 
 function packUpgradeOffer(farm     ,id            ){
@@ -1885,14 +1952,16 @@ function buyPackUpgrade(farm     ,id            ){if(!payPackCost(farm,packUpgra
 function packGateOffer(farm     ,kind                ){
  if(kind==='refund')return {coins:0,orbs:100,items:{set1:3},condition:farm.packProgress.refund>=3&&!farm.packProgress.refundGate};
  const stage=farm.packProgress.luckGate;
- return stage===0?{coins:0,orbs:2000,items:{set1:25},condition:farm.collection.every(Boolean)}:{coins:0,orbs:1000000,items:{set3:500},condition:stage===1&&farm.size>=8&&farm.collected>=100000};
+ const legendaryKinds=farm.collection.filter((count,index)=>count>0&&cropTiers[index]===3).length;
+ return stage===0?{coins:0,orbs:250,items:{set1:3},condition:legendaryKinds>=1}:
+  {coins:0,orbs:2500,items:{set3:15},condition:stage===1&&legendaryKinds>=2};
 }
 function unlockPackGate(farm     ,kind                ){
  if(kind==='refund'&&farm.packProgress.refundGate||kind==='luck'&&farm.packProgress.luckGate>=2)return false;
  if(!payPackCost(farm,packGateOffer(farm,kind)))return false;
  if(kind==='refund')farm.packProgress.refundGate=true;else farm.packProgress.luckGate++;return true;
 }
-function needsStarterRescue(farm     ){return farm.coins<seedPurchaseQuote(farm,0,1)&&!farm.seeds.some(Boolean)&&!farm.harvest.some(Boolean)&&farm.plots.every(plot=>!plot)&&!farm.lines.some(line=>!line.archived&&line.seeds>0)&&!extractionJobs(farm.extraction).some(Boolean)&&!farm.packProgress.pending;}
+function needsStarterRescue(farm     ){return farm.coins<seedPurchaseQuote(farm,0,1)&&!farm.seeds.some(Boolean)&&!farm.harvest.some(Boolean)&&[...farm.plots,...(farm.greenhouse?.plots??[])].every(plot=>!plot)&&!farm.lines.some(line=>!line.archived&&line.seeds>0)&&!extractionJobs(farm.extraction).some(Boolean)&&!farm.packProgress.pending;}
 function rescueStarterSeed(farm     ){if(!needsStarterRescue(farm))return false;farm.seeds[0]=1;farm.collection[0]=Math.max(1,farm.collection[0]);return true;}
 function migratePackProgress(s     ){
  if(!s.packProgress){
@@ -2163,16 +2232,26 @@ function loadFarm()      {
         s[field] = s[field].concat(Array(crops.length - 3).fill(0));
     }
     const counts = (a        ) => Array.isArray(a) && a.length === crops.length && a.every(n => int(n,0));
-    if (!["classic","glossy"].includes(s.skin) || !int(s.cascade,0,cascadeMax) || !int(s.luck,0,luckMax) || !(typeof s.coins==="number"&&Number.isFinite(s.coins)&&s.coins>=0) || !int(s.offset,Number.MIN_SAFE_INTEGER) || !int(s.epoch,0) || !int(s.size,1,Math.max(10,maxSize)) || !counts(s.seeds) || !counts(s.harvest) ||
-        !int(s.opened,0) || !Array.isArray(s.lastPack) || !int(s.lastPack.length,s.opened ? 1 : 0,s.opened ? packResultLimit : 0) ||
-        !s.lastPack.every((n        ) => int(n,0,crops.length-1)) || !int(s.accent,0,4) ||
-        !['light','dark'].includes(s.theme) || !Array.isArray(s.plots) || s.plots.length !== s.size**2 ||
-        !s.plots.every((p           ) => p === null || (p && int(p.crop,0,crops.length-1) && int(p.planted,0) &&
+    const validPlot = (p           ) => p === null || (p && int(p.crop,0,crops.length-1) && int(p.planted,0) &&
           (p.ready === null || int(p.ready,p.planted)) &&
           (p.watered === undefined || (p.ready !== null && int(p.watered,p.planted,p.ready))) &&
           (p.wetUntil === undefined || int(p.wetUntil,p.planted)) &&
           (p.remaining === undefined || (Number.isFinite(p.remaining)&&p.remaining>0)) &&
-          (p.duration === undefined || int(p.duration,1))))) throw new Error('Повреждённые данные фермы');
+          (p.duration === undefined || int(p.duration,1)));
+    if (!["classic","glossy"].includes(s.skin) || !int(s.cascade,0,cascadeMax) || !int(s.luck,0,luckMax) || !(typeof s.coins==="number"&&Number.isFinite(s.coins)&&s.coins>=0) || !int(s.offset,Number.MIN_SAFE_INTEGER) || !int(s.epoch,0) || !int(s.size,1,Math.max(10,maxSize)) || !counts(s.seeds) || !counts(s.harvest) ||
+        !int(s.opened,0) || !Array.isArray(s.lastPack) || !int(s.lastPack.length,s.opened ? 1 : 0,s.opened ? packResultLimit : 0) ||
+        !s.lastPack.every((n        ) => int(n,0,crops.length-1)) || !int(s.accent,0,4) ||
+        !['light','dark'].includes(s.theme) || !Array.isArray(s.plots) || s.plots.length !== s.size**2 ||
+        !s.plots.every(validPlot)) throw new Error('Повреждённые данные фермы');
+    const greenhouse=s.greenhouse;
+    if(greenhouse!==undefined){
+      const flags=(list        )=>Array.isArray(list)&&list.length===greenhouseCells&&list.every(flag=>typeof flag==='boolean');
+      if(!greenhouse||!flags(greenhouse.beds)||!flags(greenhouse.trellises)||!int(greenhouse.mutationCheck,0)||
+        !Array.isArray(greenhouse.plots)||greenhouse.plots.length!==greenhouseCells||!greenhouse.plots.every(validPlot)||
+        greenhouse.beds.filter(Boolean).length<3||greenhouse.beds.some((bed        ,index       )=>!bed&&(greenhouse.plots[index]||greenhouse.trellises[index]||greenhouse.rot?.[index])))
+        throw new Error('Повреждены грядки теплицы');
+    }
+    const savedPlots                =[...s.plots,...(greenhouse?.plots??[])];
     s.collected ??= total(s.harvest) + s.coins;
     if (!int(s.collected,0)) throw new Error("Повреждён счётчик урожая");
     s.weather ??= newWeather(Date.now()+s.offset);
@@ -2192,10 +2271,10 @@ function loadFarm()      {
     if(s.weather.surgeAt!==undefined&&(s.weather.last===null||!int(s.weather.surgeAt,s.weather.last+1,s.weather.end)))
       throw new Error('Повреждена отметка рывка дождя');
     if(s.weather.surged!==undefined&&typeof s.weather.surged!=='boolean')throw new Error('Повреждено состояние рывка дождя');
-    if(s.plots.some((p           )=>p?.line!==undefined && (!int(p.line,0,s.lines.length-1)||s.lines[p.line].crop!==p.crop))) throw new Error("Повреждено растение линии");
-    if(s.plots.some((p           )=>p?.mystery && (!Array.isArray(p.mystery.parents)||p.mystery.parents.length!==2||!p.mystery.parents.every(i=>int(i,0,crops.length-1))||!Array.isArray(p.mystery.traits)||p.mystery.traits.length>10||!p.mystery.traits.every(t=>traitNames[t]))))throw new Error("Повреждена мутация");
-    if(s.plots.some((plot           )=>plot?.mystery?.genomes && (plot.mystery.genomes.length!==2 || !plot.mystery.genomes.every(validGenome))))throw new Error("Повреждена генетика родителей");
-    for(const plot of s.plots)if(plot?.mystery){
+    if(savedPlots.some((p           )=>p?.line!==undefined && (!int(p.line,0,s.lines.length-1)||s.lines[p.line].crop!==p.crop))) throw new Error("Повреждено растение линии");
+    if(savedPlots.some((p           )=>p?.mystery && (!Array.isArray(p.mystery.parents)||p.mystery.parents.length!==2||!p.mystery.parents.every(i=>int(i,0,crops.length-1))||!Array.isArray(p.mystery.traits)||p.mystery.traits.length>10||!p.mystery.traits.every(t=>traitNames[t]))))throw new Error("Повреждена мутация");
+    if(savedPlots.some((plot           )=>plot?.mystery?.genomes && (plot.mystery.genomes.length!==2 || !plot.mystery.genomes.every(validGenome))))throw new Error("Повреждена генетика родителей");
+    for(const plot of savedPlots)if(plot?.mystery){
       if(plot.mystery.preview && !plot.mystery.preview.parents && plot.mystery.genomes){
         plot.mystery.preview.parents=plot.mystery.genomes.map((data       ,i       )=>({name:plot.mystery.parentNames?.[i]??crops[plot.mystery.parents[i]].name,crop:plot.mystery.parents[i],genome:cloneGenome(data)}));
       }
@@ -2205,7 +2284,10 @@ function loadFarm()      {
       }else plot.mystery.preview=generateMutationLine(s,plot);
     }
     s.rot ??= Array(s.plots.length).fill(null);
-    if(!Array.isArray(s.rot)||s.rot.length!==s.plots.length||!s.rot.every((r               )=>r===null||(r&&int(r.crop,0,crops.length-1)&&int(r.at,0)&&int(r.checks,1)&&typeof r.risk==="number"&&r.risk>=0&&r.risk<=1&&typeof r.value==="number"&&Number.isFinite(r.value)&&r.value>=0&&typeof r.name==="string"&&validGenome(r.genome))))throw new Error("Повреждена история гнили");
+    const validRot=(r               )=>r===null||(r&&int(r.crop,0,crops.length-1)&&int(r.at,0)&&int(r.checks,1)&&typeof r.risk==="number"&&r.risk>=0&&r.risk<=1&&typeof r.value==="number"&&Number.isFinite(r.value)&&r.value>=0&&typeof r.name==="string"&&validGenome(r.genome));
+    if(!Array.isArray(s.rot)||s.rot.length!==s.plots.length||!s.rot.every(validRot)||
+      (greenhouse&&(!Array.isArray(greenhouse.rot)||greenhouse.rot.length!==greenhouseCells||!greenhouse.rot.every(validRot))))
+      throw new Error("Повреждена история гнили");
     for(const line of s.lines)if(line.parents && (!Array.isArray(line.parents)||line.parents.length!==2||!line.parents.every((p             )=>p&&typeof p.name==="string"&&int(p.crop,0,crops.length-1)&&validGenome(p.genome))))throw new Error("Повреждена родословная");
     s.harvested??=s.harvest.map((count       )=>count);
     if(!Array.isArray(s.harvested)||s.harvested.length!==crops.length||!s.harvested.every((n        )=>typeof n==='number'&&Number.isFinite(n)&&n>=0))throw new Error('Повреждена коллекция урожая');
@@ -2219,7 +2301,7 @@ function loadFarm()      {
     for(const [id,value] of Object.entries(s.resources.found))if(!materialsBySaveKey.has(id)||typeof value!=='boolean')throw new Error('Повреждена коллекция предметов');
     const validateEnhancements=(data            )=>{if(data.enhancements&&Object.entries(data.enhancements).some(([id,n])=>!traitNames[id]||!int(n,0,100)))throw new Error('Повреждены усиления');};
     for(const line of s.lines){validateEnhancements(line);for(const parent of line.parents??[])validateEnhancements(parent.genome);}
-    for(const plot of s.plots)if(plot?.mystery){if(plot.mystery.preview){validateEnhancements(plot.mystery.preview);plot.mystery.preview.enhancements={};}for(const data of plot.mystery.genomes??[])validateEnhancements(data);}
+    for(const plot of savedPlots)if(plot?.mystery){if(plot.mystery.preview){validateEnhancements(plot.mystery.preview);plot.mystery.preview.enhancements={};}for(const data of plot.mystery.genomes??[])validateEnhancements(data);}
     const weatherMigrated=s.weather.intervalVersion!==3;
     if(weatherMigrated){
       const weather=s.weather;
@@ -2384,7 +2466,7 @@ function render() {
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
   get('counter').textContent = number(total(farm.harvest));
-  get('save-state').textContent = storageError ? 'Ошибка сохранения' : 'Сохранение на устройстве';
+  get('save-state').textContent = storageError ? 'Ошибка сохранения' : '';
   get('notice').textContent = notice;
   get('basket-coins').textContent = number(farm.coins);
   get('basket-empty').hidden = total(farm.harvest) > 0;
@@ -2414,9 +2496,10 @@ function render() {
   renderExtraction();
   renderLines();
   renderDock();
-  if(typeof mutationDialog!=="undefined" && mutationDialog.open && farm.plots[mutationIndex]?.mystery)button("mutation-accept").disabled=(farm.plots[mutationIndex] .ready??Infinity)>nowTime()||hybridCount(farm)>=farm.hybridSlots;
+  if(typeof mutationDialog!=="undefined" && mutationDialog.open && mutationArea.plots[mutationIndex]?.mystery)button("mutation-accept").disabled=(mutationArea.plots[mutationIndex] .ready??Infinity)>nowTime()||hybridCount(farm)>=farm.hybridSlots;
   renderShop(odds);
-  renderField(now);
+  if(document.body.classList.contains('in-greenhouse'))renderGreenhouse(now);
+  else renderField(now);
   applyPlantGlows();
   if(typeof alphaReady!=='undefined'&&alphaReady)renderAlpha();
   if(typeof packsUiReady!=='undefined'&&packsUiReady)renderPackWorkshop();
@@ -2588,10 +2671,10 @@ window.addEventListener('resize',()=>{
   if(!hint.hidden&&tile)positionFieldTooltip(hint,tile               );
 });
 let basketPulse                    ;
-function collectAnimated(index       ,now       ,tile        ) {
-  const plot = farm.plots[index];
+function collectAnimated(index       ,now       ,tile        ,area         =farm) {
+  const plot = area.plots[index];
   const beforeLoot={diamonds:farm.diamonds?.balance??0,orbs:farm.resources.orbs,items:{...farm.resources.items}};
-  const amount = collect(farm,index,now);
+  const amount = collect(farm,index,now,Math.random,area);
   if(amount&&typeof packsUiReady!=='undefined'&&packsUiReady)animateCollectedLoot(tile,beforeLoot);
   if(!amount && plot?.line!==undefined && (plot.ready??Infinity)<=now && hybridCount(farm)>=farm.hybridSlots)notice='Инвентарь гибридов заполнен. Освободи место — растение остаётся на грядке.';
   if (!amount || !plot || matchMedia('(prefers-reduced-motion: reduce)').matches) return amount;
@@ -2725,6 +2808,14 @@ button('water').ondblclick = () => {
   gathering=false;
   watering = true;
   seed = -1;
+  if(greenhouseVisible()){
+    let count=0;
+    for(const plot of farm.greenhouse?.plots??[]){
+      if(plot&&!plot.mystery&&water(farm,plot,now,Number.MAX_SAFE_INTEGER))count++;
+    }
+    if(count)commit('Полито грядок: '+count+'.');
+    return;
+  }
   const weatherChanged = applyRain(farm,now);
   const count = waterAll(farm,now);
   if (count || weatherChanged) commit(count ? 'Полито грядок: '+count+'.' : notice);
@@ -3149,7 +3240,6 @@ const upgradesDialog = get                   ('upgrades-dialog');
 const upgradeWallet=get('upgrade-wallet');
 const upgradeMaterialTip=document.createElement('span');
 upgradeMaterialTip.id='upgrade-material-tip';
-upgradeMaterialTip.className='glass';
 upgradeMaterialTip.setAttribute('role','tooltip');
 upgradeMaterialTip.hidden=true;
 upgradeWallet.append(upgradeMaterialTip);
@@ -3170,21 +3260,23 @@ function renderUpgradeMaterials(){
   }));
   if(!items.length)upgradeMaterialTip.textContent='Материалов пока нет';
 }
-function showUpgradeMaterials(){
+function showUpgradeMaterials(event             ){
+  if(event.pointerType!=='mouse'||!upgradesDialog.open||!upgradeMaterialTip.hidden)return;
   upgradeMaterialTip.hidden=false;
   delete upgradeMaterialTip.dataset.signature;
   renderUpgradeMaterials();
 }
 function hideUpgradeMaterials(){upgradeMaterialTip.hidden=true;}
-upgradeWallet.addEventListener('pointerenter',showUpgradeMaterials);
-upgradeWallet.addEventListener('pointerleave',()=>{if(document.activeElement!==upgradeWallet)hideUpgradeMaterials();});
-upgradeWallet.addEventListener('focus',showUpgradeMaterials);
-upgradeWallet.addEventListener('blur',()=>{if(!upgradeWallet.matches(':hover'))hideUpgradeMaterials();});
+upgradeWallet.addEventListener('pointermove',showUpgradeMaterials);
+upgradeWallet.addEventListener('pointerleave',hideUpgradeMaterials);
 upgradesDialog.addEventListener('scroll',hideUpgradeMaterials);
 upgradesDialog.addEventListener('keydown',event=>{
   if(event.key==='Escape'&&!upgradeMaterialTip.hidden){hideUpgradeMaterials();event.preventDefault();}
 });
-button('upgrades-open').onclick = () => upgradesDialog.showModal();
+button('upgrades-open').onclick = () => {
+  hideUpgradeMaterials();
+  upgradesDialog.showModal();
+};
 const upgradeTabs = ['packs','seeds','tools','discovery','extractor','hybrids'];
 for (const tab of upgradeTabs) button('upgrade-tab-'+tab).onclick = () => {
   get('trait-panel').hidden = true;
@@ -3816,10 +3908,12 @@ function renderLines(){
 }
 const mutationDialog=get                   ('mutation-dialog');
 let mutationIndex=-1;
+let mutationArea         =farm;
 let mutationRevealed=false;
-function openMutation(index       ){
+function openMutation(index       ,area         =farm){
+  mutationArea=area;
   mutationIndex=index;
-  const plot=farm.plots[index];
+  const plot=mutationArea.plots[index];
   if(!plot?.mystery)return;
   const ready=plot.ready!==null&&plot.ready<=nowTime();
   mutationRevealed=ready;
@@ -3845,7 +3939,7 @@ function openMutation(index       ){
   if(!mutationDialog.open)mutationDialog.showModal();
 }
 button('mutation-accept').onclick=()=>{
-  const result=acceptMutation(farm,mutationIndex,nowTime());
+  const result=acceptMutation(farm,mutationIndex,nowTime(),Math.random,mutationArea);
   if(!result)return;
   get('mutation-result').textContent='Получено семя линии. '+(result.replaced?
     'Заменено: '+traitNames[result.replaced]+' → '+traitNames[result.added]:
@@ -3856,7 +3950,7 @@ button('mutation-accept').onclick=()=>{
   commit('Новая линия на складе · 🧬 +'+result.points);
 };
 button('mutation-discard').onclick=()=>{
-  if(!farm.plots[mutationIndex]?.mystery)return;
+  if(!mutationArea.plots[mutationIndex]?.mystery)return;
   const control=button('mutation-discard');
   if(!mutationRevealed){
     if(control.dataset.confirmEarly!=='true'){
@@ -3866,7 +3960,7 @@ button('mutation-discard').onclick=()=>{
       return;
     }
   }else if(!confirmDeletePress(control))return;
-  const points=discardMutation(farm,mutationIndex,nowTime());
+  const points=discardMutation(farm,mutationIndex,nowTime(),mutationArea);
   mutationDialog.close();
   commit('Находка удалена.'+(points?' 🧬 +'+points:''));
 };
@@ -3915,7 +4009,7 @@ document.addEventListener('pointermove',event=>{
   const bounds=dockWrap.getBoundingClientRect();
   const y=event.clientY,x=event.clientX;
   const safety=64;
-  if(!sweep&&(x<bounds.left-safety||x>bounds.right+safety||y<bounds.top-safety||y>bounds.bottom+safety)){setDockState('peek');return;}
+  if(!document.body.classList.contains('in-greenhouse')&&!sweep&&(x<bounds.left-safety||x>bounds.right+safety||y<bounds.top-safety||y>bounds.bottom+safety)){setDockState('peek');return;}
   if(y<bounds.top||y>bounds.bottom||x<bounds.left-24||x>bounds.right+24){stopDock();return;}
   if(event.target instanceof Element && event.target.closest('#dock-close')){stopDock();return;}
   const left=x<bounds.left+35,right=x>bounds.right-35;
@@ -3927,7 +4021,7 @@ document.addEventListener('pointermove',event=>{
 });
 dockWrap.onpointerleave=()=>{clearTimeout(dockHoverTimer);dockTip.hidden=true;hideDockMagnifier();};
 dock.addEventListener('wheel',event=>{if(dock.scrollWidth<=dock.clientWidth)return;event.preventDefault();dock.scrollLeft+=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;},{passive:false});
-window.addEventListener('blur',()=>{if(dockState==='open')setDockState('peek');else stopDock();});
+window.addEventListener('blur',()=>{if(!document.body.classList.contains('in-greenhouse')&&dockState==='open')setDockState('peek');else stopDock();});
 let dockMagnifier                 =null;
 function hideDockMagnifier(){
   dockMagnifier?.remove();dockMagnifier=null;
@@ -3948,7 +4042,8 @@ function renderDock(){
   button('buy-xray').disabled=farm.xray||farm.coins<xrayCost||farm.relics<xrayRelics;
   button('buy-xray').textContent=farm.xray?'Открыто':'Открыть Xray';
   const signature=get                   ('hybrid-sort').value+';'+get                   ('hybrid-direction').value+';'+farm.lines.map((line,i)=>!line.archived&&line.seeds>0?i+':'+line.seeds:'').join('|');
-  if(hybridCount(farm)===0 && dockState!=='hidden')setDockState('hidden');
+  if(document.body.classList.contains('in-greenhouse')&&dockState!=='open')setDockState('open');
+  if(!document.body.classList.contains('in-greenhouse')&&hybridCount(farm)===0 && dockState!=='hidden')setDockState('hidden');
   dockWrap.hidden=dockState==='hidden'||hybridsDialog.open;
   if(signature===dockSignature)return;
   dockSignature=signature;dockTip.hidden=true;hideDockMagnifier();
@@ -3988,7 +4083,7 @@ function applyPlantGlows(){
   const texts       =[];
   while(walker.nextNode()){
     const text=walker.currentNode        ;
-    if(text.parentElement?.closest('#field,script,style,textarea,option,.plant-glow,.muted-crop,.resource-locked')||!text.textContent)continue;
+    if(text.parentElement?.closest('#field,#greenhouse-grid,script,style,textarea,option,.plant-glow,.muted-crop,.resource-locked')||!text.textContent)continue;
     if(crops.some(crop=>text.textContent .includes(crop.symbol)))texts.push(text);
   }
   const symbols=[...new Set(crops.map(crop=>crop.symbol))].sort((a,b)=>b.length-a.length);
@@ -4129,15 +4224,17 @@ get                 ('hybrid-rename-form').onsubmit=event=>{
 };
 const rotDialog=get                   ('rot-dialog');
 let rotIndex=-1;
-function openRot(index       ){
-  const report=farm.rot[index];if(!report)return;rotIndex=index;
+let rotArea         =farm;
+function openRot(index       ,area         =farm){
+  rotArea=area;
+  const report=rotArea.rot[index];if(!report)return;rotIndex=index;
   get('rot-description').textContent=report.name+' · погибло на проверке '+report.checks+
     ' · риск был '+formatChance(report.risk*100)+'% · стоимость на момент гибели ×'+report.value.toFixed(2);
   get('rot-genetics').textContent=report.line===undefined?'': '⚡ Gr '+report.genome.genes.gr+' / 💰 Ga '+report.genome.genes.ga+' / 🛡️ Re '+report.genome.genes.re;
   get('rot-properties').textContent=Object.entries(report.genome.powers).map(([id,value])=>powerLabel({name:'',crop:report.crop,seeds:0,traits:[id],powers:{[id]:value}},id)).join(' · ');
   if(!rotDialog.open)rotDialog.showModal();
 }
-button('rot-clear').onclick=()=>{farm.rot[rotIndex]=null;rotDialog.close();commit('Остатки убраны.');};
+button('rot-clear').onclick=()=>{rotArea.rot[rotIndex]=null;rotDialog.close();commit('Остатки убраны.');};
 rotDialog.addEventListener('click',event=>{
   if(event.target!==rotDialog)return;const r=rotDialog.getBoundingClientRect();
   if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)rotDialog.close();
@@ -4190,6 +4287,190 @@ function animateInventoryFold(){
   ],{duration:430,easing:'cubic-bezier(.3,.05,.25,1)'});
   animation.onfinish=()=>ghost.remove();animation.oncancel=()=>ghost.remove();
 }
+
+const greenhouseGrid=get('greenhouse-grid');
+
+let greenhouseTool                    =null;
+let movingBed=-1;
+
+function greenhouseVisible(){return location.hash==='#greenhouse';}
+function syncGreenhouseScreen(){
+  const visible=greenhouseVisible();
+  document.body.classList.toggle('in-greenhouse',visible);
+  document.title=visible?'Теплица — Всходы':'Всходы — семенная ферма';
+  get('quick-seeds').hidden=true;
+  greenhouseTool=null;
+  movingBed=-1;
+  if(visible){
+    farm.greenhouse??=newGreenhouse(nowTime());
+    setDockState('open');
+  }else if(hybridCount(farm)===0)setDockState('hidden');
+}
+syncGreenhouseScreen();
+window.addEventListener('hashchange',()=>{syncGreenhouseScreen();render();});
+
+function tickGreenhouse(now       ){
+  const area=farm.greenhouse;
+  if(!area)return false;
+  const abilities=updatePlantAbilities(farm,now,Math.random,area);
+  const ripening=updateRipening(farm,now,Math.random,area);
+  const mutations=checkMutations(farm,now,Math.random,area);
+  return abilities||ripening||mutations;
+}
+
+function greenhouseBedPrice(area           ){
+  return Math.ceil(3*(area.beds.filter(Boolean).length-2)**1.4);
+}
+for(const tool of ['trellis','move','buy']         ){
+  button('greenhouse-'+tool).onclick=()=>{
+    greenhouseTool=greenhouseTool===tool?null:tool;
+    movingBed=-1;
+    watering=false;
+    gathering=false;
+    get('quick-seeds').hidden=true;
+    render();
+  };
+}
+for(const id of ['water','gather','hybrid-plant']){
+  button(id).addEventListener('click',()=>{
+    if(!greenhouseVisible())return;
+    greenhouseTool=null;
+    movingBed=-1;
+    renderGreenhouse(nowTime());
+  });
+}
+function sowGreenhouse(index       ,crop       ,line        ){
+  const area=farm.greenhouse;
+  if(!area?.beds[index]||area.trellises[index]||area.rot[index])return;
+  if(plant(farm,index,crop,nowTime(),line,area)){
+    get('quick-seeds').hidden=true;
+    commit('Семя посажено в теплице.');
+  }
+}
+function useGreenhouseCell(index       ,tile                  ){
+  const area=farm.greenhouse ;
+  const now=nowTime();
+  const changed=tickGreenhouse(now);
+  if(changed)saveFarm(farm);
+  const plot=area.plots[index];
+  if(greenhouseTool==='buy'){
+    const price=greenhouseBedPrice(area);
+    const points=farm.mutationPoints??0;
+    if(!area.beds[index]&&points>=price){
+      farm.mutationPoints=points-price;
+      area.beds[index]=true;
+      commit('Добавлена грядка в теплице.');
+    }
+    return;
+  }
+  if(greenhouseTool==='move'){
+    if(plot||area.rot[index])return;
+    if(area.beds[index])movingBed=movingBed===index?-1:index;
+    else if(movingBed>=0&&!area.plots[movingBed]&&!area.rot[movingBed]){
+      area.beds[index]=true;
+      area.trellises[index]=area.trellises[movingBed];
+      area.beds[movingBed]=false;
+      area.trellises[movingBed]=false;
+      movingBed=-1;
+      commit('Грядка перенесена.');
+      return;
+    }
+    renderGreenhouse(now);
+    return;
+  }
+  if(!area.beds[index])return;
+  if(greenhouseTool==='trellis'){
+    if(plot||area.rot[index])return;
+    area.trellises[index]=!area.trellises[index];
+    commit(area.trellises[index]?'Шпалера установлена.':'Шпалера убрана.');
+    return;
+  }
+  if(plot?.mystery){openMutation(index,area);return;}
+  if(area.rot[index]){openRot(index,area);return;}
+  if(plot&&isWatering()){
+    if(water(farm,plot,now,Number.MAX_SAFE_INTEGER))commit('Грядка полита до сбора.');
+    return;
+  }
+  if(plot&&isGathering()){
+    if(collectAnimated(index,now,tile,area))commit('Урожай на складе.');
+    else render();
+    return;
+  }
+  if(!plot&&!area.trellises[index]&&!isWatering()&&!isGathering()){
+    const line=selectedLine===undefined?undefined:farm.lines[selectedLine];
+    if(line&&!line.archived&&line.seeds>0)sowGreenhouse(index,line.crop,selectedLine);
+    else openQuickSeeds(index,tile,sowGreenhouse);
+  }
+}
+
+for(let index=0;index<greenhouseCells;index++){
+  const tile=document.createElement('button');
+  tile.type='button';
+  tile.className='greenhouse-cell';
+  tile.append(document.createElement('strong'),document.createElement('small'));
+  tile.onclick=()=>useGreenhouseCell(index,tile);
+  tile.ondragover=event=>{
+    const area=farm.greenhouse;
+    if(area?.beds[index]&&!area.trellises[index]&&!area.plots[index]&&!area.rot[index]&&
+      event.dataTransfer?.types.includes('application/x-farm-hybrid'))event.preventDefault();
+  };
+  tile.ondrop=event=>{
+    event.preventDefault();
+    const value=event.dataTransfer?.getData('application/x-farm-hybrid');
+    if(!value||!/^\d+$/.test(value))return;
+    const line=farm.lines[Number(value)];
+    if(line)sowGreenhouse(index,line.crop,Number(value));
+  };
+  greenhouseGrid.append(tile);
+}
+
+function renderGreenhouse(now       ){
+  const area=farm.greenhouse;
+  if(!area)return;
+  get('greenhouse-no-trellis').hidden=area.trellises.some(Boolean);
+  get('greenhouse-dry').hidden=!area.plots.some(plot=>plot&&!plot.mystery&&plot.ready===null);
+  for(const tool of ['trellis','move','buy']         )button('greenhouse-'+tool).setAttribute('aria-pressed',String(greenhouseTool===tool));
+  const buy=button('greenhouse-buy');
+  buy.textContent='Новая грядка · 🧬 '+number(greenhouseBedPrice(area));
+  buy.disabled=area.beds.every(Boolean)||(farm.mutationPoints??0)<greenhouseBedPrice(area);
+  area.beds.forEach((bed,index)=>{
+    const tile=greenhouseGrid.children[index]                     ;
+    const plot=area.plots[index],trellis=area.trellises[index],rot=area.rot[index];
+    const ready=!!plot&&plot.ready!==null&&plot.ready<=now;
+    tile.dataset.bed=String(bed);
+    tile.dataset.trellis=String(trellis);
+    tile.dataset.mystery=String(!!plot?.mystery);
+    tile.setAttribute('aria-pressed',String(movingBed===index));
+    tile.disabled=!bed&&greenhouseTool!=='buy'&&(greenhouseTool!=='move'||movingBed<0);
+    const icon=plot?.mystery?'?':plot?(ready?crops[plot.crop].symbol:plot.ready===null?'🟤':'🌱'):rot?'🍂':'';
+    if(tile.children[0].textContent!==icon)tile.children[0].textContent=icon;
+    const status=plot?(ready?'Готово':plot.ready===null?'Сухо':clock(plot.ready-now)):'';
+    if(tile.children[1].textContent!==status)tile.children[1].textContent=status;
+    const name=plot?.mystery?'Неизвестное растение':plot?crops[plot.crop].name:rot?'Сгнило':trellis?'Шпалера':bed?'Пустая грядка':'Свободное место';
+    const label=name+(status?' · '+status:'');
+    tile.title=label;
+    tile.setAttribute('aria-label',label);
+  });
+}
+
+const mutationDebug=document.createElement('label');
+mutationDebug.textContent='Очки мутации ';
+const mutationDebugAmount=document.createElement('input');
+mutationDebugAmount.type='number';
+mutationDebugAmount.min='1';
+mutationDebugAmount.value='10';
+mutationDebugAmount.title='Enter — выдать очки мутации';
+mutationDebug.append(mutationDebugAmount);
+get('debug-unlock-crops').after(mutationDebug);
+mutationDebugAmount.addEventListener('keydown',event=>{
+  if(event.key!=='Enter'||!farm.saveCheats)return;
+  event.preventDefault();
+  const amount=mutationDebugAmount.valueAsNumber;
+  const next=(farm.mutationPoints??0)+amount;
+  if(!Number.isSafeInteger(amount)||amount<1||!Number.isSafeInteger(next))return;
+  farm.mutationPoints=next;
+  commit('Отладка: 🧬 +'+number(amount));
+});
 
 
 let playTimeCounter                     =null;
@@ -4260,13 +4541,14 @@ const tick = () => {
   updatePlayTime(playTimeCounter);
   advanceDebug();
   const weatherChanged=applyRain(farm,nowTime());
+  const greenhouseChanged=tickGreenhouse(nowTime());
   const abilitiesChanged=updatePlantAbilities(farm,nowTime());
   const ripened=updateRipening(farm,nowTime());
   const mutated=checkMutations(farm,nowTime());
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(abilitiesChanged || ripened || mutated || weatherChanged || extracted || speed !== 1 ||
+  if(greenhouseChanged || abilitiesChanged || ripened || mutated || weatherChanged || extracted || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
     if(saveFarm(farm))lastPlayTimeSave=totalPlayTime();
   }
@@ -4365,7 +4647,7 @@ document.addEventListener('wheel',event=>{
 },{passive:false,capture:true});
 
 button('seed-sort').onchange=renderSeeds;
-function openQuickSeeds(index       ,tile            ){
+function openQuickSeeds(index       ,tile            ,plantSeed                                 =sow){
   const menu=get('quick-seeds');menu.replaceChildren();
   const available=crops.map((_,i)=>i).filter(i=>unlocked(farm,i)&&farm.seeds[i]>0);
   available.sort((a,b)=>get                   ('seed-sort').value==='rarity'?seedRarityOrder.indexOf(a)-seedRarityOrder.indexOf(b):farm.seeds[b]-farm.seeds[a]);
@@ -4376,7 +4658,7 @@ function openQuickSeeds(index       ,tile            ){
     const icon=document.createElement('span');icon.className='plant-glow';icon.textContent=crops[i].symbol;
     icon.style.setProperty('--icon-rarity',rarityColors[cropRarities[i]]);
     const count=document.createElement('small');count.textContent=number(farm.seeds[i]);item.append(icon,count);
-    item.onclick=()=>{selectedLine=undefined;sow(index,i);};menu.append(item);
+    item.onclick=()=>{selectedLine=undefined;plantSeed(index,i);};menu.append(item);
   }
   if(!available.length){menu.textContent='Нет семян на складе';}
   menu.hidden=false;menu.style.left='12px';menu.style.top='12px';
@@ -4386,7 +4668,7 @@ function openQuickSeeds(index       ,tile            ){
   get('field-tip').hidden=true;
 }
 document.addEventListener('click',event=>{
-  if(!(event.target instanceof Element)||event.target.closest('#quick-seeds,#field .tile'))return;
+  if(!(event.target instanceof Element)||event.target.closest('#quick-seeds,#field .tile,#greenhouse-grid button'))return;
   get('quick-seeds').hidden=true;
 });
 window.addEventListener('resize',()=>{get('quick-seeds').hidden=true;});
@@ -4920,10 +5202,10 @@ button('starter-rescue').onclick=()=>{if(rescueStarterSeed(farm))commit('Ста�
 function renderPackWorkshop(){
  const pack=seedPacks[selectedPack],limit=packSlotLimit(farm);selectedOpeningCount=Math.min(limit,selectedOpeningCount);
  for(const control of document.querySelectorAll                   ('[data-pack-count]')){const count=Number(control.dataset.packCount);control.disabled=count>limit||rolling;control.setAttribute('aria-pressed',String(count===selectedOpeningCount));control.title=count>limit?'Открой дополнительные слоты в улучшениях мешков':count+' одновременных открытий';}
- if(pack){for(const i of crops.map((_,i)=>i).sort((a,b)=>cropTiers[a]-cropTiers[b]||cropTimes[a]-cropTimes[b])){const row=get('odds-'+i);row.parentElement .append(row);}const odds=openingOdds(farm,selectedPack),target=total(odds.filter((_,i)=>cropTiers[i]===selectedPack)),price=packOpeningPrice(selectedPack,selectedOpeningCount);
+ if(pack){for(const i of crops.map((_,i)=>i).sort((a,b)=>cropTiers[a]-cropTiers[b]||cropTimes[a]-cropTimes[b])){const row=get('odds-'+i);row.parentElement .append(row);}const odds=openingOdds(farm,selectedPack),target=total(odds.filter((_,i)=>cropTiers[i]===selectedPack)),cost=packOpeningCost(selectedPack,selectedOpeningCount),price=packCostText(cost);
  get('pack-note').textContent='Открытие вида · первое выпадение дарит 1 семя · целевая редкость: '+preciseChance(target)+'%';
- get('pack-price-total').textContent=selectedOpeningCount+' '+(selectedOpeningCount===1?'открытие':selectedOpeningCount<5?'открытия':'открытий')+' · итог 🪙 '+number(price)+(selectedOpeningCount>1?' · скидка 25%':'');
- button('open-pack').textContent='Открыть '+selectedOpeningCount+' · 🪙 '+number(price);openAgain.textContent='Открыть ещё '+selectedOpeningCount+' · 🪙 '+number(price);openAgain.disabled=rolling||!!farm.packProgress.pending||farm.coins<price;button('open-pack').disabled=rolling||!!farm.packProgress.pending||farm.coins<price;
+ get('pack-price-total').textContent=selectedOpeningCount+' '+(selectedOpeningCount===1?'открытие':selectedOpeningCount<5?'открытия':'открытий')+' · итог '+price+(selectedOpeningCount>1?' · скидка 25% на монеты':'');
+ button('open-pack').textContent='Открыть '+selectedOpeningCount+' · '+price;openAgain.textContent='Открыть ещё '+selectedOpeningCount+' · '+price;openAgain.disabled=rolling||!!farm.packProgress.pending||!canPayPackOffer({...cost,condition:true});button('open-pack').disabled=rolling||!!farm.packProgress.pending||!canPayPackOffer({...cost,condition:true});
  crops.forEach((crop,i)=>{const row=get('odds-'+i);row.hidden=odds[i]<=0;row.textContent=(unlocked(farm,i)?crop.symbol+' '+crop.name:'❔ Неизвестно · '+baseRarityNames[cropTiers[i]])+' · '+preciseChance(odds[i])+'%';row.classList.toggle('unknown-crop',!unlocked(farm,i));});}
  seedPacks.forEach((_,i)=>{get('pack-card-note-'+i).textContent='Упор: '+['обычные','редкие','эпические','легендарные'][i];});
  const chosen=Math.max(0,selectedPack),odds=openingOdds(farm,chosen),target=total(odds.filter((_,i)=>cropTiers[i]===chosen));
@@ -4940,7 +5222,7 @@ function renderPackWorkshop(){
  }
  button('pack-buy-'+id).disabled=!canPayPackOffer(offer);button('pack-buy-'+id).textContent=offer.max?'Максимум':packCostText(offer);}
  for(const kind of ['luck']         ){const offer=packGateOffer(farm,kind),max=kind==='luck'?farm.packProgress.luckGate>=2:farm.packProgress.refundGate;
- get('pack-gate-'+kind).textContent=max?'Предел легендарной удачи: 8% суммарно.':farm.packProgress.luckGate===0?'Следующий предел: 6% легендарных суммарно. Требуются все виды семян.':'Следующий предел: 8% легендарных суммарно. Требуются поле 8×8, все виды и 100 000 собранных плодов.';
+ get('pack-gate-'+kind).textContent=max?'Предел легендарной удачи: 8% суммарно.':farm.packProgress.luckGate===0?'Следующий предел: 6% легендарных суммарно. Найди первую легендарную культуру.':'Следующий предел: 8% легендарных суммарно. Найди две легендарные культуры.';
  button('pack-gate-buy-'+kind).textContent=max?'Максимум':packCostText(offer);button('pack-gate-buy-'+kind).disabled=max||!canPayPackOffer(offer);}
  button('starter-rescue').hidden=!needsStarterRescue(farm);
  applyPlantGlows();
@@ -4955,12 +5237,12 @@ async function showPackOpening(results         ){
 function showPackOutcome(outcome                                                  ){
  const grid=get('pack-results'),grouped=new Map                                     ();
  for(const entry of outcome.entries){const group=grouped.get(entry.crop)??{count:0,first:false};group.count++;group.first||=entry.first;grouped.set(entry.crop,group);}
- grid.replaceChildren(...[...grouped].map(([crop,data])=>{const item=resultCard(crop,data.count);const label=document.createElement('small');label.textContent=data.first?'Новый вид · подарочное семя ×1':'Повторка · 🔮 '+number(data.count*orbRewards[cropTiers[crop]]);item.card.append(label);return item.card;}));
+ grid.replaceChildren(...[...grouped].map(([crop,data])=>{const item=resultCard(crop,data.count);const label=document.createElement('small');label.textContent=data.first?'Новый вид · подарочное семя ×1':'Повторка';item.card.append(label);return item.card;}));
  get('reels').hidden=false;get('pack-summary').hidden=false;get('pack-summary').style.visibility='visible';
  const outcomeTitle=[...grouped].map(([crop,data])=>crops[crop].symbol+' '+crops[crop].name+' ×'+data.count).join(' · ');get('pack-opening-title').textContent=outcomeTitle;get('pack-opening-title').title=outcomeTitle;
  outcome.entries.forEach((entry,i)=>{const track=get('reels').children[i]?.querySelector('.reel-track');if(track){const old=track.children[reelFinish];if(old){const revealed=reelItem(entry.crop);cropArt(revealed.children[0]               ,entry.crop,'stage-4',crops[entry.crop].symbol);revealed.children[1].textContent=crops[entry.crop].name;old.replaceWith(revealed);}}});
  get('pack-summary-title').textContent=outcome.newKinds?'Новых видов: '+outcome.newKinds:'Повторные находки';
- packNote.textContent='🔮 +'+number(outcome.orbs)+' · возврат 🪙 '+number(outcome.returned)+(outcome.newKinds?' · подарочных семян '+outcome.newKinds:'')+'. Мелкий остаток возврата копится до целой монеты.';
+ packNote.textContent='Возврат 🪙 '+number(outcome.returned)+(outcome.newKinds?' · подарочных семян '+outcome.newKinds:'')+'. Мелкий остаток возврата копится до целой монеты.';
 }
 button('open-pack').onclick=async()=>{
  if(rolling||selectedPack<0)return;rolling=true;skipRoll=false;lastPackPress=-Infinity;packDone.classList.add('skip-ready');
@@ -4968,7 +5250,7 @@ button('open-pack').onclick=async()=>{
  packKnownBefore=farm.collection.map(Boolean);const results=openPack(farm,selectedPack,selectedOpeningCount);if(!results.length)return;
  saveFarm(farm);get('pack-opening-title').textContent='Открываем пакет…';get('pack-opening-title').removeAttribute('title');get('pack-summary').hidden=false;get('pack-summary').style.visibility='hidden';get('pack-results').replaceChildren();packNote.textContent='Открываем виды… Двойное нажатие пропускает анимацию.';
  if(!modal.open)modal.showModal();render();await showPackOpening(results);
- const outcome=finishPackOpening(farm);if(outcome){showPackOutcome(outcome);commit('Мешки открыты: '+outcome.newKinds+' новых видов, 🔮 +'+outcome.orbs+', возврат 🪙 '+outcome.returned);}
+ const outcome=finishPackOpening(farm);if(outcome){showPackOutcome(outcome);commit('Мешки открыты: '+outcome.newKinds+' новых видов · возврат 🪙 '+outcome.returned);}
  }catch(error){console.error('Ферма: ошибка открытия мешков',error);const outcome=finishPackOpening(farm);if(outcome){showPackOutcome(outcome);commit('Результаты открытия сохранены.');}}
  finally{rolling=false;packKnownBefore=null;packDone.classList.remove('skip-ready');render();}
 };
@@ -4978,12 +5260,12 @@ function animateCollectedLoot(tile        ,before                               
  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  try{const origin=tile.getBoundingClientRect(),target=get('resources-open'),bounds=target.getBoundingClientRect();
  const rewards                              =[];if(farm.resources.orbs>before.orbs)rewards.push({icon:'🔮',amount:farm.resources.orbs-before.orbs});
- const diamonds=(farm.diamonds?.balance??0)-before.diamonds;if(diamonds>0)animateDiamondPickup(origin,diamonds);
- for(const material of materials){const count=(farm.resources.items[material.id]??0)-(before.items[material.id]??0);if(count>0)rewards.push({icon:material.icon,amount:count});}
+ const diamonds=(farm.diamonds?.balance??0)-before.diamonds;if(diamonds>0)animateRarePickup(origin,diamonds,'💎',get('diamond-balance').parentElement );
+ for(const material of materials){const count=(farm.resources.items[material.id]??0)-(before.items[material.id]??0);if(count<=0)continue;if(material.id==='duplication')animateRarePickup(origin,count,material.icon,target,diamonds>0?1450:150);else rewards.push({icon:material.icon,amount:count});}
  for(const [i,reward] of rewards.entries()){
  const flight=document.createElement('span');flight.className='harvest-flight loot-flight';flight.textContent=reward.icon+' +'+number(reward.amount);flight.setAttribute('aria-hidden','true');document.documentElement.append(flight);
  const x=origin.left+origin.width/2,y=origin.top+origin.height/2;flight.style.left=x+'px';flight.style.top=y+'px';
- const animation=flight.animate([{transform:'translate(-50%,-50%) scale(.8)',opacity:0},{transform:'translate(-50%,-65%) scale(1)',opacity:1,offset:.15},{transform:'translate(calc(-50% + '+(bounds.left+bounds.width/2-x)+'px),calc(-50% + '+(bounds.top+bounds.height/2-y)+'px)) scale(.5)',opacity:.75}],{duration:650,delay:i*65,easing:'cubic-bezier(.22,.6,.4,1)'});
+ const animation=flight.animate([{transform:'translate(-50%,-50%) scale(.8)',opacity:0},{transform:'translate(-50%,-65%) scale(1)',opacity:1,offset:.15},{transform:'translate(calc(-50% + '+(bounds.left+bounds.width/2-x)+'px),calc(-50% + '+(bounds.top+bounds.height/2-y)+'px)) scale(.5)',opacity:.75}],{duration:650,delay:i*65,fill:'backwards',easing:'cubic-bezier(.22,.6,.4,1)'});
  const cleanupTimer=setTimeout(()=>{animation.cancel();flight.remove();},900+i*65);
  animation.oncancel=()=>{clearTimeout(cleanupTimer);flight.remove();};animation.onfinish=()=>{clearTimeout(cleanupTimer);flight.remove();lootPulse?.cancel();lootPulse=target.animate([{transform:'scale(1)'},{transform:'scale(1.07)',offset:.45},{transform:'scale(1)'}],{duration:300,easing:'ease-out'});};
  }
@@ -4993,15 +5275,14 @@ renderPackWorkshop();
 
 
 
-function animateDiamondPickup(origin        ,amount       ){
+function animateRarePickup(origin        ,amount       ,icon       ,target            ,delay=0){
   const field=get('field').getBoundingClientRect();
-  const target=get('diamond-balance').parentElement ;
   const counter=target.getBoundingClientRect();
   const x=origin.left+origin.width/2,y=origin.top+origin.height/2;
   const flight=document.createElement('span');
   flight.className='diamond-flight';
   flight.setAttribute('aria-hidden','true');
-  flight.textContent=amount>1?'💎 ×'+number(amount):'💎';
+  flight.textContent=amount>1?icon+' ×'+number(amount):icon;
   flight.style.left=x+'px';
   flight.style.top=y+'px';
   const pose=(bounds        ,scale       )=>
@@ -5014,7 +5295,7 @@ function animateDiamondPickup(origin        ,amount       ){
       {transform:pose(field,2.35),opacity:1,offset:.55},
       {transform:pose(field,2.15),opacity:1,offset:.72,easing:'ease-in'},
       {transform:pose(counter,.28),opacity:.15}
-    ],{duration:1450});
+    ],{duration:1450,delay,fill:'backwards'});
     animation.onfinish=()=>{
       flight.remove();
       target.animate([{scale:'1'},{scale:'1.18'},{scale:'1'}],{duration:260});
@@ -5022,7 +5303,7 @@ function animateDiamondPickup(origin        ,amount       ){
     animation.oncancel=()=>flight.remove();
   }catch(error){
     flight.remove();
-    console.error('Ферма: ошибка анимации алмаза',error);
+    console.error('Ферма: ошибка анимации редкой находки',error);
   }
 }
 

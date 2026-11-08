@@ -42,7 +42,7 @@ function inheritEnhancements(_parents:Genome[],_traits:string[]):Record<string,n
 function canTransferEnhancement(farm:Farm,source:number,target:number,id:string){
  const from=farm.lines[source],to=farm.lines[target];
  return source!==target&&!!from&&!!to&&!from.archived&&!to.archived&&from.seeds>0&&to.seeds>0&&from.traits.includes(id)&&to.traits.includes(id)&&(to.powers?.[id]??1)>0&&
- (from.enhancements?.[id]??0)>(to.enhancements?.[id]??0)&&!farm.plots.some(plot=>plot?.line===source||plot?.line===target);
+ (from.enhancements?.[id]??0)>(to.enhancements?.[id]??0)&&![...farm.plots,...(farm.greenhouse?.plots??[])].some(plot=>plot?.line===source||plot?.line===target);
 }
 function transferEnhancement(farm:Farm,source:number,target:number,id:string){
  if(!canTransferEnhancement(farm,source,target,id))return false;

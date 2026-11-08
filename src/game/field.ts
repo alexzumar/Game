@@ -1,10 +1,10 @@
-function plant(farm:Farm, index:number, crop:number, now:number,line?:number) {
-  if (!unlocked(farm,crop) || index < 0 || index >= farm.plots.length || farm.plots[index] || !(line===undefined?farm.seeds[crop]>0:farm.lines[line]?.seeds>0)) return false;
+function plant(farm:Farm, index:number, crop:number, now:number,line?:number,area:PlotArea=farm) {
+  if (!unlocked(farm,crop) || index < 0 || index >= area.plots.length || area.plots[index] || !(line===undefined?farm.seeds[crop]>0:farm.lines[line]?.seeds>0)) return false;
   if(line!==undefined){const seedLine=farm.lines[line];if(!seedLine||seedLine.archived||seedLine.crop!==crop||seedLine.seeds<1)return false;seedLine.seeds--;}
   else farm.seeds[crop]--;
-  farm.rot[index]=null;
-  farm.plots[index] = {crop, planted:now, ready:null,...(line===undefined?{}:{line})};
-  const planted=farm.plots[index]!;
+  area.rot[index]=null;
+  area.plots[index] = {crop, planted:now, ready:null,...(line===undefined?{}:{line})};
+  const planted=area.plots[index]!;
   if(Math.random()<(effectiveGenome(farm,planted).powers.sprout??0)/100){planted.duration=plantGrowthTime(farm,planted);planted.remaining=Math.round(planted.duration*.8);}
   irrigate(farm,planted,now);
   return true;
@@ -60,8 +60,8 @@ function waterAll(farm:Farm,now:number) {
 function remainingGrowth(plot:Plant,now:number) {
   return plot.ready === null ? plot.remaining : Math.max(0,plot.ready-now);
 }
-function collect(farm:Farm,index:number,now:number,random=Math.random) {
-  const plot = farm.plots[index];
+function collect(farm:Farm,index:number,now:number,random=Math.random,area:PlotArea=farm) {
+  const plot = area.plots[index];
   if (!plot || plot.mystery || plot.ready === null || plot.ready > now || (plot.wetUntil !== undefined && plot.wetUntil < plot.ready)) return 0;
   const powers=effectiveGenome(farm,plot).powers;
   const amount = (plot.line===undefined?harvestAmount(farm.levels[plot.crop].yield+farm.collection.filter(value=>value>0).length-1,random,(powers.head??0)/100):genome(farm,plot).genes.ga+harvestAmount(genome(farm,plot).genes.ga-1,random,(powers.head??0)/100)-1);
@@ -83,16 +83,16 @@ function collect(farm:Farm,index:number,now:number,random=Math.random) {
   if(random()<(powers.pod??0)/100){if(plot.line===undefined)farm.seeds[plot.crop]+=2;else farm.lines[plot.line].seeds+=2;}
   farm.collected += finalAmount;
   if(random()<.001)farm.relics++;
-  farm.plots[index] = null;
+  area.plots[index] = null;
   const renew=random()<(powers.renew??0)/100;
   const secondCut=random()<(powers.cut??0)/100;
   if(renew||secondCut||random()<Math.min(1,(powers.regrow??0)/100)) {
     if(plot.line!==undefined)farm.lines[plot.line].seeds--;
-    farm.plots[index]={crop:plot.crop,planted:now,ready:null,...(plot.line===undefined?{}:{line:plot.line})};
-    const planted=farm.plots[index]!;
+    area.plots[index]={crop:plot.crop,planted:now,ready:null,...(plot.line===undefined?{}:{line:plot.line})};
+    const planted=area.plots[index]!;
     if(renew){planted.duration=plantGrowthTime(farm,planted);planted.remaining=Math.round(planted.duration*.5);}
     irrigate(farm,planted,now);
-  } else if(farm.convenience.replant && farm.automation.replant && farm.replantCrop===plot.crop) plant(farm,index,plot.crop,now,plot.line);
+  } else if(farm.convenience.replant && farm.automation.replant && farm.replantCrop===plot.crop) plant(farm,index,plot.crop,now,plot.line,area);
   return finalAmount;
 }
 const maxSize = 8;

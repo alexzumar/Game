@@ -43,8 +43,8 @@ function roll(odds:number[],random = Math.random) {
   return last;
 }
 const seedPacks = [
-  {name:'Обычный',icon:'⬜',slots:1,price:20,size:1,boost:1},
-  {name:'Редкий',icon:'🟦',slots:1,price:500,size:1,boost:1},
-  {name:'Эпический',icon:'🟪',slots:1,price:10000,size:1,boost:1},
-  {name:'Легендарный',icon:'🟨',slots:1,price:50000,size:1,boost:1},
+  {name:'Обычный',icon:'⬜',slots:1,price:20,orbs:0,size:1,boost:1},
+  {name:'Редкий',icon:'🟦',slots:1,price:250,orbs:5,size:1,boost:1},
+  {name:'Эпический',icon:'🟪',slots:1,price:10000,orbs:25,size:1,boost:1},
+  {name:'Легендарный',icon:'🟨',slots:1,price:250000,orbs:100,size:1,boost:1},
 ];

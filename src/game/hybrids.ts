@@ -6,22 +6,25 @@ const lineTrait = (farm:Farm,plot:Plant,id:string) => plot.line===undefined?0:ef
 
 
 
-function mutationCandidates(farm:Farm) {
-  return farm.plots.flatMap((plot,index)=>{
-    if(plot)return [];
-    const row=Math.floor(index/farm.size),col=index%farm.size;
+function mutationCandidates(farm:Farm,greenhouse?:Greenhouse) {
+  const {plots}=greenhouse??farm;
+  const width=greenhouse?greenhouseWidth:farm.size;
+  return plots.flatMap((plot,index)=>{
+    if(plot||(greenhouse&&(!greenhouse.beds[index]||!greenhouse.trellises[index])))return [];
+    const row=Math.floor(index/width),col=index%width;
     const neighbors=[[row-1,col],[row+1,col],[row,col-1],[row,col+1]]
-      .filter(([r,c])=>r>=0&&c>=0&&r<farm.size&&c<farm.size)
-      .map(([r,c])=>farm.plots[r*farm.size+c]).filter((p):p is Plant=>!!p&&!p.mystery);
+      .filter(([r,c])=>r>=0&&c>=0&&r<plots.length/width&&c<width)
+      .map(([r,c])=>plots[r*width+c]).filter((p):p is Plant=>!!p&&!p.mystery);
     return neighbors.length>=2?[{index,neighbors}]:[];
   });
 }
-function checkMutations(farm:Farm,now:number,random=Math.random) {
-  if(now<farm.mutationCheck)return false;
-  for(let checks=0;farm.mutationCheck<=now&&checks<2000;checks++){
-  const at=farm.mutationCheck;
-  farm.mutationCheck+=30000;
-  for(const candidate of mutationCandidates(farm)) {
+function checkMutations(farm:Farm,now:number,random=Math.random,greenhouse?:Greenhouse) {
+  const area=greenhouse??farm;
+  if(now<area.mutationCheck)return false;
+  for(let checks=0;area.mutationCheck<=now&&checks<2000;checks++){
+  const at=area.mutationCheck;
+  area.mutationCheck+=30000;
+  for(const candidate of mutationCandidates(farm,greenhouse)) {
     const index=candidate.index,neighbors=candidate.neighbors.filter(p=>p.planted<=at && p.ready!==null && p.ready<=at && (p.wetUntil===undefined||p.wetUntil>=p.ready));
     if(neighbors.length<2)continue;
     const potential=neighbors.reduce((sum,p)=>sum+Math.min(30,genome(farm,p).genes.re+(effectiveGenome(farm,p).powers.resistance??0)),0)/neighbors.length;
@@ -32,10 +35,10 @@ function checkMutations(farm:Farm,now:number,random=Math.random) {
     const chosen=parents[random()<.5?0:1];
     const duration=chosen.duration??growthTime(chosen.crop,collectionGrowth(farm,chosen.crop));
     const inherited=parents.flatMap(p=>p.line===undefined?[]:farm.lines[p.line].traits);
-    farm.plots[index]={crop:chosen.crop,planted:at,watered:at,ready:at+duration,wetUntil:at+duration,
+    area.plots[index]={crop:chosen.crop,planted:at,watered:at,ready:at+duration,wetUntil:at+duration,
       duration,mystery:{parentNames:parents.map(p=>p.line===undefined?crops[p.crop].name:farm.lines[p.line].name),genomes:parents.map(p=>genome(farm,p)),parents:parents.map(p=>p.crop),traits:inherited}};
-    farm.rot[index]=null;
-    farm.plots[index]!.mystery!.preview=generateMutationLine(farm,farm.plots[index]!,random);
+    area.rot[index]=null;
+    area.plots[index]!.mystery!.preview=generateMutationLine(farm,area.plots[index]!,random);
   }
   }
   return true;
@@ -50,21 +53,21 @@ function mutationReward(line:Line){
     value>Math.max(...parents.map(parent=>parent.genome.powers[id]??0)));
   return 1+Number(strongerGene)+Number(strongerPower);
 }
-function discardMutation(farm:Farm,index:number,now:number){
-  const plot=farm.plots[index];
+function discardMutation(farm:Farm,index:number,now:number,area:PlotArea=farm){
+  const plot=area.plots[index];
   if(!plot?.mystery)return 0;
   const points=plot.ready!==null&&plot.ready<=now?mutationReward(plot.mystery.preview??generateMutationLine(farm,plot)):0;
   farm.mutationPoints=(farm.mutationPoints??0)+points;
-  farm.plots[index]=null;
+  area.plots[index]=null;
   return points;
 }
-function acceptMutation(farm:Farm,index:number,now:number,random=Math.random) {
-  const plot=farm.plots[index];
+function acceptMutation(farm:Farm,index:number,now:number,random=Math.random,area:PlotArea=farm) {
+  const plot=area.plots[index];
   if(!plot?.mystery || plot.ready===null || plot.ready>now || hybridCount(farm)>=farm.hybridSlots)return null;
   const line=plot.mystery.preview??generateMutationLine(farm,plot,random);
   line.enhancements={};
   line.name='Гибрид #'+(farm.lines.length+1);
-  farm.lines.push(line);farm.plots[index]=null;
+  farm.lines.push(line);area.plots[index]=null;
   const points=mutationReward(line);
   farm.mutationPoints=(farm.mutationPoints??0)+points;
   if(random()<.001)farm.relics++;

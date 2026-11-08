@@ -67,13 +67,14 @@ const tick = () => {
   updatePlayTime(playTimeCounter);
   advanceDebug();
   const weatherChanged=applyRain(farm,nowTime());
+  const greenhouseChanged=tickGreenhouse(nowTime());
   const abilitiesChanged=updatePlantAbilities(farm,nowTime());
   const ripened=updateRipening(farm,nowTime());
   const mutated=checkMutations(farm,nowTime());
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(abilitiesChanged || ripened || mutated || weatherChanged || extracted || speed !== 1 ||
+  if(greenhouseChanged || abilitiesChanged || ripened || mutated || weatherChanged || extracted || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
     if(saveFarm(farm))lastPlayTimeSave=totalPlayTime();
   }
@@ -172,7 +173,7 @@ document.addEventListener('wheel',event=>{
 },{passive:false,capture:true});
 
 button('seed-sort').onchange=renderSeeds;
-function openQuickSeeds(index:number,tile:HTMLElement){
+function openQuickSeeds(index:number,tile:HTMLElement,plantSeed:(index:number,crop:number)=>void=sow){
   const menu=get('quick-seeds');menu.replaceChildren();
   const available=crops.map((_,i)=>i).filter(i=>unlocked(farm,i)&&farm.seeds[i]>0);
   available.sort((a,b)=>get<HTMLSelectElement>('seed-sort').value==='rarity'?seedRarityOrder.indexOf(a)-seedRarityOrder.indexOf(b):farm.seeds[b]-farm.seeds[a]);
@@ -183,7 +184,7 @@ function openQuickSeeds(index:number,tile:HTMLElement){
     const icon=document.createElement('span');icon.className='plant-glow';icon.textContent=crops[i].symbol;
     icon.style.setProperty('--icon-rarity',rarityColors[cropRarities[i]]);
     const count=document.createElement('small');count.textContent=number(farm.seeds[i]);item.append(icon,count);
-    item.onclick=()=>{selectedLine=undefined;sow(index,i);};menu.append(item);
+    item.onclick=()=>{selectedLine=undefined;plantSeed(index,i);};menu.append(item);
   }
   if(!available.length){menu.textContent='Нет семян на складе';}
   menu.hidden=false;menu.style.left='12px';menu.style.top='12px';
@@ -193,7 +194,7 @@ function openQuickSeeds(index:number,tile:HTMLElement){
   get('field-tip').hidden=true;
 }
 document.addEventListener('click',event=>{
-  if(!(event.target instanceof Element)||event.target.closest('#quick-seeds,#field .tile'))return;
+  if(!(event.target instanceof Element)||event.target.closest('#quick-seeds,#field .tile,#greenhouse-grid button'))return;
   get('quick-seeds').hidden=true;
 });
 window.addEventListener('resize',()=>{get('quick-seeds').hidden=true;});

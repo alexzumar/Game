@@ -22,6 +22,14 @@ button('water').ondblclick = () => {
   gathering=false;
   watering = true;
   seed = -1;
+  if(greenhouseVisible()){
+    let count=0;
+    for(const plot of farm.greenhouse?.plots??[]){
+      if(plot&&!plot.mystery&&water(farm,plot,now,Number.MAX_SAFE_INTEGER))count++;
+    }
+    if(count)commit('Полито грядок: '+count+'.');
+    return;
+  }
   const weatherChanged = applyRain(farm,now);
   const count = waterAll(farm,now);
   if (count || weatherChanged) commit(count ? 'Полито грядок: '+count+'.' : notice);

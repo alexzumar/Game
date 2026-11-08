@@ -131,16 +131,26 @@ function loadFarm():Farm {
         s[field] = s[field].concat(Array(crops.length - 3).fill(0));
     }
     const counts = (a:unknown) => Array.isArray(a) && a.length === crops.length && a.every(n => int(n,0));
-    if (!["classic","glossy"].includes(s.skin) || !int(s.cascade,0,cascadeMax) || !int(s.luck,0,luckMax) || !(typeof s.coins==="number"&&Number.isFinite(s.coins)&&s.coins>=0) || !int(s.offset,Number.MIN_SAFE_INTEGER) || !int(s.epoch,0) || !int(s.size,1,Math.max(10,maxSize)) || !counts(s.seeds) || !counts(s.harvest) ||
-        !int(s.opened,0) || !Array.isArray(s.lastPack) || !int(s.lastPack.length,s.opened ? 1 : 0,s.opened ? packResultLimit : 0) ||
-        !s.lastPack.every((n:unknown) => int(n,0,crops.length-1)) || !int(s.accent,0,4) ||
-        !['light','dark'].includes(s.theme) || !Array.isArray(s.plots) || s.plots.length !== s.size**2 ||
-        !s.plots.every((p:Plant|null) => p === null || (p && int(p.crop,0,crops.length-1) && int(p.planted,0) &&
+    const validPlot = (p:Plant|null) => p === null || (p && int(p.crop,0,crops.length-1) && int(p.planted,0) &&
           (p.ready === null || int(p.ready,p.planted)) &&
           (p.watered === undefined || (p.ready !== null && int(p.watered,p.planted,p.ready))) &&
           (p.wetUntil === undefined || int(p.wetUntil,p.planted)) &&
           (p.remaining === undefined || (Number.isFinite(p.remaining)&&p.remaining>0)) &&
-          (p.duration === undefined || int(p.duration,1))))) throw new Error('Повреждённые данные фермы');
+          (p.duration === undefined || int(p.duration,1)));
+    if (!["classic","glossy"].includes(s.skin) || !int(s.cascade,0,cascadeMax) || !int(s.luck,0,luckMax) || !(typeof s.coins==="number"&&Number.isFinite(s.coins)&&s.coins>=0) || !int(s.offset,Number.MIN_SAFE_INTEGER) || !int(s.epoch,0) || !int(s.size,1,Math.max(10,maxSize)) || !counts(s.seeds) || !counts(s.harvest) ||
+        !int(s.opened,0) || !Array.isArray(s.lastPack) || !int(s.lastPack.length,s.opened ? 1 : 0,s.opened ? packResultLimit : 0) ||
+        !s.lastPack.every((n:unknown) => int(n,0,crops.length-1)) || !int(s.accent,0,4) ||
+        !['light','dark'].includes(s.theme) || !Array.isArray(s.plots) || s.plots.length !== s.size**2 ||
+        !s.plots.every(validPlot)) throw new Error('Повреждённые данные фермы');
+    const greenhouse=s.greenhouse;
+    if(greenhouse!==undefined){
+      const flags=(list:unknown)=>Array.isArray(list)&&list.length===greenhouseCells&&list.every(flag=>typeof flag==='boolean');
+      if(!greenhouse||!flags(greenhouse.beds)||!flags(greenhouse.trellises)||!int(greenhouse.mutationCheck,0)||
+        !Array.isArray(greenhouse.plots)||greenhouse.plots.length!==greenhouseCells||!greenhouse.plots.every(validPlot)||
+        greenhouse.beds.filter(Boolean).length<3||greenhouse.beds.some((bed:boolean,index:number)=>!bed&&(greenhouse.plots[index]||greenhouse.trellises[index]||greenhouse.rot?.[index])))
+        throw new Error('Повреждены грядки теплицы');
+    }
+    const savedPlots: (Plant|null)[]=[...s.plots,...(greenhouse?.plots??[])];
     s.collected ??= total(s.harvest) + s.coins;
     if (!int(s.collected,0)) throw new Error("Повреждён счётчик урожая");
     s.weather ??= newWeather(Date.now()+s.offset);
@@ -160,10 +170,10 @@ function loadFarm():Farm {
     if(s.weather.surgeAt!==undefined&&(s.weather.last===null||!int(s.weather.surgeAt,s.weather.last+1,s.weather.end)))
       throw new Error('Повреждена отметка рывка дождя');
     if(s.weather.surged!==undefined&&typeof s.weather.surged!=='boolean')throw new Error('Повреждено состояние рывка дождя');
-    if(s.plots.some((p:Plant|null)=>p?.line!==undefined && (!int(p.line,0,s.lines.length-1)||s.lines[p.line].crop!==p.crop))) throw new Error("Повреждено растение линии");
-    if(s.plots.some((p:Plant|null)=>p?.mystery && (!Array.isArray(p.mystery.parents)||p.mystery.parents.length!==2||!p.mystery.parents.every(i=>int(i,0,crops.length-1))||!Array.isArray(p.mystery.traits)||p.mystery.traits.length>10||!p.mystery.traits.every(t=>traitNames[t]))))throw new Error("Повреждена мутация");
-    if(s.plots.some((plot:Plant|null)=>plot?.mystery?.genomes && (plot.mystery.genomes.length!==2 || !plot.mystery.genomes.every(validGenome))))throw new Error("Повреждена генетика родителей");
-    for(const plot of s.plots)if(plot?.mystery){
+    if(savedPlots.some((p:Plant|null)=>p?.line!==undefined && (!int(p.line,0,s.lines.length-1)||s.lines[p.line].crop!==p.crop))) throw new Error("Повреждено растение линии");
+    if(savedPlots.some((p:Plant|null)=>p?.mystery && (!Array.isArray(p.mystery.parents)||p.mystery.parents.length!==2||!p.mystery.parents.every(i=>int(i,0,crops.length-1))||!Array.isArray(p.mystery.traits)||p.mystery.traits.length>10||!p.mystery.traits.every(t=>traitNames[t]))))throw new Error("Повреждена мутация");
+    if(savedPlots.some((plot:Plant|null)=>plot?.mystery?.genomes && (plot.mystery.genomes.length!==2 || !plot.mystery.genomes.every(validGenome))))throw new Error("Повреждена генетика родителей");
+    for(const plot of savedPlots)if(plot?.mystery){
       if(plot.mystery.preview && !plot.mystery.preview.parents && plot.mystery.genomes){
         plot.mystery.preview.parents=plot.mystery.genomes.map((data:Genome,i:number)=>({name:plot.mystery.parentNames?.[i]??crops[plot.mystery.parents[i]].name,crop:plot.mystery.parents[i],genome:cloneGenome(data)}));
       }
@@ -173,7 +183,10 @@ function loadFarm():Farm {
       }else plot.mystery.preview=generateMutationLine(s,plot);
     }
     s.rot ??= Array(s.plots.length).fill(null);
-    if(!Array.isArray(s.rot)||s.rot.length!==s.plots.length||!s.rot.every((r:RotRecord|null)=>r===null||(r&&int(r.crop,0,crops.length-1)&&int(r.at,0)&&int(r.checks,1)&&typeof r.risk==="number"&&r.risk>=0&&r.risk<=1&&typeof r.value==="number"&&Number.isFinite(r.value)&&r.value>=0&&typeof r.name==="string"&&validGenome(r.genome))))throw new Error("Повреждена история гнили");
+    const validRot=(r:RotRecord|null)=>r===null||(r&&int(r.crop,0,crops.length-1)&&int(r.at,0)&&int(r.checks,1)&&typeof r.risk==="number"&&r.risk>=0&&r.risk<=1&&typeof r.value==="number"&&Number.isFinite(r.value)&&r.value>=0&&typeof r.name==="string"&&validGenome(r.genome));
+    if(!Array.isArray(s.rot)||s.rot.length!==s.plots.length||!s.rot.every(validRot)||
+      (greenhouse&&(!Array.isArray(greenhouse.rot)||greenhouse.rot.length!==greenhouseCells||!greenhouse.rot.every(validRot))))
+      throw new Error("Повреждена история гнили");
     for(const line of s.lines)if(line.parents && (!Array.isArray(line.parents)||line.parents.length!==2||!line.parents.every((p:ParentRecord)=>p&&typeof p.name==="string"&&int(p.crop,0,crops.length-1)&&validGenome(p.genome))))throw new Error("Повреждена родословная");
     s.harvested??=s.harvest.map((count:number)=>count);
     if(!Array.isArray(s.harvested)||s.harvested.length!==crops.length||!s.harvested.every((n:unknown)=>typeof n==='number'&&Number.isFinite(n)&&n>=0))throw new Error('Повреждена коллекция урожая');
@@ -187,7 +200,7 @@ function loadFarm():Farm {
     for(const [id,value] of Object.entries(s.resources.found))if(!materialsBySaveKey.has(id)||typeof value!=='boolean')throw new Error('Повреждена коллекция предметов');
     const validateEnhancements=(data:Genome|Line)=>{if(data.enhancements&&Object.entries(data.enhancements).some(([id,n])=>!traitNames[id]||!int(n,0,100)))throw new Error('Повреждены усиления');};
     for(const line of s.lines){validateEnhancements(line);for(const parent of line.parents??[])validateEnhancements(parent.genome);}
-    for(const plot of s.plots)if(plot?.mystery){if(plot.mystery.preview){validateEnhancements(plot.mystery.preview);plot.mystery.preview.enhancements={};}for(const data of plot.mystery.genomes??[])validateEnhancements(data);}
+    for(const plot of savedPlots)if(plot?.mystery){if(plot.mystery.preview){validateEnhancements(plot.mystery.preview);plot.mystery.preview.enhancements={};}for(const data of plot.mystery.genomes??[])validateEnhancements(data);}
     const weatherMigrated=s.weather.intervalVersion!==3;
     if(weatherMigrated){
       const weather=s.weather;

@@ -26,7 +26,17 @@ const defaultGlass = () => ({transparency:30,strength:60});
 type ExtractionJob = {completionOffsets?:number[];unitValue?:number;quality?:number;crop:number;input:number;output:number;outputs:number[];done:number;start:number;end:number};
 type Extraction = {extraJobs?: (ExtractionJob|null)[];slots?:number;history?:{crop:number;input:number;seeds:number}[];speed:number;yield:number;job:ExtractionJob|null;processed:number;produced:number;last:string};
 const newExtraction = ():Extraction => ({speed:0,yield:0,job:null,processed:0,produced:0,last:""});
+type PlotArea={plots:(Plant|null)[];rot:(RotRecord|null)[]};
+type Greenhouse=PlotArea & {beds:boolean[];trellises:boolean[];mutationCheck:number};
+const greenhouseWidth=10;
+const greenhouseCells=30;
+function newGreenhouse(now:number):Greenhouse{
+  return {beds:Array.from({length:greenhouseCells},(_,i)=>i>=13&&i<=15),
+    trellises:Array(greenhouseCells).fill(false),plots:Array(greenhouseCells).fill(null),
+    rot:Array(greenhouseCells).fill(null),mutationCheck:now+30000};
+}
 type Farm = {
+  greenhouse?:Greenhouse;
   wheels?:WheelState;
   pausedAt?:number;
   activePlayMs?:number;

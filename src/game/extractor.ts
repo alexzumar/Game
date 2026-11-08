@@ -29,7 +29,7 @@ function startExtraction(farm:Farm,crop:number,count:number,now:number,random=Ma
     const max=bonus.max+(random()<bonus.extra?1:0);
     return 1+Math.min(max-1,Math.floor(random()*max));
   });
-  if(!outputs.some(Boolean)&&farm.seeds[crop]===0&&!farm.plots.some(plot=>plot?.crop===crop)&&farm.harvest[crop]===count){const max=bonus.max+(random()<bonus.extra?1:0);outputs[outputs.length-1]=1+Math.min(max-1,Math.floor(random()*max));}
+  if(!outputs.some(Boolean)&&farm.seeds[crop]===0&&![...farm.plots,...(farm.greenhouse?.plots??[])].some(plot=>plot?.crop===crop)&&farm.harvest[crop]===count){const max=bonus.max+(random()<bonus.extra?1:0);outputs[outputs.length-1]=1+Math.min(max-1,Math.floor(random()*max));}
   const output=total(outputs);
   const period=extractionTime(machine.speed);
   const early=diamondCurve(diamondLevel(farm,'extract'));

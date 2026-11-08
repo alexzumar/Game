@@ -138,10 +138,10 @@ window.addEventListener('resize',()=>{
   if(!hint.hidden&&tile)positionFieldTooltip(hint,tile as HTMLElement);
 });
 let basketPulse:Animation|undefined;
-function collectAnimated(index:number,now:number,tile:Element) {
-  const plot = farm.plots[index];
+function collectAnimated(index:number,now:number,tile:Element,area:PlotArea=farm) {
+  const plot = area.plots[index];
   const beforeLoot={diamonds:farm.diamonds?.balance??0,orbs:farm.resources.orbs,items:{...farm.resources.items}};
-  const amount = collect(farm,index,now);
+  const amount = collect(farm,index,now,Math.random,area);
   if(amount&&typeof packsUiReady!=='undefined'&&packsUiReady)animateCollectedLoot(tile,beforeLoot);
   if(!amount && plot?.line!==undefined && (plot.ready??Infinity)<=now && hybridCount(farm)>=farm.hybridSlots)notice='Инвентарь гибридов заполнен. Освободи место — растение остаётся на грядке.';
   if (!amount || !plot || matchMedia('(prefers-reduced-motion: reduce)').matches) return amount;
