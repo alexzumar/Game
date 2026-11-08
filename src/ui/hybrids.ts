@@ -214,7 +214,6 @@ mutationDialog.addEventListener('click',event=>{
 get<HTMLInputElement>('debug-amount').addEventListener('keydown',event=>{
   if(event.key==='Enter'){event.preventDefault();button('debug-coins').click();}
 });
-button('buy-xray').onclick=()=>{if(buyXray(farm))commit('Xray открыт.');};
 const dock=get('hybrid-dock'),dockWrap=get('hybrid-dock-wrap'),dockTip=get('dock-tooltip');
 type DockState = 'hidden'|'peek'|'open';
 let dockState:DockState='hidden';
@@ -280,9 +279,6 @@ function magnifyDockCard(card:HTMLElement){
   document.documentElement.append(dockMagnifier);
 }
 function renderDock(){
-  get('xray-price').textContent='🪙 '+number(xrayCost)+' + 🔮 '+xrayRelics+' · найдено предметов '+farm.relics;
-  button('buy-xray').disabled=farm.xray||farm.coins<xrayCost||farm.relics<xrayRelics;
-  button('buy-xray').textContent=farm.xray?'Открыто':'Открыть Xray';
   const signature=get<HTMLSelectElement>('hybrid-sort').value+';'+get<HTMLSelectElement>('hybrid-direction').value+';'+farm.lines.map((line,i)=>!line.archived&&line.seeds>0?i+':'+line.seeds:'').join('|');
   if(document.body.classList.contains('in-greenhouse')&&dockState!=='open')setDockState('open');
   if(!document.body.classList.contains('in-greenhouse')&&hybridCount(farm)===0 && dockState!=='hidden')setDockState('hidden');

@@ -14,11 +14,11 @@ const smoke=`<script>setTimeout(async()=>{try{
  assert(farm.activePlayMs===playTime&&farm.backgroundPlayMs>=1000&&document.getElementById('active-play-time')===timeRow,'Background time counted as active or replaced its row');
  assert(get('total-play-time').textContent==='0 ч 0 мин '+Math.floor(totalPlayTime()/1000)+' с','Total play time excludes inactive time');
  window.dispatchEvent(new Event('pagehide'));assert(loadFarm().backgroundPlayMs===farm.backgroundPlayMs,'Background time was not saved on close');syncPlayTime();
- farm.xray=true;farm.plots[0]={crop:0,planted:nowTime(),ready:nowTime()+60000,duration:60000,mystery:{parents:[0,0],traits:['growth']}};
+ farm.plots[0]={crop:0,planted:nowTime(),ready:nowTime()+60000,duration:60000,mystery:{parents:[0,0],traits:['growth']}};
  render();document.querySelector('#field .tile').click();
  assert(mutationDialog.open&&get('mutation-icon').textContent==='?'&&button('mutation-accept').hidden,'Unripe mutation revealed or cannot be inspected');
  button('mutation-discard').click();assert(farm.plots[0]&&get('mutation-result').textContent.includes('Точно удалить'),'No early discard confirmation');
- button('mutation-discard').click();assert(!farm.plots[0]&&!mutationDialog.open,'Early discard did not clear the plot');farm.xray=false;
+ button('mutation-discard').click();assert(!farm.plots[0]&&!mutationDialog.open,'Early discard did not clear the plot');
  document.querySelector('[data-resource-tab="sets"]').click();assert(document.querySelectorAll('[data-set]').length===4,'Missing real sets');
  assert(document.querySelector('[data-set="0"]').textContent.includes('0/4'),'Set progress missing');document.querySelector('[data-set="0"]').click();
  assert(document.getElementById('set-details-dialog').open,'Set details missing');assert(document.querySelectorAll('.set-crop').length===4,'Set composition wrong');

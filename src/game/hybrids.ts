@@ -88,7 +88,6 @@ function acceptMutation(farm:Farm,index:number,now:number,random=Math.random,are
   farm.lines.push(line);area.plots[index]=null;
   const points=mutationReward(line);
   farm.mutationPoints=(farm.mutationPoints??0)+points;
-  if(random()<.001)farm.relics++;
   return {line,added:line.traits[0]??'growth',replaced:null,points};
 }
 function generateMutationLine(farm:Farm,plot:Plant,random=Math.random):Line {
@@ -159,12 +158,6 @@ function powerLabel(line:Line,id:string) {
 }
 
 
-const xrayCost = 100000;
-const xrayRelics = 5;
-function buyXray(farm:Farm) {
-  if(farm.xray||farm.coins<xrayCost||farm.relics<xrayRelics)return false;
-  spendFarmCoins(farm,xrayCost);farm.relics-=xrayRelics;farm.xray=true;return true;
-}
 
 
 

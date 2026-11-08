@@ -50,7 +50,7 @@ type Farm = {
   lines:Line[];hybridSlots:number;mutationCheck:number;
   packProgress:PackProgress;harvested:number[];collection:number[];discoveries:number;discoveryUp:{speed:number;slots:number;amount:number};
   pendingDiscovery:{crop:number;amount:number}[];
-  levels:CropLevels[];coins:number;luck:number;cascade:number;relics:number;xray:boolean;
+  levels:CropLevels[];coins:number;luck:number;cascade:number;
   convenience:Record<Convenience,boolean>;glass:{transparency:number;strength:number};
   automation:{irrigation:boolean;replant:boolean};automationRevision:number;
   irrigationUntil:number;replantCrop:number|null;extraction:Extraction;
@@ -60,7 +60,7 @@ type Farm = {
 const total = (counts:number[]) => counts.reduce((sum,count) => sum + count,0);
 const newFarm = ():Farm => {
   const now = Date.now();
-  return {packProgress:newPackProgress(),harvested:crops.map(()=>0),resources:newResources(),rot:[null],harvestQuality:crops.map(()=>0),harvestValue:crops.map(()=>0),relics:0,xray:false,hybridSlots:20,mutationCheck:now+30000,lines:[],automationRevision:1,irrigationUntil:0,replantCrop:null,automation:{irrigation:false,replant:false},extraction:newExtraction(),discoveryUp:{speed:0,slots:0,amount:0},pendingDiscovery:[],collection:crops.map((_,i)=>i===0?1:0),discoveries:0,convenience:emptyConveniences(),glass:defaultGlass(),epoch:now,size:1,plots:[null],seeds:crops.map((_,i)=>i===0?1:0),harvest:crops.map(()=>0),
+  return {packProgress:newPackProgress(),harvested:crops.map(()=>0),resources:newResources(),rot:[null],harvestQuality:crops.map(()=>0),harvestValue:crops.map(()=>0),hybridSlots:20,mutationCheck:now+30000,lines:[],automationRevision:1,irrigationUntil:0,replantCrop:null,automation:{irrigation:false,replant:false},extraction:newExtraction(),discoveryUp:{speed:0,slots:0,amount:0},pendingDiscovery:[],collection:crops.map((_,i)=>i===0?1:0),discoveries:0,convenience:emptyConveniences(),glass:defaultGlass(),epoch:now,size:1,plots:[null],seeds:crops.map((_,i)=>i===0?1:0),harvest:crops.map(()=>0),
     levels:emptyLevels(),coins:0,luck:0,cascade:0,skin:'glossy',collected:0,offset:0,opened:0,lastPack:[],
     theme:'light',accent:0,weather:newWeather(now)};
 };

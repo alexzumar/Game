@@ -83,7 +83,7 @@ function renderPlotArt(tile:HTMLElement,visual:HTMLElement,plot:Plant|null,rot:R
   tile.dataset.stage = !plot ? 'empty' : ready ? 'ripe' : halfway ? 'sprout' : 'seed';
   const icon = !plot ? '' : ready ? crop!.symbol : halfway ? '🌱' : '🟤';
   if(plot?.mystery){
-    delete visual.dataset.art;visual.classList.remove("has-crop-art");visual.textContent=farm.xray&&ready?crops[plot.crop].symbol:"?";
+    delete visual.dataset.art;visual.classList.remove("has-crop-art");visual.textContent="?";
     const progress=1-(remaining??duration)/duration;visual.style.setProperty("--mystery-size",String(.4+.6*Math.max(0,Math.min(1,progress))));
   } else if(plot){
     const progress=remaining===undefined?0:1-remaining/duration;
@@ -111,11 +111,7 @@ function renderPlotTooltip(plot:Plant|null|undefined,rot:RotRecord|null|undefine
   const lines:string[]=[];
   if(plot){
     const ripe=plot.ready!==null&&plot.ready<=now;
-    if(plot.mystery&&ripe&&farm.xray&&plot.mystery.preview){
-      title=crops[plot.crop].name;
-      const genes=plot.mystery.preview.genes!;
-      lines.push('⚡ Gr '+genes.gr+' / 💰 Ga '+genes.ga+' / 🛡️ Re '+genes.re);
-    }else if(plot.line!==undefined){
+    if(plot.line!==undefined){
       const line=farm.lines[plot.line],genes=genome(farm,plot).genes;
       title=line.name+' · '+crops[line.crop].name;
       lines.push('⚡ Gr '+genes.gr+' / 💰 Ga '+genes.ga+' / 🛡️ Re '+genes.re);

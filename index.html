@@ -710,9 +710,9 @@ button{user-select:none}
         <small class="gather-help">Alt — шпалера · M — перенос пустой грядки</small>
       </div>
     </section>
-    <section class="glass panel"><span class="kicker">УРОЖАЙ</span><button class="quiet wide" id="basket"><span><span id="basket-icon">🧺</span> Корзина</span><b id="counter"></b></button></section>
+    <section class="glass panel"><span class="kicker">УРОЖАЙ</span><button class="quiet wide" id="basket"><span><span id="basket-icon">🧺</span> Корзина</span><b id="counter"></b></button><button class="quiet wide" id="extractor-open">⚙️ Экстрактор семян</button></section>
     <section class="glass panel greenhouse-only" id="greenhouse-expansion"><span class="kicker">Грядки</span><button class="quiet wide" id="greenhouse-buy" aria-pressed="false">Новая грядка</button><button class="quiet wide" id="greenhouse-move" aria-pressed="false">Перенос грядок</button></section>
-    <section class="glass panel" id="upgrade-field"><span class="kicker">Расширение поля</span><p id="expand-note"></p><button class="quiet" id="expand"></button></section><section class="glass panel"><button class="quiet wide" id="hybrids-open">🧬 Гибриды</button><button class="quiet wide" id="extractor-open">⚙️ Экстрактор семян</button><button class="quiet wide" id="diamonds-open">💎 Алмазные улучшения</button><button class="primary" id="upgrades-open">⬆ Улучшения</button></section>
+    <section class="glass panel" id="upgrade-field"><span class="kicker">Расширение поля</span><p id="expand-note"></p><button class="quiet" id="expand"></button></section><section class="glass panel"><button class="quiet wide" id="hybrids-open">🧬 Гибриды</button><button class="quiet wide" id="diamonds-open">💎 Алмазные улучшения</button><button class="primary" id="upgrades-open">⬆ Улучшения</button></section>
   </aside>
 </main>
 <footer><span id="save-state"></span><span id="notice" role="status"></span></footer>
@@ -803,7 +803,7 @@ button{user-select:none}
 
   </section>
   <section id="upgrade-tools" hidden><div id="convenience-list"></div></section>
-  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section><h2>🔎 Xray</h2><p>Показывает вид и Gr/Ga/Re созревшей находки прямо на грядке.</p><p id="xray-price"></p><button class="quiet" id="buy-xray"></button></section><section id="trait-panel" class="glass panel trait-panel" hidden>
+  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section></section><section id="trait-panel" class="glass panel trait-panel" hidden>
     <button class="quiet close" id="trait-close" aria-label="Закрыть">×</button>
     <h2 id="trait-title"></h2><p id="crop-rarity-time"></p><p id="trait-lock"></p><p id="crop-ability"></p><div id="trait-list"></div>
   </section>
@@ -1038,7 +1038,7 @@ function newGreenhouse(now       )           {
 const total = (counts         ) => counts.reduce((sum,count) => sum + count,0);
 const newFarm = ()      => {
   const now = Date.now();
-  return {packProgress:newPackProgress(),harvested:crops.map(()=>0),resources:newResources(),rot:[null],harvestQuality:crops.map(()=>0),harvestValue:crops.map(()=>0),relics:0,xray:false,hybridSlots:20,mutationCheck:now+30000,lines:[],automationRevision:1,irrigationUntil:0,replantCrop:null,automation:{irrigation:false,replant:false},extraction:newExtraction(),discoveryUp:{speed:0,slots:0,amount:0},pendingDiscovery:[],collection:crops.map((_,i)=>i===0?1:0),discoveries:0,convenience:emptyConveniences(),glass:defaultGlass(),epoch:now,size:1,plots:[null],seeds:crops.map((_,i)=>i===0?1:0),harvest:crops.map(()=>0),
+  return {packProgress:newPackProgress(),harvested:crops.map(()=>0),resources:newResources(),rot:[null],harvestQuality:crops.map(()=>0),harvestValue:crops.map(()=>0),hybridSlots:20,mutationCheck:now+30000,lines:[],automationRevision:1,irrigationUntil:0,replantCrop:null,automation:{irrigation:false,replant:false},extraction:newExtraction(),discoveryUp:{speed:0,slots:0,amount:0},pendingDiscovery:[],collection:crops.map((_,i)=>i===0?1:0),discoveries:0,convenience:emptyConveniences(),glass:defaultGlass(),epoch:now,size:1,plots:[null],seeds:crops.map((_,i)=>i===0?1:0),harvest:crops.map(()=>0),
     levels:emptyLevels(),coins:0,luck:0,cascade:0,skin:'glossy',collected:0,offset:0,opened:0,lastPack:[],
     theme:'light',accent:0,weather:newWeather(now)};
 };
@@ -1234,7 +1234,6 @@ function collect(farm     ,index       ,now       ,random=Math.random,area      
   if(plot.line!==undefined){const genes=genome(farm,plot).genes;farm.harvestQuality[plot.crop]+=finalAmount*((genes.ga-1)/29+(genes.gr-1)/58+(genes.re-1)/58);}
   if(random()<(powers.pod??0)/100){if(plot.line===undefined)farm.seeds[plot.crop]+=2;else farm.lines[plot.line].seeds+=2;}
   farm.collected += finalAmount;
-  if(random()<.001)farm.relics++;
   area.plots[index] = null;
   const renew=random()<(powers.renew??0)/100;
   const secondCut=random()<(powers.cut??0)/100;
@@ -1557,7 +1556,6 @@ function acceptMutation(farm     ,index       ,now       ,random=Math.random,are
   farm.lines.push(line);area.plots[index]=null;
   const points=mutationReward(line);
   farm.mutationPoints=(farm.mutationPoints??0)+points;
-  if(random()<.001)farm.relics++;
   return {line,added:line.traits[0]??'growth',replaced:null,points};
 }
 function generateMutationLine(farm     ,plot      ,random=Math.random)      {
@@ -1628,12 +1626,6 @@ function powerLabel(line     ,id       ) {
 }
 
 
-const xrayCost = 100000;
-const xrayRelics = 5;
-function buyXray(farm     ) {
-  if(farm.xray||farm.coins<xrayCost||farm.relics<xrayRelics)return false;
-  spendFarmCoins(farm,xrayCost);farm.relics-=xrayRelics;farm.xray=true;return true;
-}
 
 
 
@@ -2223,9 +2215,7 @@ function loadFarm()      {
     s.harvestValue ??= [...(s.harvest??[])];
     if(s.harvestValue.length===3)s.harvestValue=s.harvestValue.concat(Array(crops.length-3).fill(0));
     if(!Array.isArray(s.harvestValue)||s.harvestValue.length!==crops.length||!s.harvestValue.every((v        )=>typeof v==="number"&&Number.isFinite(v)&&v>=0))throw new Error("Повреждена стоимость урожая");
-    s.relics ??= 0;s.xray ??= false;
     if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
-    if(!int(s.relics,0)||typeof s.xray!=="boolean")throw new Error("Повреждены предметы");
     s.mutationCheck ??= Date.now()+(s.offset??0)+30000;
     if(!int(s.mutationCheck,0))throw new Error("Повреждён таймер селекции");
     s.lines ??= [];
@@ -2702,7 +2692,7 @@ function renderPlotArt(tile            ,visual            ,plot           ,rot  
   tile.dataset.stage = !plot ? 'empty' : ready ? 'ripe' : halfway ? 'sprout' : 'seed';
   const icon = !plot ? '' : ready ? crop .symbol : halfway ? '🌱' : '🟤';
   if(plot?.mystery){
-    delete visual.dataset.art;visual.classList.remove("has-crop-art");visual.textContent=farm.xray&&ready?crops[plot.crop].symbol:"?";
+    delete visual.dataset.art;visual.classList.remove("has-crop-art");visual.textContent="?";
     const progress=1-(remaining??duration)/duration;visual.style.setProperty("--mystery-size",String(.4+.6*Math.max(0,Math.min(1,progress))));
   } else if(plot){
     const progress=remaining===undefined?0:1-remaining/duration;
@@ -2730,11 +2720,7 @@ function renderPlotTooltip(plot                     ,rot                        
   const lines         =[];
   if(plot){
     const ripe=plot.ready!==null&&plot.ready<=now;
-    if(plot.mystery&&ripe&&farm.xray&&plot.mystery.preview){
-      title=crops[plot.crop].name;
-      const genes=plot.mystery.preview.genes ;
-      lines.push('⚡ Gr '+genes.gr+' / 💰 Ga '+genes.ga+' / 🛡️ Re '+genes.re);
-    }else if(plot.line!==undefined){
+    if(plot.line!==undefined){
       const line=farm.lines[plot.line],genes=genome(farm,plot).genes;
       title=line.name+' · '+crops[line.crop].name;
       lines.push('⚡ Gr '+genes.gr+' / 💰 Ga '+genes.ga+' / 🛡️ Re '+genes.re);
@@ -4100,7 +4086,6 @@ mutationDialog.addEventListener('click',event=>{
 get                  ('debug-amount').addEventListener('keydown',event=>{
   if(event.key==='Enter'){event.preventDefault();button('debug-coins').click();}
 });
-button('buy-xray').onclick=()=>{if(buyXray(farm))commit('Xray открыт.');};
 const dock=get('hybrid-dock'),dockWrap=get('hybrid-dock-wrap'),dockTip=get('dock-tooltip');
 
 let dockState          ='hidden';
@@ -4166,9 +4151,6 @@ function magnifyDockCard(card            ){
   document.documentElement.append(dockMagnifier);
 }
 function renderDock(){
-  get('xray-price').textContent='🪙 '+number(xrayCost)+' + 🔮 '+xrayRelics+' · найдено предметов '+farm.relics;
-  button('buy-xray').disabled=farm.xray||farm.coins<xrayCost||farm.relics<xrayRelics;
-  button('buy-xray').textContent=farm.xray?'Открыто':'Открыть Xray';
   const signature=get                   ('hybrid-sort').value+';'+get                   ('hybrid-direction').value+';'+farm.lines.map((line,i)=>!line.archived&&line.seeds>0?i+':'+line.seeds:'').join('|');
   if(document.body.classList.contains('in-greenhouse')&&dockState!=='open')setDockState('open');
   if(!document.body.classList.contains('in-greenhouse')&&hybridCount(farm)===0 && dockState!=='hidden')setDockState('hidden');

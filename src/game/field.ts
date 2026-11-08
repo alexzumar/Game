@@ -82,7 +82,6 @@ function collect(farm:Farm,index:number,now:number,random=Math.random,area:PlotA
   if(plot.line!==undefined){const genes=genome(farm,plot).genes;farm.harvestQuality[plot.crop]+=finalAmount*((genes.ga-1)/29+(genes.gr-1)/58+(genes.re-1)/58);}
   if(random()<(powers.pod??0)/100){if(plot.line===undefined)farm.seeds[plot.crop]+=2;else farm.lines[plot.line].seeds+=2;}
   farm.collected += finalAmount;
-  if(random()<.001)farm.relics++;
   area.plots[index] = null;
   const renew=random()<(powers.renew??0)/100;
   const secondCut=random()<(powers.cut??0)/100;

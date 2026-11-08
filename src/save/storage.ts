@@ -49,9 +49,7 @@ function loadFarm():Farm {
     s.harvestValue ??= [...(s.harvest??[])];
     if(s.harvestValue.length===3)s.harvestValue=s.harvestValue.concat(Array(crops.length-3).fill(0));
     if(!Array.isArray(s.harvestValue)||s.harvestValue.length!==crops.length||!s.harvestValue.every((v:unknown)=>typeof v==="number"&&Number.isFinite(v)&&v>=0))throw new Error("Повреждена стоимость урожая");
-    s.relics ??= 0;s.xray ??= false;
     if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
-    if(!int(s.relics,0)||typeof s.xray!=="boolean")throw new Error("Повреждены предметы");
     s.mutationCheck ??= Date.now()+(s.offset??0)+30000;
     if(!int(s.mutationCheck,0))throw new Error("Повреждён таймер селекции");
     s.lines ??= [];
