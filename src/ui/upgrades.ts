@@ -56,6 +56,16 @@ upgradesDialog.addEventListener('click',event => {
   if (!event.target.closest('#trait-panel,#upgrade-catalog button')) traitPanel.hidden=true;
 });
 let upgradeCrop = 0;
+let guardedBarrier:{crop:number;trait:Trait;bounds:DOMRect}|null=null;
+const barrierSafetyMargin=32;
+document.addEventListener('pointermove',event=>{
+  if(!guardedBarrier||event.pointerType!=='mouse')return;
+  const {bounds}=guardedBarrier;
+  if(event.clientX>=bounds.left-barrierSafetyMargin&&event.clientX<=bounds.right+barrierSafetyMargin&&
+    event.clientY>=bounds.top-barrierSafetyMargin&&event.clientY<=bounds.bottom+barrierSafetyMargin)return;
+  guardedBarrier=null;
+  if(upgradesDialog.open)renderTraits();
+});
 for (const i of crops.map((_,index)=>index).sort((a,b)=>cropTiers[a]-cropTiers[b]||cropTimes[a]-cropTimes[b])) {
   const crop=crops[i];
   const card = document.createElement('button');
@@ -81,7 +91,19 @@ for (const {id,label} of traits) {
   const buy = document.createElement('button');
   buy.id = 'trait-buy-'+id;
   buy.className = 'quiet';
-  buy.onclick = () => {if(barrierClosed(farm,upgradeCrop,id)){if(unlockBarrier(farm,upgradeCrop,id))commit('Теперь можно улучшать до '+barrierThreshold(barrierLevel(farm,upgradeCrop,id))+' уровня.');}else if (buyTrait(farm,upgradeCrop,id)) commit(label+' улучшена.');};
+  buy.onclick = event => {
+    if(barrierClosed(farm,upgradeCrop,id)){
+      if(guardedBarrier?.crop===upgradeCrop&&guardedBarrier.trait===id)return;
+      if(unlockBarrier(farm,upgradeCrop,id))commit('Теперь можно улучшать до '+barrierThreshold(barrierLevel(farm,upgradeCrop,id))+' уровня.');
+      return;
+    }
+    if(!buyTrait(farm,upgradeCrop,id))return;
+    const mouseClick=event instanceof PointerEvent?event.pointerType==='mouse':event.detail>0;
+    if(mouseClick&&barrierClosed(farm,upgradeCrop,id)){
+      guardedBarrier={crop:upgradeCrop,trait:id,bounds:buy.getBoundingClientRect()};
+    }
+    commit(label+' улучшена.');
+  };
   card.append(title,detail,buy);
   get('trait-list').append(card);
 }
@@ -108,8 +130,8 @@ function renderTraits() {
   for (const {id} of traits) {
     const level = id === "growth" ? collectionGrowth(farm,index) : farm.levels[index][id];
     const maxed = level === traitMax;
-    const price = traitPrice(farm.levels[index][id]);
-    const orbs=traitOrbPrice(farm.levels[index][id]);
+    const price=traitPrice(index,farm.levels[index][id]);
+    const orbs=traitOrbPrice(index,farm.levels[index][id]);
     const effect = (n:number) => id === 'growth' ? clock(growthTime(index,n)) :
       id === 'yield' ? formatChance(n)+'%' : clock(wateringDuration(farm,{crop:index,planted:0,ready:null},n));
     const explanation = id === 'growth' ? ' до сбора после полива' :
@@ -120,7 +142,14 @@ function renderTraits() {
     buy.disabled = locked || maxed || farm.coins < price || farm.resources.orbs<orbs;
     buy.textContent = maxed ? 'Максимальный уровень' : 'Улучшить · 🪙 '+number(price)+(orbs?' · 🔮 '+number(orbs):'');
     buy.removeAttribute('title');
-    if(!locked&&barrierClosed(farm,index,id)){const cost=barrierPrice(farm,index,id);const material=barrierMaterial(index,id);buy.textContent=material.icon+' '+number(cost);buy.title=material.name;buy.disabled=(farm.resources.items[material.id]??0)<cost;}
+    if(!locked&&barrierClosed(farm,index,id)){
+      const cost=barrierPrice(farm,index,id);
+      const material=barrierMaterial(index,id);
+      const guarded=guardedBarrier?.crop===index&&guardedBarrier.trait===id;
+      buy.textContent=material.icon+' '+number(cost);
+      buy.title=guarded?'Отведи курсор от кнопки, чтобы открыть барьер':material.name;
+      buy.disabled=guarded||(farm.resources.items[material.id]??0)<cost;
+    }
   }
   applyPlantGlows();
 }

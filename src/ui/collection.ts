@@ -51,7 +51,8 @@ function renderHarvestDetails(){
    ...properties.map(id=>powerLabel(specimen,id)+' — '+abilityDefinitions[id].description),
    '',
    'Добыча с обычного плода',
-   '🔮 Орбы ×'+[1,4,16,64][tier]+' — '+formatChance((1-2*chance)*100)+'%',
+   '🔮 Добыча орбов — '+formatChance((1-2*chance)*100)+'% · количество 0–'+orbMaximums[tier],
+   '🔮 Шанс максимума при добыче орбов — '+formatChance(orbMaximumChance(tier,farm.resources.orbLuck)*100)+'%',
    ...['set'+set,...properties.map(propertyMaterialId),'duplication'].map(id=>{
      const material=materials.find(item=>item.id===id)!;
      const probability=id==='duplication'?harvestDuplicationChance(i):id.startsWith('set')?chance:chance/properties.length;

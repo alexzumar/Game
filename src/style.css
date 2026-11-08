@@ -344,8 +344,9 @@ body.raining::after{opacity:1}
 #collection-dialog .window-heading>.collection-close{position:static;order:4}
 #upgrades-dialog>.window-heading{flex:none;top:0}
 #upgrade-wallet{position:relative}
+#upgrades-dialog>.window-heading>#upgrade-wallet:has(#upgrade-material-tip:not([hidden])){z-index:2}
 #upgrades-dialog>.window-heading>h2{z-index:2}
-#upgrade-material-tip{position:absolute;top:calc(100% + 6px);left:50%;translate:-50% 0;z-index:30;display:flex;flex-wrap:wrap;gap:6px 12px;width:max-content;max-width:min(254px,64vw);padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--base);box-shadow:0 8px 26px var(--shade);color:var(--ink);font-size:.85rem;pointer-events:none}
+#upgrade-material-tip{position:absolute;top:calc(100% + 6px);left:50%;translate:-50% 0;z-index:30;display:flex;flex-wrap:wrap;gap:6px 12px;width:max-content;max-width:min(254px,64vw);padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--base);box-shadow:0 5px 14px #17282033;color:var(--ink);font-size:.85rem;pointer-events:none}
 #upgrade-material-tip span{white-space:nowrap}
 .greenhouse-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit;border:1px solid var(--edge);border-radius:12px}
 .greenhouse-only{display:none}

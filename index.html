@@ -350,8 +350,9 @@ body.raining::after{opacity:1}
 #collection-dialog .window-heading>.collection-close{position:static;order:4}
 #upgrades-dialog>.window-heading{flex:none;top:0}
 #upgrade-wallet{position:relative}
+#upgrades-dialog>.window-heading>#upgrade-wallet:has(#upgrade-material-tip:not([hidden])){z-index:2}
 #upgrades-dialog>.window-heading>h2{z-index:2}
-#upgrade-material-tip{position:absolute;top:calc(100% + 6px);left:50%;translate:-50% 0;z-index:30;display:flex;flex-wrap:wrap;gap:6px 12px;width:max-content;max-width:min(254px,64vw);padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--base);box-shadow:0 8px 26px var(--shade);color:var(--ink);font-size:.85rem;pointer-events:none}
+#upgrade-material-tip{position:absolute;top:calc(100% + 6px);left:50%;translate:-50% 0;z-index:30;display:flex;flex-wrap:wrap;gap:6px 12px;width:max-content;max-width:min(254px,64vw);padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--base);box-shadow:0 5px 14px #17282033;color:var(--ink);font-size:.85rem;pointer-events:none}
 #upgrade-material-tip span{white-space:nowrap}
 .greenhouse-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit;border:1px solid var(--edge);border-radius:12px}
 .greenhouse-only{display:none}
@@ -1043,12 +1044,13 @@ const newFarm = ()      => {
 };
 
 const requiredSize = (crop       ) => crop < 3 ? 1 : crop < 10 ? 2 : 3;
-const traitPrice = (level       ) => Math.ceil(5*(level+1)**2);
-const traitOrbPrice = (level       ) => Math.ceil(Math.max(0,level-9)**1.15);
+const traitTimeFactor=(crop       )=>Math.sqrt(cropTimes[crop]/cropTimes[0]);
+const traitPrice=(crop       ,level       )=>Math.ceil(.4*cropPrices[crop]*traitTimeFactor(crop)*(1+level/10)**2.2);
+const traitOrbPrice=(crop       ,level       )=>Math.ceil(.15*baseOrbYield(crop)*traitTimeFactor(crop)*(Math.max(0,level-4)/5)**1.6);
 function buyTrait(farm     ,crop       ,trait      ) {
   if (!crops[crop] || !unlocked(farm,crop)) return false;
   const level = farm.levels[crop][trait];
-  const price = traitPrice(level),orbs=traitOrbPrice(level);
+  const price=traitPrice(crop,level),orbs=traitOrbPrice(crop,level);
   if (barrierClosed(farm,crop,trait) || level >= traitMax || farm.coins < price || farm.resources.orbs<orbs) return false;
   spendFarmCoins(farm,price);spendFarmOrbs(farm,orbs);
   farm.levels[crop][trait]++;
@@ -1489,20 +1491,33 @@ function matureMutationParent(plot      ,at       ){
   return plot.planted<=at&&plot.ready!==null&&plot.ready<=at&&
     (plot.wetUntil===undefined||plot.wetUntil>=plot.ready);
 }
+function mutationParentProgress(farm     ,plot      ,at       ){
+  if(matureMutationParent(plot,at))return 1;
+  const duration=plot.duration??plantGrowthTime(farm,plot);
+  const growthThrough=Math.min(at,plot.wetUntil??at);
+  const remaining=plot.ready===null?plot.remaining??duration:plot.ready-growthThrough;
+  return Math.max(0,Math.min(1,1-remaining/duration));
+}
+const mutationInterval = (re       ) => Math.round(30-20*(re-1)/29)*1000;
+
 function checkMutations(farm     ,now       ,random=Math.random,greenhouse            ) {
   const area=greenhouse??farm;
   if(now<area.mutationCheck)return false;
   for(let checks=0;area.mutationCheck<=now&&checks<2000;checks++){
   const at=area.mutationCheck;
-  area.mutationCheck+=30000;
-  for(const candidate of mutationCandidates(farm,greenhouse)) {
-    const index=candidate.index,neighbors=candidate.neighbors.filter(plot=>matureMutationParent(plot,at));
+  const candidates=mutationCandidates(farm,greenhouse);
+  let fastestRe=1;
+  for(const candidate of candidates) {
+    const index=candidate.index,neighbors=candidate.neighbors.filter(plot=>plot.planted<=at);
     if(neighbors.length<2)continue;
-    const potential=neighbors.reduce((sum,p)=>sum+Math.min(30,genome(farm,p).genes.re+(effectiveGenome(farm,p).powers.resistance??0)),0)/neighbors.length;
-    if(random()>=mutationChance(potential))continue;
+    const strongest=neighbors.map(plot=>genome(farm,plot).genes.re).sort((a,b)=>b-a);
+    fastestRe=Math.max(fastestRe,(strongest[0]+strongest[1])/2);
     const first=Math.floor(random()*neighbors.length);
     const second=(first+1+Math.floor(random()*(neighbors.length-1)))%neighbors.length;
     const parents=[neighbors[first],neighbors[second]];
+    const potential=parents.reduce((sum,p)=>sum+Math.min(30,genome(farm,p).genes.re+(effectiveGenome(farm,p).powers.resistance??0)),0)/2;
+    const progress=parents.reduce((sum,p)=>sum+mutationParentProgress(farm,p,at),0)/2;
+    if(random()>=mutationChance(potential)*(.2+.8*progress))continue;
     const chosen=parents[random()<.5?0:1];
     const duration=chosen.duration??growthTime(chosen.crop,collectionGrowth(farm,chosen.crop));
     const inherited=parents.flatMap(p=>p.line===undefined?[]:farm.lines[p.line].traits);
@@ -1511,6 +1526,7 @@ function checkMutations(farm     ,now       ,random=Math.random,greenhouse      
     area.rot[index]=null;
     area.plots[index] .mystery .preview=generateMutationLine(farm,area.plots[index] ,random);
   }
+  area.mutationCheck=at+mutationInterval(fastestRe);
   }
   return true;
 }
@@ -1819,7 +1835,7 @@ function spendFarmOrbs(farm     ,amount       ){
 }
 
 
-const newResources=()          =>({barriers:{},irrigation:0,orbs:0,items:{},found:{},duplication:0});
+const newResources=()          =>({barrierVersion:2,barriers:{},irrigation:0,orbs:0,orbLuck:0,items:{},found:{},duplication:0});
 // Exact geometric sampling for sparse results, bounded-cost normal approximation for large batches.
 function extractorConcentrateChance(crop       ){
   return cropSets[0].crops.includes(crop)?.02:.001;
@@ -1840,12 +1856,36 @@ function duplicateCount(farm     ,count       ,random=Math.random){
  return count*(1+Math.floor(chance/100))+sampleBinomial(count,(chance%100)/100,random);
 }
 const harvestMaterialChance=(crop       )=>[.01,.015,.02,.05][cropTiers[crop]];
+const orbMaximums=[1,4,16,64];
+const orbLuckMax=200;
+function orbMaximumChance(tier       ,level       ){
+ const base=tier===0?.8:.25;
+ return 1-(1-base)*(1-level/orbLuckMax)**2;
+}
+const baseOrbYield=(crop       )=>(1-2*harvestMaterialChance(crop))*orbMaximums[cropTiers[crop]]*(cropTiers[crop]===0?.8:.6875);
+const orbLuckPrice=(level       )=>Math.ceil(20*(level+1)**2.15);
+function buyOrbLuck(farm     ){
+ const level=farm.resources.orbLuck,price=orbLuckPrice(level);
+ if(level>=orbLuckMax||farm.resources.orbs<price)return false;
+ spendFarmOrbs(farm,price);
+ farm.resources.orbLuck++;
+ return true;
+}
+function rollHarvestOrbs(count       ,tier       ,level       ,random           ){
+ const maximum=orbMaximums[tier];
+ const full=sampleBinomial(count,orbMaximumChance(tier,level),random);
+ if(tier===0)return full;
+ // Among the remaining rolls, the original weights for zero, half and three quarters are 10:20:45.
+ const threeQuarters=sampleBinomial(count-full,45/75,random);
+ const half=sampleBinomial(count-full-threeQuarters,20/30,random);
+ return maximum*full+maximum/4*(3*threeQuarters+2*half);
+}
 const harvestDuplicationChance=(crop       )=>Math.min(1,cropTimes[crop]/120*.0015);
 function awardHarvestLoot(farm     ,crop       ,count       ,random=Math.random){
  const tier=cropTiers[crop],chance=harvestMaterialChance(crop);
  const setCount=sampleBinomial(count,chance,random);
  const propertyCount=sampleBinomial(count-setCount,chance/(1-chance),random);
- const orbs=(count-setCount-propertyCount)*[1,4,16,64][tier];
+ const orbs=rollHarvestOrbs(count-setCount-propertyCount,tier,farm.resources.orbLuck,random);
  const bonus=Math.min(orbs,farm.wheels?.orbBoost??0);
  if(farm.wheels)farm.wheels.orbBoost-=bonus;
  farm.resources.orbs+=orbs+bonus;
@@ -1883,9 +1923,15 @@ function enhanceProperty(farm     ,index       ,id       ,random=Math.random)   
 }
 
 const barrierLevel=(farm     ,crop       ,id      )=>farm.resources.barriers[crop+':'+id]??0;
-const barrierThreshold=(cleared       )=>cleared===0?10:cleared*50;
+const barrierThreshold=(cleared       )=>(cleared+1)*10;
 const barrierClosed=(farm     ,crop       ,id      )=>farm.levels[crop][id]>=barrierThreshold(barrierLevel(farm,crop,id));
-const barrierPrice=(farm     ,crop       ,id      )=>Math.ceil((barrierLevel(farm,crop,id)+1)**1.25);
+function barrierPrice(farm     ,crop       ,id      ){
+ const cleared=barrierLevel(farm,crop,id);
+ if(cleared===0)return 1;
+ const propertyRate=harvestMaterialChance(crop)/Object.keys(basePowers[crop]).length;
+ const relativeDropRate=propertyRate/harvestMaterialChance(0)*cropTimes[0]/cropTimes[crop];
+ return Math.ceil((cleared+1)**1.25*Math.sqrt(relativeDropRate));
+}
 function barrierMaterial(crop       ,id      ){
  const properties=Object.keys(basePowers[crop]);
  const property=id==='moisture'&&properties.length>1?properties[1]:properties[0];
@@ -2320,9 +2366,20 @@ function loadFarm()      {
     if(!Array.isArray(s.harvested)||s.harvested.length!==crops.length||!s.harvested.every((n        )=>typeof n==='number'&&Number.isFinite(n)&&n>=0))throw new Error('Повреждена коллекция урожая');
     s.resources??=newResources();
     s.resources.barriers??={};s.resources.irrigation??=0;
+    s.resources.orbLuck??=0;
     if(!s.resources.barriers||!int(s.resources.irrigation,0))throw new Error('Повреждены ресурсные улучшения');
     for(const [key,value] of Object.entries(s.resources.barriers))if(!/^[0-9]+:(growth|yield|moisture)$/.test(key)||!int(Number(key.split(':')[0]),0,crops.length-1)||!int(value,0))throw new Error('Повреждены барьеры');
-    for(let crop=0;crop<crops.length;crop++)for(const {id} of traits){const key=crop+':'+id;s.resources.barriers[key]=Math.max(s.resources.barriers[key]??0,s.levels[crop][id]>10?Math.ceil(s.levels[crop][id]/50):0);}
+    const barriersMigrated=s.resources.barrierVersion===undefined;
+    if(barriersMigrated){
+      for(let crop=0;crop<crops.length;crop++)for(const {id} of traits){
+        const key=crop+':'+id;
+        const oldCleared=s.resources.barriers[key]??0;
+        const paidLimit=oldCleared?oldCleared*50:10;
+        s.resources.barriers[key]=Math.ceil(Math.max(paidLimit,s.levels[crop][id])/10)-1;
+      }
+      s.resources.barrierVersion=2;
+    }
+    if(s.resources.barrierVersion!==2||!int(s.resources.orbLuck,0,orbLuckMax))throw new Error('Повреждены ресурсные улучшения');
     if(!s.resources||!int(s.resources.orbs,0)||!int(s.resources.duplication,0)||!s.resources.items||!s.resources.found)throw new Error('Повреждены ресурсы');
     for(const [id,count] of Object.entries(s.resources.items))if(!materialsBySaveKey.has(id)||!int(count,0))throw new Error('Повреждён материал');
     for(const [id,value] of Object.entries(s.resources.found))if(!materialsBySaveKey.has(id)||typeof value!=='boolean')throw new Error('Повреждена коллекция предметов');
@@ -2372,7 +2429,7 @@ function loadFarm()      {
     const awardedSets=awardDiamondSets(s);
     finishDiscovery(s);
     migratePackProgress(s);
-    if(finishPackOpening(s)||weatherMigrated||refundedWeatherDiamonds||awardedSets||resumed)saveFarm(s);
+    if(finishPackOpening(s)||weatherMigrated||barriersMigrated||refundedWeatherDiamonds||awardedSets||resumed)saveFarm(s);
     return s;
   } catch (error) {
     storageError = true;
@@ -3336,6 +3393,16 @@ upgradesDialog.addEventListener('click',event => {
   if (!event.target.closest('#trait-panel,#upgrade-catalog button')) traitPanel.hidden=true;
 });
 let upgradeCrop = 0;
+let guardedBarrier                                              =null;
+const barrierSafetyMargin=32;
+document.addEventListener('pointermove',event=>{
+  if(!guardedBarrier||event.pointerType!=='mouse')return;
+  const {bounds}=guardedBarrier;
+  if(event.clientX>=bounds.left-barrierSafetyMargin&&event.clientX<=bounds.right+barrierSafetyMargin&&
+    event.clientY>=bounds.top-barrierSafetyMargin&&event.clientY<=bounds.bottom+barrierSafetyMargin)return;
+  guardedBarrier=null;
+  if(upgradesDialog.open)renderTraits();
+});
 for (const i of crops.map((_,index)=>index).sort((a,b)=>cropTiers[a]-cropTiers[b]||cropTimes[a]-cropTimes[b])) {
   const crop=crops[i];
   const card = document.createElement('button');
@@ -3361,7 +3428,19 @@ for (const {id,label} of traits) {
   const buy = document.createElement('button');
   buy.id = 'trait-buy-'+id;
   buy.className = 'quiet';
-  buy.onclick = () => {if(barrierClosed(farm,upgradeCrop,id)){if(unlockBarrier(farm,upgradeCrop,id))commit('Теперь можно улучшать до '+barrierThreshold(barrierLevel(farm,upgradeCrop,id))+' уровня.');}else if (buyTrait(farm,upgradeCrop,id)) commit(label+' улучшена.');};
+  buy.onclick = event => {
+    if(barrierClosed(farm,upgradeCrop,id)){
+      if(guardedBarrier?.crop===upgradeCrop&&guardedBarrier.trait===id)return;
+      if(unlockBarrier(farm,upgradeCrop,id))commit('Теперь можно улучшать до '+barrierThreshold(barrierLevel(farm,upgradeCrop,id))+' уровня.');
+      return;
+    }
+    if(!buyTrait(farm,upgradeCrop,id))return;
+    const mouseClick=event instanceof PointerEvent?event.pointerType==='mouse':event.detail>0;
+    if(mouseClick&&barrierClosed(farm,upgradeCrop,id)){
+      guardedBarrier={crop:upgradeCrop,trait:id,bounds:buy.getBoundingClientRect()};
+    }
+    commit(label+' улучшена.');
+  };
   card.append(title,detail,buy);
   get('trait-list').append(card);
 }
@@ -3388,8 +3467,8 @@ function renderTraits() {
   for (const {id} of traits) {
     const level = id === "growth" ? collectionGrowth(farm,index) : farm.levels[index][id];
     const maxed = level === traitMax;
-    const price = traitPrice(farm.levels[index][id]);
-    const orbs=traitOrbPrice(farm.levels[index][id]);
+    const price=traitPrice(index,farm.levels[index][id]);
+    const orbs=traitOrbPrice(index,farm.levels[index][id]);
     const effect = (n       ) => id === 'growth' ? clock(growthTime(index,n)) :
       id === 'yield' ? formatChance(n)+'%' : clock(wateringDuration(farm,{crop:index,planted:0,ready:null},n));
     const explanation = id === 'growth' ? ' до сбора после полива' :
@@ -3400,7 +3479,14 @@ function renderTraits() {
     buy.disabled = locked || maxed || farm.coins < price || farm.resources.orbs<orbs;
     buy.textContent = maxed ? 'Максимальный уровень' : 'Улучшить · 🪙 '+number(price)+(orbs?' · 🔮 '+number(orbs):'');
     buy.removeAttribute('title');
-    if(!locked&&barrierClosed(farm,index,id)){const cost=barrierPrice(farm,index,id);const material=barrierMaterial(index,id);buy.textContent=material.icon+' '+number(cost);buy.title=material.name;buy.disabled=(farm.resources.items[material.id]??0)<cost;}
+    if(!locked&&barrierClosed(farm,index,id)){
+      const cost=barrierPrice(farm,index,id);
+      const material=barrierMaterial(index,id);
+      const guarded=guardedBarrier?.crop===index&&guardedBarrier.trait===id;
+      buy.textContent=material.icon+' '+number(cost);
+      buy.title=guarded?'Отведи курсор от кнопки, чтобы открыть барьер':material.name;
+      buy.disabled=guarded||(farm.resources.items[material.id]??0)<cost;
+    }
   }
   applyPlantGlows();
 }
@@ -4856,6 +4942,11 @@ get('enhance-line').onchange=renderEnhancements;
 const duplicatePanel=document.createElement('section');duplicatePanel.className='glass panel';duplicatePanel.innerHTML='<h2>✨ Дублирование материалов</h2><p id="duplicate-info"></p><button class="quiet" id="buy-duplicate"></button>';
 get('upgrade-tools').append(duplicatePanel);
 button('buy-duplicate').onclick=()=>{if(buyDuplication(farm))commit('Дублирование улучшено.');};
+const orbLuckPanel=document.createElement('section');
+orbLuckPanel.className='glass panel';
+orbLuckPanel.innerHTML='<h2>🔮 Удача добычи орбов</h2><p>Повышает шанс получить максимум, когда плоду выпадает добыча орбов.</p><p id="orb-luck-info"></p><button class="quiet" id="buy-orb-luck"></button>';
+get('upgrade-tools').append(orbLuckPanel);
+button('buy-orb-luck').onclick=()=>{if(buyOrbLuck(farm))commit('Удача добычи орбов улучшена.');};
 function renderAlpha(){
  if(get                   ('diamonds-dialog').open)renderDiamondShop();
  get('resource-upgrade-title').dataset.upgradeTarget=resourceCategory==='cultures'?'discovery':resourceCategory==='properties'?'hybrids':resourceCategory==='special'?'tools':'seeds';
@@ -4866,6 +4957,13 @@ function renderAlpha(){
  const level=farm.resources.duplication,chance=level?1+(level-1)*.1:0;
  get('duplicate-info').textContent='Шанс: '+formatChance(chance)+'% · '+Math.floor(chance/100)+' дополнительных копий гарантированно + '+formatChance(chance%100)+'% ещё одной. Орбы и кристалл не дублируются.';
  button('buy-duplicate').textContent='Улучшить · ✨ '+number(duplicationPrice(level));button('buy-duplicate').disabled=(farm.resources.items.duplication??0)<duplicationPrice(level);
+ const orbLuck=farm.resources.orbLuck;
+ const orbLuckCapped=orbLuck>=orbLuckMax;
+ const orbChance=(tier       )=>formatChance(orbMaximumChance(tier,orbLuck)*100)+'%'+
+   (orbLuckCapped?'':' → '+formatChance(orbMaximumChance(tier,orbLuck+1)*100)+'%');
+ get('orb-luck-info').textContent='Ур. '+orbLuck+'/'+orbLuckMax+' · Обычные '+orbChance(0)+' · Остальные '+orbChance(1);
+ button('buy-orb-luck').textContent=orbLuckCapped?'Максимальный уровень':'Улучшить · 🔮 '+number(orbLuckPrice(orbLuck));
+ button('buy-orb-luck').disabled=orbLuckCapped||farm.resources.orbs<orbLuckPrice(orbLuck);
  const selector=get                   ('enhance-line'),previous=selector.value;
  const ids=farm.lines.map((line,i)=>({line,i})).filter(({line})=>!line.archived&&line.seeds>0);
  const lineSignature=ids.map(({line,i})=>i+':'+line.name).join('|');
@@ -5030,7 +5128,8 @@ function renderHarvestDetails(){
    ...properties.map(id=>powerLabel(specimen,id)+' — '+abilityDefinitions[id].description),
    '',
    'Добыча с обычного плода',
-   '🔮 Орбы ×'+[1,4,16,64][tier]+' — '+formatChance((1-2*chance)*100)+'%',
+   '🔮 Добыча орбов — '+formatChance((1-2*chance)*100)+'% · количество 0–'+orbMaximums[tier],
+   '🔮 Шанс максимума при добыче орбов — '+formatChance(orbMaximumChance(tier,farm.resources.orbLuck)*100)+'%',
    ...['set'+set,...properties.map(propertyMaterialId),'duplication'].map(id=>{
      const material=materials.find(item=>item.id===id) ;
      const probability=id==='duplication'?harvestDuplicationChance(i):id.startsWith('set')?chance:chance/properties.length;

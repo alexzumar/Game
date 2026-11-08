@@ -58,6 +58,9 @@ const smoke=`<script>setTimeout(async()=>{try{
  assert(upgradeMaterialTip.hidden,'Material tooltip shown on opening');
  upgradeWallet.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse'}));
  assert(!upgradeMaterialTip.hidden&&upgradeMaterialTip.firstElementChild.textContent.endsWith('90'),'Upgrade material tooltip missing or unsorted');inside(upgradeMaterialTip,upgradesDialog);
+ const upgradeTabBar=upgradesDialog.querySelector('.shop-tabs');
+ assert(Number(getComputedStyle(upgradeWallet).zIndex)>Number(getComputedStyle(upgradeTabBar).zIndex),'Material tooltip wallet paints below the upgrade tabs');
+ assert(getComputedStyle(upgradeMaterialTip).backgroundColor.startsWith('rgb('),'Material tooltip background is not opaque');
  const walletRect=upgradeWallet.getBoundingClientRect(),tipRect=upgradeMaterialTip.getBoundingClientRect();
  assert(Math.abs(tipRect.left+tipRect.width/2-walletRect.left-walletRect.width/2)<2&&Math.abs(tipRect.top-walletRect.bottom-6)<3,'Tooltip is not directly below the balance');
  upgradeWallet.dispatchEvent(new PointerEvent('pointerleave',{pointerType:'mouse'}));
@@ -120,6 +123,21 @@ const smoke=`<script>setTimeout(async()=>{try{
  quickAnchor.dispatchEvent(new PointerEvent('pointerout',{pointerType:'mouse',bubbles:true,relatedTarget:document.body}));
  await sleep(230);
  assert(get('quick-seeds').hidden,'Quick seed menu stayed open after leaving the bed');
+ button('upgrades-open').click();button('upgrade-tab-seeds').click();button('upgrade-crop-0').click();
+ farm.coins=10000;farm.levels[0].growth=9;farm.resources.items['property:growth']=5;renderTraits();
+ const growthBuy=button('trait-buy-growth');
+ const growthRect=growthBuy.getBoundingClientRect();
+ growthBuy.dispatchEvent(new MouseEvent('click',{detail:1,bubbles:true}));
+ assert(growthBuy.disabled&&farm.levels[0].growth===10,'New material barrier was not protected');
+ growthBuy.dispatchEvent(new MouseEvent('click',{detail:2,bubbles:true}));
+ assert(farm.resources.items['property:growth']===5,'Repeated click spent barrier material');
+ document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:growthRect.left-10,clientY:growthRect.top}));
+ assert(growthBuy.disabled,'Barrier unlocked inside the cursor safety margin');
+ document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:growthRect.left-40,clientY:growthRect.top}));
+ assert(!growthBuy.disabled,'Barrier stayed disabled outside the cursor safety margin');
+ growthBuy.click();
+ assert(farm.resources.items['property:growth']===4,'Intentional barrier purchase failed');
+ upgradesDialog.close();
  ${captureScene}
  assert(alphaErrors.length===0,alphaErrors.join(';'));const pre=document.createElement('pre');pre.id='alpha-smoke-result';pre.textContent='PASS UI: real sets and tooltips, sorted harvest collection, exact and held purchases, inventory enhancement picker, best-parent comparison, upgrade spacing and scroll access';document.body.append(pre);
  }catch(e){const pre=document.createElement('pre');pre.id='alpha-smoke-result';pre.textContent='FAIL '+e.stack+' Errors: '+alphaErrors.join(';');document.body.append(pre);}},1000);</script>`;

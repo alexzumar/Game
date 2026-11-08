@@ -1,5 +1,5 @@
-type Resources={barriers:Record<string,number>;irrigation:number;orbs:number;items:Record<string,number>;found:Record<string,boolean>;duplication:number};
-const newResources=():Resources=>({barriers:{},irrigation:0,orbs:0,items:{},found:{},duplication:0});
+type Resources={barrierVersion:2;barriers:Record<string,number>;irrigation:number;orbs:number;orbLuck:number;items:Record<string,number>;found:Record<string,boolean>;duplication:number};
+const newResources=():Resources=>({barrierVersion:2,barriers:{},irrigation:0,orbs:0,orbLuck:0,items:{},found:{},duplication:0});
 // Exact geometric sampling for sparse results, bounded-cost normal approximation for large batches.
 function extractorConcentrateChance(crop:number){
   return cropSets[0].crops.includes(crop)?.02:.001;
@@ -20,12 +20,36 @@ function duplicateCount(farm:Farm,count:number,random=Math.random){
  return count*(1+Math.floor(chance/100))+sampleBinomial(count,(chance%100)/100,random);
 }
 const harvestMaterialChance=(crop:number)=>[.01,.015,.02,.05][cropTiers[crop]];
+const orbMaximums=[1,4,16,64];
+const orbLuckMax=200;
+function orbMaximumChance(tier:number,level:number){
+ const base=tier===0?.8:.25;
+ return 1-(1-base)*(1-level/orbLuckMax)**2;
+}
+const baseOrbYield=(crop:number)=>(1-2*harvestMaterialChance(crop))*orbMaximums[cropTiers[crop]]*(cropTiers[crop]===0?.8:.6875);
+const orbLuckPrice=(level:number)=>Math.ceil(20*(level+1)**2.15);
+function buyOrbLuck(farm:Farm){
+ const level=farm.resources.orbLuck,price=orbLuckPrice(level);
+ if(level>=orbLuckMax||farm.resources.orbs<price)return false;
+ spendFarmOrbs(farm,price);
+ farm.resources.orbLuck++;
+ return true;
+}
+function rollHarvestOrbs(count:number,tier:number,level:number,random:()=>number){
+ const maximum=orbMaximums[tier];
+ const full=sampleBinomial(count,orbMaximumChance(tier,level),random);
+ if(tier===0)return full;
+ // Among the remaining rolls, the original weights for zero, half and three quarters are 10:20:45.
+ const threeQuarters=sampleBinomial(count-full,45/75,random);
+ const half=sampleBinomial(count-full-threeQuarters,20/30,random);
+ return maximum*full+maximum/4*(3*threeQuarters+2*half);
+}
 const harvestDuplicationChance=(crop:number)=>Math.min(1,cropTimes[crop]/120*.0015);
 function awardHarvestLoot(farm:Farm,crop:number,count:number,random=Math.random){
  const tier=cropTiers[crop],chance=harvestMaterialChance(crop);
  const setCount=sampleBinomial(count,chance,random);
  const propertyCount=sampleBinomial(count-setCount,chance/(1-chance),random);
- const orbs=(count-setCount-propertyCount)*[1,4,16,64][tier];
+ const orbs=rollHarvestOrbs(count-setCount-propertyCount,tier,farm.resources.orbLuck,random);
  const bonus=Math.min(orbs,farm.wheels?.orbBoost??0);
  if(farm.wheels)farm.wheels.orbBoost-=bonus;
  farm.resources.orbs+=orbs+bonus;
@@ -63,9 +87,15 @@ function enhanceProperty(farm:Farm,index:number,id:string,random=Math.random):'s
 }
 
 const barrierLevel=(farm:Farm,crop:number,id:Trait)=>farm.resources.barriers[crop+':'+id]??0;
-const barrierThreshold=(cleared:number)=>cleared===0?10:cleared*50;
+const barrierThreshold=(cleared:number)=>(cleared+1)*10;
 const barrierClosed=(farm:Farm,crop:number,id:Trait)=>farm.levels[crop][id]>=barrierThreshold(barrierLevel(farm,crop,id));
-const barrierPrice=(farm:Farm,crop:number,id:Trait)=>Math.ceil((barrierLevel(farm,crop,id)+1)**1.25);
+function barrierPrice(farm:Farm,crop:number,id:Trait){
+ const cleared=barrierLevel(farm,crop,id);
+ if(cleared===0)return 1;
+ const propertyRate=harvestMaterialChance(crop)/Object.keys(basePowers[crop]).length;
+ const relativeDropRate=propertyRate/harvestMaterialChance(0)*cropTimes[0]/cropTimes[crop];
+ return Math.ceil((cleared+1)**1.25*Math.sqrt(relativeDropRate));
+}
 function barrierMaterial(crop:number,id:Trait){
  const properties=Object.keys(basePowers[crop]);
  const property=id==='moisture'&&properties.length>1?properties[1]:properties[0];

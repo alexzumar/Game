@@ -192,9 +192,20 @@ function loadFarm():Farm {
     if(!Array.isArray(s.harvested)||s.harvested.length!==crops.length||!s.harvested.every((n:unknown)=>typeof n==='number'&&Number.isFinite(n)&&n>=0))throw new Error('Повреждена коллекция урожая');
     s.resources??=newResources();
     s.resources.barriers??={};s.resources.irrigation??=0;
+    s.resources.orbLuck??=0;
     if(!s.resources.barriers||!int(s.resources.irrigation,0))throw new Error('Повреждены ресурсные улучшения');
     for(const [key,value] of Object.entries(s.resources.barriers))if(!/^[0-9]+:(growth|yield|moisture)$/.test(key)||!int(Number(key.split(':')[0]),0,crops.length-1)||!int(value,0))throw new Error('Повреждены барьеры');
-    for(let crop=0;crop<crops.length;crop++)for(const {id} of traits){const key=crop+':'+id;s.resources.barriers[key]=Math.max(s.resources.barriers[key]??0,s.levels[crop][id]>10?Math.ceil(s.levels[crop][id]/50):0);}
+    const barriersMigrated=s.resources.barrierVersion===undefined;
+    if(barriersMigrated){
+      for(let crop=0;crop<crops.length;crop++)for(const {id} of traits){
+        const key=crop+':'+id;
+        const oldCleared=s.resources.barriers[key]??0;
+        const paidLimit=oldCleared?oldCleared*50:10;
+        s.resources.barriers[key]=Math.ceil(Math.max(paidLimit,s.levels[crop][id])/10)-1;
+      }
+      s.resources.barrierVersion=2;
+    }
+    if(s.resources.barrierVersion!==2||!int(s.resources.orbLuck,0,orbLuckMax))throw new Error('Повреждены ресурсные улучшения');
     if(!s.resources||!int(s.resources.orbs,0)||!int(s.resources.duplication,0)||!s.resources.items||!s.resources.found)throw new Error('Повреждены ресурсы');
     for(const [id,count] of Object.entries(s.resources.items))if(!materialsBySaveKey.has(id)||!int(count,0))throw new Error('Повреждён материал');
     for(const [id,value] of Object.entries(s.resources.found))if(!materialsBySaveKey.has(id)||typeof value!=='boolean')throw new Error('Повреждена коллекция предметов');
@@ -244,7 +255,7 @@ function loadFarm():Farm {
     const awardedSets=awardDiamondSets(s);
     finishDiscovery(s);
     migratePackProgress(s);
-    if(finishPackOpening(s)||weatherMigrated||refundedWeatherDiamonds||awardedSets||resumed)saveFarm(s);
+    if(finishPackOpening(s)||weatherMigrated||barriersMigrated||refundedWeatherDiamonds||awardedSets||resumed)saveFarm(s);
     return s;
   } catch (error) {
     storageError = true;

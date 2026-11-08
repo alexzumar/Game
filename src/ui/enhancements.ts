@@ -12,6 +12,11 @@ get('enhance-line').onchange=renderEnhancements;
 const duplicatePanel=document.createElement('section');duplicatePanel.className='glass panel';duplicatePanel.innerHTML='<h2>✨ Дублирование материалов</h2><p id="duplicate-info"></p><button class="quiet" id="buy-duplicate"></button>';
 get('upgrade-tools').append(duplicatePanel);
 button('buy-duplicate').onclick=()=>{if(buyDuplication(farm))commit('Дублирование улучшено.');};
+const orbLuckPanel=document.createElement('section');
+orbLuckPanel.className='glass panel';
+orbLuckPanel.innerHTML='<h2>🔮 Удача добычи орбов</h2><p>Повышает шанс получить максимум, когда плоду выпадает добыча орбов.</p><p id="orb-luck-info"></p><button class="quiet" id="buy-orb-luck"></button>';
+get('upgrade-tools').append(orbLuckPanel);
+button('buy-orb-luck').onclick=()=>{if(buyOrbLuck(farm))commit('Удача добычи орбов улучшена.');};
 function renderAlpha(){
  if(get<HTMLDialogElement>('diamonds-dialog').open)renderDiamondShop();
  get('resource-upgrade-title').dataset.upgradeTarget=resourceCategory==='cultures'?'discovery':resourceCategory==='properties'?'hybrids':resourceCategory==='special'?'tools':'seeds';
@@ -22,6 +27,13 @@ function renderAlpha(){
  const level=farm.resources.duplication,chance=level?1+(level-1)*.1:0;
  get('duplicate-info').textContent='Шанс: '+formatChance(chance)+'% · '+Math.floor(chance/100)+' дополнительных копий гарантированно + '+formatChance(chance%100)+'% ещё одной. Орбы и кристалл не дублируются.';
  button('buy-duplicate').textContent='Улучшить · ✨ '+number(duplicationPrice(level));button('buy-duplicate').disabled=(farm.resources.items.duplication??0)<duplicationPrice(level);
+ const orbLuck=farm.resources.orbLuck;
+ const orbLuckCapped=orbLuck>=orbLuckMax;
+ const orbChance=(tier:number)=>formatChance(orbMaximumChance(tier,orbLuck)*100)+'%'+
+   (orbLuckCapped?'':' → '+formatChance(orbMaximumChance(tier,orbLuck+1)*100)+'%');
+ get('orb-luck-info').textContent='Ур. '+orbLuck+'/'+orbLuckMax+' · Обычные '+orbChance(0)+' · Остальные '+orbChance(1);
+ button('buy-orb-luck').textContent=orbLuckCapped?'Максимальный уровень':'Улучшить · 🔮 '+number(orbLuckPrice(orbLuck));
+ button('buy-orb-luck').disabled=orbLuckCapped||farm.resources.orbs<orbLuckPrice(orbLuck);
  const selector=get<HTMLSelectElement>('enhance-line'),previous=selector.value;
  const ids=farm.lines.map((line,i)=>({line,i})).filter(({line})=>!line.archived&&line.seeds>0);
  const lineSignature=ids.map(({line,i})=>i+':'+line.name).join('|');

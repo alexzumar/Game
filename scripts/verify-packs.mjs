@@ -5,6 +5,18 @@ const context=vm.createContext({assert,console,localStorage:storage});vm.runInCo
 vm.runInContext(`
 const starter=newFarm();assert.equal(starter.coins,0);assert.equal(starter.seeds[0],1);assert.equal(total(starter.seeds),1);assert.equal(expansionPrice(starter),1);assert.equal(expand(starter),false);starter.plots[0]={crop:0,planted:0,ready:0};starter.seeds[0]=0;assert.equal(collect(starter,0,1,()=>.5),1);assert.equal(starter.harvestValue[0],5);assert.equal(expand(starter),true);assert.equal(starter.size,2);assert.equal(expansionPrice(starter),15);assert.equal(starter.resources.orbs,0);assert.deepEqual(fieldOrbPrices,[1,15,50,150,400,1000,2500]);
 assert.deepEqual([1,2,3,4,5].map(n=>packOpeningPrice(0,n)),[20,30,45,60,75]);assert.equal(seedPrice(15),2000000);assert.equal(seedPacks.length,4);
+for(const [readyA,readyB,roll,expected] of [
+  [null,null,.015,true],[null,null,.017,false],
+  [30000,null,.047,true],[30000,null,.049,false],
+  [30000,30000,.079,true],[30000,30000,.081,false],
+  [90000,90000,.047,true],[90000,90000,.049,false]
+]){
+  const breeding=newFarm();resize(breeding,2);breeding.mutationCheck=60000;
+  breeding.plots[1]={crop:0,planted:0,ready:readyA,duration:60000};
+  breeding.plots[2]={crop:0,planted:0,ready:readyB,duration:60000};
+  checkMutations(breeding,60000,()=>roll);
+  assert.equal(!!breeding.plots[0]?.mystery,expected);
+}
 const rainFarm=newFarm(),rainStart=rainFarm.epoch;
 rainFarm.weather.next=rainStart+1e6;
 rainWindow(rainFarm,rainStart,rainStart+60000,rainStart);

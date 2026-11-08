@@ -13,7 +13,7 @@ for(let tier=0;tier<4;tier++){
  awardHarvestLoot(farm,crop,n,random);
  const chance=[.01,.015,.02,.05][tier],group=cropSets.findIndex(s=>s.crops.includes(crop));
  const sets=farm.resources.items['set'+group]??0,props=Object.entries(farm.resources.items).filter(([id])=>id.startsWith('property:')).reduce((s,[,n])=>s+n,0);
- assert.equal(farm.resources.orbs/[1,4,16,64][tier]+sets+props,n);
+ assert.ok(Math.abs(farm.resources.orbs/n-baseOrbYield(crop))<orbMaximums[tier]*.01);
  assert.ok(Math.abs(sets/n-chance)<.003);assert.ok(Math.abs(props/n-chance)<.003);
  assert.ok(Math.abs((farm.resources.items.duplication??0)/n-cropTimes[crop]/120*.0015)<.002);
 }
@@ -31,7 +31,15 @@ const hybridFarm=newFarm();hybridFarm.lines.push({...line,enhancements:{growth:1
 const baseFarm=newFarm();baseFarm.plots[0]={crop:0,planted:0,ready:0};assert.ok(collect(baseFarm,0,1,()=>.5)>0);assert.ok(baseFarm.resources.orbs>0);
 saveFarm(f);const loaded=loadFarm();assert.equal(loaded.lines[0].enhancements.growth,100);assert.equal(loaded.resources.items['property:growth'],8);
 const legacy=JSON.parse(localStorage.value);delete legacy.resources;localStorage.value=JSON.stringify(legacy);assert.equal(loadFarm().resources.orbs,0);
-f.coins=10000;f.collection[0]=1;f.levels[0].growth=10;f.resources.orbs=0;assert.equal(buyTrait(f,0,'growth'),false);f.resources.orbs=1;f.resources.items.set1=1;f.resources.items['property:growth']=0;assert.equal(unlockBarrier(f,0,'growth'),false);f.resources.items['property:growth']=1;assert.equal(unlockBarrier(f,0,'growth'),true);assert.equal(f.resources.items.set1,1);assert.equal(f.resources.items['property:growth'],0);assert.equal(barrierThreshold(barrierLevel(f,0,'growth')),50);assert.equal(buyTrait(f,0,'growth'),true);assert.equal(f.resources.orbs,0);
+f.coins=10000;f.collection[0]=1;f.levels[0].growth=10;f.resources.orbs=0;assert.equal(buyTrait(f,0,'growth'),false);f.resources.orbs=1;f.resources.items.set1=1;f.resources.items['property:growth']=0;assert.equal(unlockBarrier(f,0,'growth'),false);f.resources.items['property:growth']=1;assert.equal(unlockBarrier(f,0,'growth'),true);assert.equal(f.resources.items.set1,1);assert.equal(f.resources.items['property:growth'],0);assert.equal(barrierThreshold(barrierLevel(f,0,'growth')),20);assert.equal(buyTrait(f,0,'growth'),true);assert.equal(f.resources.orbs,0);
+const orbFarm=newFarm();
+assert.equal(rollHarvestOrbs(1,0,0,()=>0),0);
+assert.equal(rollHarvestOrbs(100,3,orbLuckMax,random),6400);
+orbFarm.resources.orbs=20;
+assert.equal(buyOrbLuck(orbFarm),true);
+assert.equal(orbFarm.resources.orbs,0);
+assert.ok(orbMaximumChance(3,orbFarm.resources.orbLuck)>.25);
+saveFarm(orbFarm);assert.equal(loadFarm().resources.orbLuck,1);
 const automated=newFarm();automated.coins=100000;automated.collection.fill(1);automated.harvested.fill(1);automated.resources.items.set2=6;
 assert.equal(buyConvenience(automated,'irrigation'),true);assert.equal(automated.resources.items.set2,1);assert.equal(buyConvenience(automated,'replant'),true);assert.equal(automated.resources.items.set2,0);
 automated.resources.items.set3=1;const duration=irrigationOffer(automated).duration;assert.equal(upgradeIrrigation(automated),true);assert.equal(irrigationOffer(automated).duration,duration*1.25);

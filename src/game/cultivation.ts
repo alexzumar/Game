@@ -1,10 +1,11 @@
 const requiredSize = (crop:number) => crop < 3 ? 1 : crop < 10 ? 2 : 3;
-const traitPrice = (level:number) => Math.ceil(5*(level+1)**2);
-const traitOrbPrice = (level:number) => Math.ceil(Math.max(0,level-9)**1.15);
+const traitTimeFactor=(crop:number)=>Math.sqrt(cropTimes[crop]/cropTimes[0]);
+const traitPrice=(crop:number,level:number)=>Math.ceil(.4*cropPrices[crop]*traitTimeFactor(crop)*(1+level/10)**2.2);
+const traitOrbPrice=(crop:number,level:number)=>Math.ceil(.15*baseOrbYield(crop)*traitTimeFactor(crop)*(Math.max(0,level-4)/5)**1.6);
 function buyTrait(farm:Farm,crop:number,trait:Trait) {
   if (!crops[crop] || !unlocked(farm,crop)) return false;
   const level = farm.levels[crop][trait];
-  const price = traitPrice(level),orbs=traitOrbPrice(level);
+  const price=traitPrice(crop,level),orbs=traitOrbPrice(crop,level);
   if (barrierClosed(farm,crop,trait) || level >= traitMax || farm.coins < price || farm.resources.orbs<orbs) return false;
   spendFarmCoins(farm,price);spendFarmOrbs(farm,orbs);
   farm.levels[crop][trait]++;

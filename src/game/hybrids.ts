@@ -22,20 +22,33 @@ function matureMutationParent(plot:Plant,at:number){
   return plot.planted<=at&&plot.ready!==null&&plot.ready<=at&&
     (plot.wetUntil===undefined||plot.wetUntil>=plot.ready);
 }
+function mutationParentProgress(farm:Farm,plot:Plant,at:number){
+  if(matureMutationParent(plot,at))return 1;
+  const duration=plot.duration??plantGrowthTime(farm,plot);
+  const growthThrough=Math.min(at,plot.wetUntil??at);
+  const remaining=plot.ready===null?plot.remaining??duration:plot.ready-growthThrough;
+  return Math.max(0,Math.min(1,1-remaining/duration));
+}
+const mutationInterval = (re:number) => Math.round(30-20*(re-1)/29)*1000;
+
 function checkMutations(farm:Farm,now:number,random=Math.random,greenhouse?:Greenhouse) {
   const area=greenhouse??farm;
   if(now<area.mutationCheck)return false;
   for(let checks=0;area.mutationCheck<=now&&checks<2000;checks++){
   const at=area.mutationCheck;
-  area.mutationCheck+=30000;
-  for(const candidate of mutationCandidates(farm,greenhouse)) {
-    const index=candidate.index,neighbors=candidate.neighbors.filter(plot=>matureMutationParent(plot,at));
+  const candidates=mutationCandidates(farm,greenhouse);
+  let fastestRe=1;
+  for(const candidate of candidates) {
+    const index=candidate.index,neighbors=candidate.neighbors.filter(plot=>plot.planted<=at);
     if(neighbors.length<2)continue;
-    const potential=neighbors.reduce((sum,p)=>sum+Math.min(30,genome(farm,p).genes.re+(effectiveGenome(farm,p).powers.resistance??0)),0)/neighbors.length;
-    if(random()>=mutationChance(potential))continue;
+    const strongest=neighbors.map(plot=>genome(farm,plot).genes.re).sort((a,b)=>b-a);
+    fastestRe=Math.max(fastestRe,(strongest[0]+strongest[1])/2);
     const first=Math.floor(random()*neighbors.length);
     const second=(first+1+Math.floor(random()*(neighbors.length-1)))%neighbors.length;
     const parents=[neighbors[first],neighbors[second]];
+    const potential=parents.reduce((sum,p)=>sum+Math.min(30,genome(farm,p).genes.re+(effectiveGenome(farm,p).powers.resistance??0)),0)/2;
+    const progress=parents.reduce((sum,p)=>sum+mutationParentProgress(farm,p,at),0)/2;
+    if(random()>=mutationChance(potential)*(.2+.8*progress))continue;
     const chosen=parents[random()<.5?0:1];
     const duration=chosen.duration??growthTime(chosen.crop,collectionGrowth(farm,chosen.crop));
     const inherited=parents.flatMap(p=>p.line===undefined?[]:farm.lines[p.line].traits);
@@ -44,6 +57,7 @@ function checkMutations(farm:Farm,now:number,random=Math.random,greenhouse?:Gree
     area.rot[index]=null;
     area.plots[index]!.mystery!.preview=generateMutationLine(farm,area.plots[index]!,random);
   }
+  area.mutationCheck=at+mutationInterval(fastestRe);
   }
   return true;
 }
