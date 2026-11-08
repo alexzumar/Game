@@ -289,7 +289,7 @@ function renderDock(){
   dockWrap.hidden=dockState==='hidden'||hybridsDialog.open;
   if(signature===dockSignature)return;
   dockSignature=signature;dockTip.hidden=true;hideDockMagnifier();
-  dock.replaceChildren(...farm.lines.map((line,i)=>({line,i})).sort((a,b)=>compareHybridOrder(a.line,b.line)*Number(get<HTMLSelectElement>('hybrid-direction').value)||a.i-b.i).flatMap(({line,i})=>{
+  const cards=farm.lines.map((line,i)=>({line,i})).sort((a,b)=>compareHybridOrder(a.line,b.line)*Number(get<HTMLSelectElement>('hybrid-direction').value)||a.i-b.i).flatMap(({line,i})=>{
     if(line.archived||line.seeds<1)return [];
     const card=document.createElement('button');card.className='dock-hybrid';card.draggable=true;
     const genes=line.genes??{gr:1,ga:1,re:1};
@@ -318,7 +318,12 @@ function renderDock(){
     };
     card.onpointerleave=()=>{dockTip.hidden=true;hideDockMagnifier();};
     return [card];
-  }));
+  });
+  const group=document.createElement('div');
+  group.className='dock-card-group';
+  group.style.setProperty('--dock-columns',String(Math.max(1,Math.ceil(cards.length/2))));
+  group.append(...cards);
+  dock.replaceChildren(group);
 }
 function applyPlantGlows(){
   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
@@ -346,7 +351,7 @@ function applyPlantGlows(){
     text.replaceWith(fragment);
   }
   document.querySelectorAll<HTMLElement>('.has-crop-art').forEach(host=>{
-    if(host.closest('#field'))return;
+    if(host.closest('#field,#greenhouse-grid'))return;
     const path=host.dataset.art??'';
     const index=cropFolders.findIndex(folder=>path.includes('/'+folder+'/'));
     if(index>=0)host.style.filter='drop-shadow(0 0 7px '+rarityColors[cropRarities[index]]+')';

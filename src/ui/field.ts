@@ -67,61 +67,74 @@ function renderField(now:number) {
     tile.dataset.state = !plot ? rot?'rotten':'empty' : ready ? 'ready' : plot.ready === null ? 'dry' : 'growing';
     tile.style.setProperty('--crop',crop?.color ?? 'var(--accent)');
     tile.children[0].textContent = String(index+1);
-    const remaining = plot ? remainingGrowth(plot,now) : undefined;
-    const duration = plot ? (plot.duration ?? crops[plot.crop].seconds*1000) : 0;
-    const halfway = remaining !== undefined && remaining <= duration/2;
-    tile.dataset.stage = !plot ? 'empty' : ready ? 'ripe' : halfway ? 'sprout' : 'seed';
-    const icon = !plot ? '' : ready ? crop!.symbol : halfway ? '🌱' : '🟤';
-    const visual=tile.children[1] as HTMLElement;
-    if(plot?.mystery){
-      delete visual.dataset.art;visual.classList.remove("has-crop-art");visual.textContent=farm.xray&&ready?crops[plot.crop].symbol:"?";
-      const progress=1-(remaining??duration)/duration;visual.style.setProperty("--mystery-size",String(.4+.6*Math.max(0,Math.min(1,progress))));
-    } else if(plot){
-      const progress=remaining===undefined?0:1-remaining/duration;
-      const stage=ready?4:progress>=2/3?3:progress>=1/3?2:1;
-      cropArt(visual,plot.crop,'stage-'+stage,icon);
-    } else {
-      delete visual.dataset.art;
-      visual.classList.remove('has-crop-art');
-      visual.textContent=rot?'🍂':'';
-    }
-    tile.children[2].textContent = !plot&&rot?'Сгнило':plot?.mystery?'Неизвестное растение':crop?.name ?? 'Пустая грядка';
-    tile.children[3].textContent = !plot ? rot?'Нажми для отчёта':'Выбери семена' : ready ? 'Готово к сбору' :
-      plot.ready === null ? (remaining === undefined ? 'Нужен полив' : 'Сухо · '+clock(remaining)) : clock(remaining!);
+    renderPlotArt(tile,tile.children[1] as HTMLElement,plot,rot,now);
+    tile.children[2].textContent=plotTitle(plot,rot);
+    tile.children[3].textContent=plotStatus(plot,rot,now);
   });
-  const hint = get('field-tip');
-  const hovered = field.children[hoveredPlot];
-  hint.hidden = !get('quick-seeds').hidden || !hovered || (!farm.plots[hoveredPlot] && !farm.rot[hoveredPlot]);
-  hint.classList.toggle('hybrid-tip',!!farm.plots[hoveredPlot]?.line || farm.plots[hoveredPlot]?.line===0);
-  if (!hint.hidden) {
-    const wetUntil = farm.plots[hoveredPlot]?.wetUntil ?? 0;
-    hint.textContent = hovered.children[2].textContent+' · '+hovered.children[3].textContent+
-      (wetUntil > now ? ' · 💧 '+clock(wetUntil-now) : '');
-    const plot=farm.plots[hoveredPlot];
-
-    if(plot?.mystery && (plot.ready??Infinity)<=now && farm.xray && plot.mystery.preview){
-      const genes=plot.mystery.preview.genes!;
-      hint.textContent=crops[plot.crop].name+' · ⚡ Gr '+genes.gr+' / 💰 Ga '+genes.ga+' / 🛡️ Re '+genes.re+' · '+hovered.children[3].textContent;
-    }
-    if(plot?.line!==undefined){
-      const line=farm.lines[plot.line],data=genome(farm,plot);
-      hint.textContent=line.name+' · '+crops[line.crop].name+'\n⚡ Gr '+data.genes.gr+' / 💰 Ga '+data.genes.ga+' / 🛡️ Re '+data.genes.re+
-        '\n'+line.traits.map(t=>powerLabel(line,t)).join(' · ')+'\n'+hovered.children[3].textContent;
-    }
-    if(plot){
-      const forecast=ripeningInfo(farm,plot);
-      if(forecast) {
-        hint.classList.add('hybrid-tip');
-        hint.textContent+=String.fromCharCode(10)+'Цена сейчас ×'+forecast.value.toFixed(2)+
-          ' → ×'+forecast.nextValue.toFixed(2)+String.fromCharCode(10)+
-          'Через '+clock(forecast.next-now)+' · риск гнили '+formatChance(forecast.risk*100)+'%';
-      }
-    } else if(farm.rot[hoveredPlot]){
-      const record=farm.rot[hoveredPlot]!;
-      hint.textContent=record.name+' · сгнило на проверке '+record.checks+' · риск '+formatChance(record.risk*100)+'% · цена ×'+record.value.toFixed(2);
-    }
+  const hovered=field.children[hoveredPlot] as HTMLElement|undefined;
+  if(renderPlotTooltip(farm.plots[hoveredPlot],farm.rot[hoveredPlot],now)&&hovered)positionFieldTooltip(get('field-tip'),hovered);
+}
+function renderPlotArt(tile:HTMLElement,visual:HTMLElement,plot:Plant|null,rot:RotRecord|null,now:number){
+  const crop=plot?crops[plot.crop]:null;
+  const ready=!!plot&&plot.ready!==null&&plot.ready<=now;
+  const remaining = plot ? remainingGrowth(plot,now) : undefined;
+  const duration = plot ? (plot.duration ?? crops[plot.crop].seconds*1000) : 0;
+  const halfway = remaining !== undefined && remaining <= duration/2;
+  tile.dataset.stage = !plot ? 'empty' : ready ? 'ripe' : halfway ? 'sprout' : 'seed';
+  const icon = !plot ? '' : ready ? crop!.symbol : halfway ? '🌱' : '🟤';
+  if(plot?.mystery){
+    delete visual.dataset.art;visual.classList.remove("has-crop-art");visual.textContent=farm.xray&&ready?crops[plot.crop].symbol:"?";
+    const progress=1-(remaining??duration)/duration;visual.style.setProperty("--mystery-size",String(.4+.6*Math.max(0,Math.min(1,progress))));
+  } else if(plot){
+    const progress=remaining===undefined?0:1-remaining/duration;
+    const stage=ready?4:progress>=2/3?3:progress>=1/3?2:1;
+    cropArt(visual,plot.crop,'stage-'+stage,icon);
+  } else {
+    delete visual.dataset.art;
+    visual.classList.remove('has-crop-art');
+    visual.textContent=rot?'🍂':'';
   }
-  if(!hint.hidden)positionFieldTooltip(hint,hovered as HTMLElement);
+}
+function plotTitle(plot:Plant|null|undefined,rot:RotRecord|null|undefined){
+  return plot?.mystery?'Неизвестное растение':plot?crops[plot.crop].name:rot?'Сгнило':'Пустая грядка';
+}
+function plotStatus(plot:Plant|null|undefined,rot:RotRecord|null|undefined,now:number){
+  if(!plot)return rot?'Нажми для отчёта':'Выбери семена';
+  if(plot.ready===null)return plot.remaining===undefined?'Нужен полив':'Сухо · '+clock(plot.remaining);
+  return plot.ready<=now?'Готово к сбору':clock(plot.ready-now);
+}
+function renderPlotTooltip(plot:Plant|null|undefined,rot:RotRecord|null|undefined,now:number){
+  const hint=get('field-tip');
+  hint.hidden=!get('quick-seeds').hidden||(!plot&&!rot);
+  if(hint.hidden)return false;
+  let title=plotTitle(plot,rot);
+  const lines:string[]=[];
+  if(plot){
+    const ripe=plot.ready!==null&&plot.ready<=now;
+    if(plot.mystery&&ripe&&farm.xray&&plot.mystery.preview){
+      title=crops[plot.crop].name;
+      const genes=plot.mystery.preview.genes!;
+      lines.push('⚡ Gr '+genes.gr+' / 💰 Ga '+genes.ga+' / 🛡️ Re '+genes.re);
+    }else if(plot.line!==undefined){
+      const line=farm.lines[plot.line],genes=genome(farm,plot).genes;
+      title=line.name+' · '+crops[line.crop].name;
+      lines.push('⚡ Gr '+genes.gr+' / 💰 Ga '+genes.ga+' / 🛡️ Re '+genes.re);
+      if(line.traits.length)lines.push(line.traits.map(id=>powerLabel(line,id)).join(' · '));
+    }
+    lines.push(plotStatus(plot,rot,now));
+    if(!ripe&&plot.ready!==null&&(plot.wetUntil??0)>now){
+      lines.push(plot.wetUntil!>=plot.ready?'💧 Полито до созревания':'💧 Влаги ещё '+clock(plot.wetUntil!-now));
+    }
+    const forecast=!plot.mystery?ripeningInfo(farm,plot):null;
+    if(forecast)lines.push('Цена сейчас ×'+forecast.value.toFixed(2)+' → ×'+forecast.nextValue.toFixed(2),
+      'Через '+clock(forecast.next-now)+' · риск гнили '+formatChance(forecast.risk*100)+'%');
+  }else if(rot){
+    title=rot.name;
+    lines.push('Сгнило на проверке '+rot.checks+' · риск '+formatChance(rot.risk*100)+'% · цена ×'+rot.value.toFixed(2));
+  }
+  const text=[title,...lines].join('\n');
+  if(hint.textContent!==text)hint.textContent=text;
+  return true;
 }
 function positionFieldTooltip(hint:HTMLElement,tile:HTMLElement){
   const margin=12,bounds=get('field').getBoundingClientRect(),cell=tile.getBoundingClientRect();
@@ -135,7 +148,7 @@ function positionFieldTooltip(hint:HTMLElement,tile:HTMLElement){
 }
 window.addEventListener('resize',()=>{
   const hint=get('field-tip'),tile=get('field').children[hoveredPlot];
-  if(!hint.hidden&&tile)positionFieldTooltip(hint,tile as HTMLElement);
+  if(!document.body.classList.contains('in-greenhouse')&&!hint.hidden&&tile)positionFieldTooltip(hint,tile as HTMLElement);
 });
 let basketPulse:Animation|undefined;
 function collectAnimated(index:number,now:number,tile:Element,area:PlotArea=farm) {

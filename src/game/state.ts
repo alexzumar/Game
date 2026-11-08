@@ -31,7 +31,7 @@ type Greenhouse=PlotArea & {beds:boolean[];trellises:boolean[];mutationCheck:num
 const greenhouseWidth=10;
 const greenhouseCells=30;
 function newGreenhouse(now:number):Greenhouse{
-  return {beds:Array.from({length:greenhouseCells},(_,i)=>i>=13&&i<=15),
+  return {beds:Array.from({length:greenhouseCells},(_,i)=>i>=20&&i<=22),
     trellises:Array(greenhouseCells).fill(false),plots:Array(greenhouseCells).fill(null),
     rot:Array(greenhouseCells).fill(null),mutationCheck:now+30000};
 }

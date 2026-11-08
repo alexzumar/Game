@@ -1,7 +1,10 @@
 const greenhouseGrid=get('greenhouse-grid');
-type GreenhouseTool='trellis'|'move'|'buy';
+type GreenhouseTool='trellis'|'buy'|'move';
 let greenhouseTool:GreenhouseTool|null=null;
 let movingBed=-1;
+let greenhouseMoveHeld=false;
+let greenhouseAltHeld=false;
+let hoveredGreenhousePlot=-1;
 
 function greenhouseVisible(){return location.hash==='#greenhouse';}
 function syncGreenhouseScreen(){
@@ -9,8 +12,18 @@ function syncGreenhouseScreen(){
   document.body.classList.toggle('in-greenhouse',visible);
   document.title=visible?'Теплица — Всходы':'Всходы — семенная ферма';
   get('quick-seeds').hidden=true;
+  const hint=get('field-tip');
+  hint.hidden=true;
+  hint.style.removeProperty('top');
+  hint.style.removeProperty('left');
+  get(visible?'greenhouse-board':'garden-field-head').append(hint);
+  hoveredGreenhousePlot=-1;
+  hoveredPlot=-1;
   greenhouseTool=null;
   movingBed=-1;
+  greenhouseMoveHeld=false;
+  greenhouseAltHeld=false;
+  dockWrap.classList.remove('greenhouse-dock-expanded');
   if(visible){
     farm.greenhouse??=newGreenhouse(nowTime());
     setDockState('open');
@@ -18,6 +31,44 @@ function syncGreenhouseScreen(){
 }
 syncGreenhouseScreen();
 window.addEventListener('hashchange',()=>{syncGreenhouseScreen();render();});
+dockWrap.addEventListener('pointerenter',event=>{
+  if(greenhouseVisible()&&event.pointerType==='mouse')dockWrap.classList.add('greenhouse-dock-expanded');
+});
+dockWrap.addEventListener('pointerleave',()=>dockWrap.classList.remove('greenhouse-dock-expanded'));
+const greenhouseRight=get('greenhouse-expansion').parentElement!;
+new ResizeObserver(()=>{
+  if(greenhouseVisible())get('greenhouse-pots').style.setProperty('--greenhouse-pots-height',greenhouseRight.offsetHeight+'px');
+}).observe(greenhouseRight);
+
+window.addEventListener('keydown',event=>{
+  if(!greenhouseVisible()||document.querySelector('dialog[open]')||
+    (event.target instanceof Element&&event.target.closest('input,textarea,select,[contenteditable]')))return;
+  if(event.key==='Alt'){
+    event.preventDefault();
+    greenhouseAltHeld=true;
+  }else if(event.code==='KeyM'&&!event.altKey&&!event.ctrlKey&&!event.metaKey){
+    event.preventDefault();
+    greenhouseMoveHeld=true;
+  }else return;
+  if(!event.repeat){
+    get('quick-seeds').hidden=true;
+    renderGreenhouse(nowTime());
+  }
+});
+window.addEventListener('keyup',event=>{
+  if(event.key==='Alt')greenhouseAltHeld=false;
+  else if(event.code==='KeyM'){
+    greenhouseMoveHeld=false;
+    movingBed=-1;
+  }else return;
+  if(greenhouseVisible())renderGreenhouse(nowTime());
+});
+window.addEventListener('blur',()=>{
+  greenhouseAltHeld=greenhouseMoveHeld=false;
+  movingBed=-1;
+  dockWrap.classList.remove('greenhouse-dock-expanded');
+  if(greenhouseVisible())renderGreenhouse(nowTime());
+});
 
 function tickGreenhouse(now:number){
   const area=farm.greenhouse;
@@ -31,7 +82,7 @@ function tickGreenhouse(now:number){
 function greenhouseBedPrice(area:Greenhouse){
   return Math.ceil(3*(area.beds.filter(Boolean).length-2)**1.4);
 }
-for(const tool of ['trellis','move','buy'] as const){
+for(const tool of ['trellis','buy','move'] as const){
   button('greenhouse-'+tool).onclick=()=>{
     greenhouseTool=greenhouseTool===tool?null:tool;
     movingBed=-1;
@@ -57,13 +108,26 @@ function sowGreenhouse(index:number,crop:number,line?:number){
     commit('Семя посажено в теплице.');
   }
 }
-function useGreenhouseCell(index:number,tile:HTMLButtonElement){
+function canMoveGreenhouseBed(area:Greenhouse,index:number){
+  return area.beds[index]&&!area.plots[index]&&!area.rot[index];
+}
+function moveGreenhouseBed(area:Greenhouse,from:number,to:number){
+  if(!canMoveGreenhouseBed(area,from)||area.beds[to]||area.plots[to]||area.rot[to])return;
+  area.beds[to]=true;
+  area.trellises[to]=area.trellises[from];
+  area.beds[from]=false;
+  area.trellises[from]=false;
+  movingBed=-1;
+  commit('Грядка перенесена.');
+}
+function useGreenhouseCell(index:number,tile:HTMLButtonElement,event:MouseEvent){
   const area=farm.greenhouse!;
   const now=nowTime();
   const changed=tickGreenhouse(now);
   if(changed)saveFarm(farm);
   const plot=area.plots[index];
-  if(greenhouseTool==='buy'){
+  const tool=greenhouseMoveHeld?'move':event.altKey||greenhouseAltHeld?'trellis':greenhouseTool;
+  if(tool==='buy'){
     const price=greenhouseBedPrice(area);
     const points=farm.mutationPoints??0;
     if(!area.beds[index]&&points>=price){
@@ -73,23 +137,15 @@ function useGreenhouseCell(index:number,tile:HTMLButtonElement){
     }
     return;
   }
-  if(greenhouseTool==='move'){
+  if(tool==='move'){
     if(plot||area.rot[index])return;
     if(area.beds[index])movingBed=movingBed===index?-1:index;
-    else if(movingBed>=0&&!area.plots[movingBed]&&!area.rot[movingBed]){
-      area.beds[index]=true;
-      area.trellises[index]=area.trellises[movingBed];
-      area.beds[movingBed]=false;
-      area.trellises[movingBed]=false;
-      movingBed=-1;
-      commit('Грядка перенесена.');
-      return;
-    }
+    else if(movingBed>=0)return moveGreenhouseBed(area,movingBed,index);
     renderGreenhouse(now);
     return;
   }
   if(!area.beds[index])return;
-  if(greenhouseTool==='trellis'){
+  if(tool==='trellis'){
     if(plot||area.rot[index])return;
     area.trellises[index]=!area.trellises[index];
     commit(area.trellises[index]?'Шпалера установлена.':'Шпалера убрана.');
@@ -117,15 +173,46 @@ for(let index=0;index<greenhouseCells;index++){
   const tile=document.createElement('button');
   tile.type='button';
   tile.className='greenhouse-cell';
-  tile.append(document.createElement('strong'),document.createElement('small'));
-  tile.onclick=()=>useGreenhouseCell(index,tile);
+  const icon=document.createElement('strong');
+  icon.className='greenhouse-plant';
+  icon.setAttribute('aria-hidden','true');
+  tile.append(icon);
+  tile.onpointerenter=()=>{hoveredGreenhousePlot=index;renderGreenhouseTooltip(nowTime());};
+  tile.onpointerleave=()=>{
+    if(hoveredGreenhousePlot===index){hoveredGreenhousePlot=-1;renderGreenhouseTooltip(nowTime());}
+  };
+  tile.onclick=event=>useGreenhouseCell(index,tile,event);
+  tile.ondragstart=event=>{
+    const area=farm.greenhouse;
+    if(!area||!(greenhouseMoveHeld||greenhouseTool==='move')||!canMoveGreenhouseBed(area,index)||!event.dataTransfer){
+      event.preventDefault();
+      return;
+    }
+    event.dataTransfer.setData('application/x-farm-bed',String(index));
+    event.dataTransfer.effectAllowed='move';
+  };
   tile.ondragover=event=>{
     const area=farm.greenhouse;
+    if(area&&!area.beds[index]&&(greenhouseMoveHeld||greenhouseTool==='move')&&
+      event.dataTransfer?.types.includes('application/x-farm-bed')){
+      event.preventDefault();
+      event.dataTransfer.dropEffect='move';
+      return;
+    }
     if(area?.beds[index]&&!area.trellises[index]&&!area.plots[index]&&!area.rot[index]&&
       event.dataTransfer?.types.includes('application/x-farm-hybrid'))event.preventDefault();
   };
   tile.ondrop=event=>{
     event.preventDefault();
+    const bed=event.dataTransfer?.getData('application/x-farm-bed');
+    if(bed&&/^\d+$/.test(bed)){
+      const area=farm.greenhouse;
+      if(area&&(greenhouseMoveHeld||greenhouseTool==='move')){
+        if(tickGreenhouse(nowTime()))saveFarm(farm);
+        moveGreenhouseBed(area,Number(bed),index);
+      }
+      return;
+    }
     const value=event.dataTransfer?.getData('application/x-farm-hybrid');
     if(!value||!/^\d+$/.test(value))return;
     const line=farm.lines[Number(value)];
@@ -137,30 +224,39 @@ for(let index=0;index<greenhouseCells;index++){
 function renderGreenhouse(now:number){
   const area=farm.greenhouse;
   if(!area)return;
-  get('greenhouse-no-trellis').hidden=area.trellises.some(Boolean);
+  const candidates=mutationCandidates(farm,area,false)
+    .filter(({neighbors})=>neighbors.filter(plot=>matureMutationParent(plot,now)).length>=2);
+  get('greenhouse-no-trellis').hidden=!candidates.length||candidates.some(({index})=>area.trellises[index])||
+    area.plots.some((plot,index)=>plot?.mystery&&area.trellises[index]);
   get('greenhouse-dry').hidden=!area.plots.some(plot=>plot&&!plot.mystery&&plot.ready===null);
-  for(const tool of ['trellis','move','buy'] as const)button('greenhouse-'+tool).setAttribute('aria-pressed',String(greenhouseTool===tool));
+  button('greenhouse-trellis').setAttribute('aria-pressed',String(greenhouseAltHeld||greenhouseTool==='trellis'));
+  button('greenhouse-buy').setAttribute('aria-pressed',String(greenhouseTool==='buy'));
+  const moving=greenhouseMoveHeld||greenhouseTool==='move';
+  button('greenhouse-move').setAttribute('aria-pressed',String(moving));
   const buy=button('greenhouse-buy');
   buy.textContent='Новая грядка · 🧬 '+number(greenhouseBedPrice(area));
   buy.disabled=area.beds.every(Boolean)||(farm.mutationPoints??0)<greenhouseBedPrice(area);
   area.beds.forEach((bed,index)=>{
     const tile=greenhouseGrid.children[index] as HTMLButtonElement;
     const plot=area.plots[index],trellis=area.trellises[index],rot=area.rot[index];
-    const ready=!!plot&&plot.ready!==null&&plot.ready<=now;
     tile.dataset.bed=String(bed);
     tile.dataset.trellis=String(trellis);
     tile.dataset.mystery=String(!!plot?.mystery);
     tile.setAttribute('aria-pressed',String(movingBed===index));
-    tile.disabled=!bed&&greenhouseTool!=='buy'&&(greenhouseTool!=='move'||movingBed<0);
-    const icon=plot?.mystery?'?':plot?(ready?crops[plot.crop].symbol:plot.ready===null?'🟤':'🌱'):rot?'🍂':'';
-    if(tile.children[0].textContent!==icon)tile.children[0].textContent=icon;
-    const status=plot?(ready?'Готово':plot.ready===null?'Сухо':clock(plot.ready-now)):'';
-    if(tile.children[1].textContent!==status)tile.children[1].textContent=status;
-    const name=plot?.mystery?'Неизвестное растение':plot?crops[plot.crop].name:rot?'Сгнило':trellis?'Шпалера':bed?'Пустая грядка':'Свободное место';
-    const label=name+(status?' · '+status:'');
-    tile.title=label;
-    tile.setAttribute('aria-label',label);
+    tile.disabled=!bed&&!moving&&(greenhouseTool!=='buy'||greenhouseAltHeld);
+    tile.draggable=moving&&canMoveGreenhouseBed(area,index);
+    tile.classList.toggle('greenhouse-movable',tile.draggable);
+    tile.classList.toggle('greenhouse-move-target',moving&&!bed);
+    renderPlotArt(tile,tile.children[0] as HTMLElement,plot,rot,now);
+    const name=plot||rot?plotTitle(plot,rot):trellis?'Шпалера':bed?'Пустая грядка':'Свободное место';
+    tile.setAttribute('aria-label',plot?name+' · '+plotStatus(plot,rot,now):name);
   });
+  renderGreenhouseTooltip(now);
+}
+
+function renderGreenhouseTooltip(now:number){
+  const area=farm.greenhouse;
+  renderPlotTooltip(area?.plots[hoveredGreenhousePlot],area?.rot[hoveredGreenhousePlot],now);
 }
 
 const mutationDebug=document.createElement('label');

@@ -64,7 +64,9 @@ function render() {
   get("skin").textContent = farm.skin === "glossy" ? "✧ Глянец" : "◈ Классика";
   document.documentElement.dataset.accent = String(farm.accent);
   document.body.classList.toggle('raining',rain);
-  get('weather').textContent = rain ? '🌧️ Дождь · расход влаги ×0,5 · рост +5%'+(farm.weather.surged?' · Рывок роста':'')+' · ещё '+clock((farm.weather.end ?? now)-now) : '☀️ Ясно';
+  const rainLabel=document.body.classList.contains('in-greenhouse')?'🌧️ Дождь снаружи':
+    '🌧️ Дождь · расход влаги ×0,5 · рост +5%'+(farm.weather.surged?' · Рывок роста':'');
+  get('weather').textContent=rain?rainLabel+' · ещё '+clock((farm.weather.end??now)-now):'☀️ Ясно';
   get('theme').textContent = farm.theme === 'light' ? '☾ Тёмная' : '☀ Светлая';
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;

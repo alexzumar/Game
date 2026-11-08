@@ -88,7 +88,7 @@ renderPackWorkshop();
 
 
 function animateRarePickup(origin:DOMRect,amount:number,icon:string,target:HTMLElement,delay=0){
-  const field=get('field').getBoundingClientRect();
+  const field=get(document.body.classList.contains('in-greenhouse')?'greenhouse-grid':'field').getBoundingClientRect();
   const counter=target.getBoundingClientRect();
   const x=origin.left+origin.width/2,y=origin.top+origin.height/2;
   const flight=document.createElement('span');

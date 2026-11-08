@@ -6,17 +6,21 @@ const lineTrait = (farm:Farm,plot:Plant,id:string) => plot.line===undefined?0:ef
 
 
 
-function mutationCandidates(farm:Farm,greenhouse?:Greenhouse) {
+function mutationCandidates(farm:Farm,greenhouse?:Greenhouse,requireTrellis=true) {
   const {plots}=greenhouse??farm;
   const width=greenhouse?greenhouseWidth:farm.size;
   return plots.flatMap((plot,index)=>{
-    if(plot||(greenhouse&&(!greenhouse.beds[index]||!greenhouse.trellises[index])))return [];
+    if(plot||(greenhouse&&(!greenhouse.beds[index]||greenhouse.rot[index]||(requireTrellis&&!greenhouse.trellises[index]))))return [];
     const row=Math.floor(index/width),col=index%width;
     const neighbors=[[row-1,col],[row+1,col],[row,col-1],[row,col+1]]
       .filter(([r,c])=>r>=0&&c>=0&&r<plots.length/width&&c<width)
       .map(([r,c])=>plots[r*width+c]).filter((p):p is Plant=>!!p&&!p.mystery);
     return neighbors.length>=2?[{index,neighbors}]:[];
   });
+}
+function matureMutationParent(plot:Plant,at:number){
+  return plot.planted<=at&&plot.ready!==null&&plot.ready<=at&&
+    (plot.wetUntil===undefined||plot.wetUntil>=plot.ready);
 }
 function checkMutations(farm:Farm,now:number,random=Math.random,greenhouse?:Greenhouse) {
   const area=greenhouse??farm;
@@ -25,7 +29,7 @@ function checkMutations(farm:Farm,now:number,random=Math.random,greenhouse?:Gree
   const at=area.mutationCheck;
   area.mutationCheck+=30000;
   for(const candidate of mutationCandidates(farm,greenhouse)) {
-    const index=candidate.index,neighbors=candidate.neighbors.filter(p=>p.planted<=at && p.ready!==null && p.ready<=at && (p.wetUntil===undefined||p.wetUntil>=p.ready));
+    const index=candidate.index,neighbors=candidate.neighbors.filter(plot=>matureMutationParent(plot,at));
     if(neighbors.length<2)continue;
     const potential=neighbors.reduce((sum,p)=>sum+Math.min(30,genome(farm,p).genes.re+(effectiveGenome(farm,p).powers.resistance??0)),0)/neighbors.length;
     if(random()>=mutationChance(potential))continue;

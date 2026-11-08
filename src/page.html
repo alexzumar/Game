@@ -20,8 +20,8 @@
 </dialog>
 <main class="workspace">
   <aside class="left" aria-label="Семена">
-    <section class="glass panel packet"><span class="kicker">ПАКЕТЫ</span><h2><span data-upgrade-target="packs">Магазин</span></h2><button class="primary" id="seed-shop">Открыть магазин</button></section>
-    <section class="glass panel seed-storage"><span class="kicker">СКЛАД</span><div class="seed-stock-heading"><h2 id="seed-stock-title"><span data-upgrade-target="seeds">Семена</span></h2><select id="seed-sort" aria-label="Сортировка семян"><option value="quantity">По количеству</option><option value="rarity">По редкости</option></select></div><p>Выбери семечко и нажми на грядку или перетащи его.</p><div id="seeds"></div></section>
+    <section class="glass panel packet"><span class="kicker" data-upgrade-target="packs">Магазин</span><button class="primary" id="seed-shop">Открыть магазин</button></section>
+    <section class="glass panel seed-storage"><div class="seed-stock-heading"><span class="kicker" id="seed-stock-title" data-upgrade-target="seeds">Склад</span><select id="seed-sort" aria-label="Сортировка семян"><option value="quantity">По количеству</option><option value="rarity">По редкости</option></select></div><p>Выбери семечко и нажми на грядку или перетащи его.</p><div id="seeds"></div></section>
     <section class="glass panel greenhouse-only" id="greenhouse-pots" aria-label="Горшки">
       <h2>Горшки</h2>
       <img src="assets/greenhouse/pot.png" alt=""><img src="assets/greenhouse/pot.png" alt=""><img src="assets/greenhouse/pot.png" alt="">
@@ -29,10 +29,10 @@
   </aside>
   <section class="growing-area" aria-label="Поле">
     <button type="button" id="resources-open" class="glass wallet" title="Открыть коллекцию"><span>🪙 <b id="coins"></b></span><span>🔮 <b id="orbs">0</b></span><span>💎 <b id="diamond-balance">0</b></span><span title="Очки мутации">🧬 <b id="mutation-points">0</b></span></button>
-    <div class="field-head"><small id="dry-field-notice" class="glass" role="status" hidden title="Удерживай Ctrl или включи лейку, затем нажми на сухую грядку."></small><span>ПОЛЕ</span><strong id="field-tip" hidden></strong><strong id="dimensions"></strong></div>
+    <div class="field-head" id="garden-field-head"><small id="dry-field-notice" class="glass" role="status" hidden title="Удерживай Ctrl или включи лейку, затем нажми на сухую грядку."></small><span>ПОЛЕ</span><strong id="field-tip" class="glass" role="tooltip" hidden></strong><strong id="dimensions"></strong></div>
     <div class="field" id="field"></div>
     <section id="greenhouse-board" class="greenhouse-only" aria-label="Грядки теплицы">
-      <div id="greenhouse-notices"><small id="greenhouse-dry" class="glass" hidden>Нужен полив</small><small id="greenhouse-no-trellis" class="glass">Не установлена шпалера</small></div>
+      <div id="greenhouse-notices"><small id="greenhouse-dry" class="glass" hidden>Нужен полив</small><small id="greenhouse-no-trellis" class="glass" hidden>Не установлена шпалера</small></div>
       <div id="greenhouse-grid"></div>
     </section>
   </section>
@@ -41,12 +41,12 @@
       <button class="quiet wide" id="gather" title="Можно удерживать Shift для временного сбора" aria-pressed="false">🧺 Сбор</button><button class="quiet wide" id="water" title="Удерживай Ctrl для временного полива" aria-pressed="false">🚿 Лейка</button><small class="gather-help">Shift — сбор · Ctrl — полив</small>
       <div class="greenhouse-only" id="greenhouse-tools">
         <button class="quiet wide" id="greenhouse-trellis" aria-pressed="false">Шпалера</button>
-        <button class="quiet wide" id="greenhouse-move" aria-pressed="false">Перенос грядок</button>
-        <button class="quiet wide" id="greenhouse-buy" aria-pressed="false">Новая грядка</button>
+        <small class="gather-help">Alt — шпалера · M — перенос пустой грядки</small>
       </div>
     </section>
     <section class="glass panel"><span class="kicker">УРОЖАЙ</span><button class="quiet wide" id="basket"><span><span id="basket-icon">🧺</span> Корзина</span><b id="counter"></b></button></section>
-    <section class="glass panel" id="upgrade-field"><h2>Расширение поля</h2><p id="expand-note"></p><button class="quiet" id="expand"></button></section><section class="glass panel"><button class="quiet wide" id="hybrids-open">🧬 Гибриды</button><button class="quiet wide" id="extractor-open">⚙️ Экстрактор семян</button><button class="quiet wide" id="diamonds-open">💎 Алмазные улучшения</button><button class="primary" id="upgrades-open">⬆ Улучшения</button></section>
+    <section class="glass panel greenhouse-only" id="greenhouse-expansion"><span class="kicker">Грядки</span><button class="quiet wide" id="greenhouse-buy" aria-pressed="false">Новая грядка</button><button class="quiet wide" id="greenhouse-move" aria-pressed="false">Перенос грядок</button></section>
+    <section class="glass panel" id="upgrade-field"><span class="kicker">Расширение поля</span><p id="expand-note"></p><button class="quiet" id="expand"></button></section><section class="glass panel"><button class="quiet wide" id="hybrids-open">🧬 Гибриды</button><button class="quiet wide" id="extractor-open">⚙️ Экстрактор семян</button><button class="quiet wide" id="diamonds-open">💎 Алмазные улучшения</button><button class="primary" id="upgrades-open">⬆ Улучшения</button></section>
   </aside>
 </main>
 <footer><span id="save-state"></span><span id="notice" role="status"></span></footer>

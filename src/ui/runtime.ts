@@ -173,8 +173,16 @@ document.addEventListener('wheel',event=>{
 },{passive:false,capture:true});
 
 button('seed-sort').onchange=renderSeeds;
+const quickSeedsMenu=get('quick-seeds');
+let quickSeedsAnchor:HTMLElement|null=null;
+let quickSeedsCloseTimer:ReturnType<typeof setTimeout>|undefined;
+function insideQuickSeeds(target:EventTarget|null){
+  return target instanceof Node&&(quickSeedsMenu.contains(target)||!!quickSeedsAnchor?.contains(target));
+}
 function openQuickSeeds(index:number,tile:HTMLElement,plantSeed:(index:number,crop:number)=>void=sow){
-  const menu=get('quick-seeds');menu.replaceChildren();
+  clearTimeout(quickSeedsCloseTimer);
+  quickSeedsAnchor=tile;
+  const menu=quickSeedsMenu;menu.replaceChildren();
   const available=crops.map((_,i)=>i).filter(i=>unlocked(farm,i)&&farm.seeds[i]>0);
   available.sort((a,b)=>get<HTMLSelectElement>('seed-sort').value==='rarity'?seedRarityOrder.indexOf(a)-seedRarityOrder.indexOf(b):farm.seeds[b]-farm.seeds[a]);
   for(const i of available){
@@ -193,6 +201,14 @@ function openQuickSeeds(index:number,tile:HTMLElement,plantSeed:(index:number,cr
   menu.style.top=Math.max(12,Math.min(innerHeight-size.height-12,cell.top-size.height-10))+'px';
   get('field-tip').hidden=true;
 }
+document.addEventListener('pointerout',event=>{
+  if(event.pointerType!=='mouse'||quickSeedsMenu.hidden||!insideQuickSeeds(event.target)||insideQuickSeeds(event.relatedTarget))return;
+  clearTimeout(quickSeedsCloseTimer);
+  quickSeedsCloseTimer=setTimeout(()=>{quickSeedsMenu.hidden=true;},200);
+});
+document.addEventListener('pointerover',event=>{
+  if(event.pointerType==='mouse'&&insideQuickSeeds(event.target))clearTimeout(quickSeedsCloseTimer);
+});
 document.addEventListener('click',event=>{
   if(!(event.target instanceof Element)||event.target.closest('#quick-seeds,#field .tile,#greenhouse-grid button'))return;
   get('quick-seeds').hidden=true;
