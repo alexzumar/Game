@@ -59,7 +59,6 @@ html,body{height:100%;overflow:hidden}body{min-height:0;padding-bottom:clamp(48p
 @media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
   :is(.seed,.harvest-item,#shop-seeds button,#seed-shop,#open-pack){transition:background .2s,transform .26s ease-out,box-shadow .26s ease-out}
   :is(.seed,.harvest-item,#shop-seeds button,#seed-shop,#open-pack).tilting:not(:disabled){
-    transform:perspective(550px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(-1px);
     box-shadow:0 5px 13px var(--shade);
   }
 }
@@ -76,7 +75,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 .receipt-total{display:flex;justify-content:space-between;font-size:1rem}
 #upgrade-catalog,#trait-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,155px),1fr));gap:8px}#upgrade-catalog button{white-space:normal;text-align:left}#upgrade-catalog [aria-pressed=true]{background:var(--accent);color:#21372b}.trait-panel{margin-top:12px}
 @media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
-  :is(#upgrades-open,#upgrade-catalog button).tilting{transform:perspective(550px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(-1px);box-shadow:0 5px 13px var(--shade)}
+  :is(#upgrades-open,#upgrade-catalog button).tilting{box-shadow:0 5px 13px var(--shade)}
 }
 
 .wallet{display:flex;flex-wrap:wrap;gap:7px 12px;font-size:.85rem}
@@ -96,7 +95,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 .square-card b{font-size:1.9rem}.square-card small{font-size:.67rem}.square-card[aria-pressed=true]{background:var(--accent);color:#21372b}
 #upgrades-dialog .trait-panel{position:sticky;z-index:3;bottom:12px;width:100%;max-height:min(250px,45svh);overflow:auto;margin:14px 0 12px;background:color-mix(in srgb,var(--base) 94%,var(--accent));box-shadow:0 -8px 30px var(--shade)}
 #pack-dialog #reels{max-height:56svh;overflow:auto;scrollbar-width:none}
-@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){.square-card.tilting{transform:perspective(550px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(-1px);box-shadow:0 5px 13px var(--shade)}}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){.square-card.tilting{box-shadow:0 5px 13px var(--shade)}}
 #upgrades-dialog[open]{display:flex;flex-direction:column}
 #upgrades-dialog[open]>:not(.trait-panel){flex:none}
 #upgrades-dialog>form{position:absolute;top:22px;right:22px}
@@ -356,7 +355,9 @@ body.raining::after{opacity:1}
 #upgrade-material-tip span{white-space:nowrap}
 .greenhouse-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit;border:1px solid var(--edge);border-radius:12px}
 .greenhouse-only{display:none}
-html.farm-background{filter:contrast(.85)}
+html{filter:saturate(1) contrast(1);transition:filter .38s ease}
+html.farm-background{filter:saturate(.12) contrast(.85)}
+@media(prefers-reduced-motion:reduce){html{transition:none}}
 #mutation-upgrades{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px;margin-bottom:12px}
 body.in-greenhouse{--greenhouse-scene-height:max(100dvh,50vw)}
 body.in-greenhouse::before{background-image:url('assets/greenhouse/clear.png')}
@@ -430,6 +431,24 @@ body>footer{position:fixed;bottom:5px;inset-inline:12px;justify-content:center;p
 dialog>form[method=dialog]{position:absolute;right:16px;top:16px;z-index:6}
 dialog>h2{padding-right:32px}
 #hybrid-detail-dialog .close{margin:0}
+
+.upgrade-next{display:block;color:#17633d;font-weight:750;white-space:pre-line}
+[data-theme=dark] .upgrade-next{color:#a5edbc}
+.upgrade-arrow{display:block;color:var(--soft);line-height:1.2}
+.upgrade-details{position:relative;margin:0 0 8px;font-size:.88em;color:var(--soft)}
+.upgrade-details>span:first-child{cursor:help}
+.upgrade-tooltip{position:absolute;inset-inline:0;bottom:calc(100% + 4px);z-index:5;visibility:hidden;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--base);color:var(--ink);box-shadow:0 5px 14px var(--shade);pointer-events:none}
+.upgrade-details>span:is(:hover,:focus)+.upgrade-tooltip{visibility:visible}
+.game-help{display:inline-grid;place-items:center;flex:0 0 auto;width:30px;height:30px;padding:0;font-weight:700}
+.masthead .game-help.greenhouse-only{display:none}
+.in-greenhouse .masthead .game-help.greenhouse-only{display:inline-grid}
+#game-help-dialog{width:min(460px,calc(100% - 24px));height:auto;max-height:calc(100% - 24px);padding-bottom:20px}
+.upgrade-note{display:block;margin-top:4px;color:var(--soft)}
+.upgrade-shortcut{font-size:.75rem;padding:4px 8px}
+.upgrade-shortcut{margin-inline-start:8px}
+#upgrade-field.field-expansion-complete{padding-block:10px}
+.field-expansion-complete #expand-note{margin:3px 0 0}
+#pack-results .pack-result-buy{margin:0;padding:2px 4px;font-size:.64rem;white-space:normal}
 .hybrid-detail-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
 .hybrid-detail-actions #hybrid-plant{grid-column:1/-1}
 .hybrid-detail-actions button{min-width:0;white-space:normal}
@@ -595,6 +614,40 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 #field .tile[data-wet=true]::after{opacity:1;transition:opacity .5s ease}
 #extractor-upgrades>.panel,#pack-upgrade-list>.panel{display:flex;flex-direction:column;min-width:0}
 #extractor-upgrades>.panel>button,#pack-upgrade-list>.panel>button{margin-top:auto;width:100%;min-height:36px;white-space:normal}
+:is(.glass.panel,.square-card,.resource-card,.hybrid-card,.pack-result,.harvest-item,.extractor-slot,#upgrade-catalog>button){position:relative;isolation:isolate}
+:is(.glass.panel,.square-card,.resource-card,.hybrid-card,.pack-result,.harvest-item,.extractor-slot,#upgrade-catalog>button)::after{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .18s;background:radial-gradient(ellipse at var(--glare-x,50%) var(--glare-y,50%),color-mix(in srgb,var(--accent) 23%,transparent),transparent 72%)}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ :is(.glass.panel,.square-card,.resource-card,.hybrid-card,.pack-result,.harvest-item,.extractor-slot,#upgrade-catalog>button).tilting::after{opacity:1}
+ :is(#upgrades-dialog,#diamonds-dialog) .tilting{transform:none}
+}
+:is(#upgrades-dialog,#diamonds-dialog) .panel > :is(h2,h3){display:flex;align-items:center;gap:10px;margin:0 0 14px;min-height:44px;font-size:1.18rem;line-height:1.2;letter-spacing:-.015em}
+.workspace .panel > h2:has(.extractor-upgrade-icon){display:flex;align-items:center;gap:10px}
+.extractor-upgrade-icon{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;border:1px solid var(--line);background:color-mix(in srgb,var(--accent) 38%,var(--base));box-shadow:0 3px 8px var(--shade);font-size:1.22rem}
+:is(#upgrades-dialog,#diamonds-dialog) .panel>p{margin:0 0 10px;color:var(--ink);font-size:.92rem}
+.upgrade-arrow{display:none}
+.upgrade-next{margin-top:5px;padding:6px 8px;border-radius:10px;background:color-mix(in srgb,var(--accent) 27%,transparent)}
+.upgrade-price{position:relative;margin-top:auto}
+.upgrade-price>button{width:100%;min-height:36px;white-space:normal}
+.upgrade-price>.upgrade-tooltip{white-space:pre-line}
+.upgrade-price:is(:hover,:focus-within)>.upgrade-tooltip:not([hidden]){visibility:visible}
+.upgrade-tooltip-card:popover-open{position:fixed;inset:auto;margin:0;box-sizing:border-box;visibility:visible;white-space:pre-line;padding:16px;overflow:auto;pointer-events:auto;border:1px solid var(--line);background:color-mix(in srgb,var(--accent) 18%,var(--base));box-shadow:0 8px 24px var(--shade)}
+.upgrade-tooltip-card:not(:popover-open){display:none}
+.upgrade-tooltip-card:popover-open::backdrop{backdrop-filter:grayscale(.24);pointer-events:none}
+.upgrade-tooltip-title{display:block;margin-bottom:10px;font-size:1.13rem;line-height:1.2}
+@media(prefers-reduced-motion:no-preference){
+ .upgrade-tooltip-card:popover-open{animation:upgrade-tooltip-enter .18s ease-out both}
+}
+@keyframes upgrade-tooltip-enter{from{opacity:0}to{opacity:1}}
+:is(#mutation-upgrades,#trait-list,#convenience-list,#extractor-upgrades,#pack-upgrade-list,#diamond-upgrades)> .panel,
+#upgrade-hybrids>.panel,#upgrade-tools>.panel,#pack-luck-upgrade{display:flex;flex-direction:column;min-width:0}
+:is(#mutation-upgrades,#trait-list,#convenience-list,#extractor-upgrades,#pack-upgrade-list,#diamond-upgrades)> .panel>button,
+#upgrade-hybrids>.panel>button,#upgrade-tools>.panel>button,#pack-luck-upgrade>button{width:100%;min-height:36px;margin-top:auto}
+#trait-list{align-items:stretch}
+#trait-list .panel>strong{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+#mutation-upgrades .mutation-upgrade-limit{color:var(--soft);font-weight:400}
+:is(#upgrades-dialog,#diamonds-dialog) .panel > p:not([data-change]):has(~ p[data-change]),
+#mutation-upgrades .mutation-upgrade-description,
+#enhance-panel-description{color:var(--soft);font-size:.82rem;padding-bottom:10px;border-bottom:1px solid var(--edge)}
 
 #upgrade-catalog button:disabled b{filter:grayscale(1);opacity:.4}
 #upgrade-catalog button small{font-size:.65rem;white-space:normal}
@@ -757,7 +810,7 @@ button{user-select:none}
   <form id="sale"><strong id="sale-title"></strong><p id="sale-hint" role="status"></p>
     <label id="skip-single-row"><input type="checkbox" id="skip-single"> Больше не спрашивать до закрытия корзины</label>
     <div class="sale-options">
-      <button type="button" class="quiet" id="sell-one">Продать 1</button><button type="button" class="quiet" id="sell-half">Половина</button><button type="button" class="quiet" id="sell-all">Всё</button>
+      <button type="button" class="quiet" id="sale-extract">В экстрактор</button><button type="button" class="quiet" id="sell-one">Продать 1</button><button type="button" class="quiet" id="sell-half">Половина</button><button type="button" class="quiet" id="sell-all">Всё</button>
       <label id="quantity-row">Своё число <input id="quantity" type="number" min="1" required></label><button class="quiet" id="sell-custom">Продать</button>
     </div>
   </form>
@@ -813,7 +866,7 @@ button{user-select:none}
 
   </section>
   <section id="upgrade-tools" hidden><div id="convenience-list"></div></section>
-  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><div id="mutation-upgrades"></div><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section></section><section id="trait-panel" class="glass panel trait-panel" hidden>
+  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><div id="mutation-upgrades"></div><section class="glass panel"><h2>Вместимость инвентаря</h2><p id="hybrid-expand-effect"></p><button class="quiet" id="hybrid-expand"></button></section></section><section id="trait-panel" class="glass panel trait-panel" hidden>
     <button class="quiet close" id="trait-close" aria-label="Закрыть">×</button>
     <h2 id="trait-title"></h2><p id="crop-rarity-time"></p><p id="trait-lock"></p><p id="crop-ability"></p><div id="trait-list"></div>
   </section>
@@ -2154,13 +2207,8 @@ function wheelLayout(farm     ,kind          ,stake       )             {
   const account=wheelAccount(farm,kind),info=wheelInfo[kind],unit=info.icon;
   let seed=account.seed;
   const random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/2**32);
-  const returns=[10,25,50,75,100,125,150];
-  const weights=[8,6,4,3,2,1.5,1];
-  const picked=Array.from({length:3},()=>{
-    const index=Math.floor(random()*returns.length);
-    return {weight:weights.splice(index,1)[0],percent:returns.splice(index,1)[0]};
-  });
-  const weightTotal=total(picked.map(result=>result.weight));
+  const returns=[{percent:50,weight:4},{percent:100,weight:2},{percent:150,weight:1}];
+  const weightTotal=total(returns.map(result=>result.weight));
   const materialPool=[...new Set(crops.flatMap((_,crop)=>unlocked(farm,crop)?Object.keys(basePowers[crop]).map(propertyMaterialId):[]))];
   const itemAt=(index       )=>materialPool[(Math.floor(random()*materialPool.length)+index)%materialPool.length]??'property:growth';
   const itemPrize=(item       ,amount       ,weight       ,color       )           =>{
@@ -2171,7 +2219,7 @@ function wheelLayout(farm     ,kind          ,stake       )             {
   const rareLocked=stake<info.minimum;
   const rareWeight=.99;
   const colors=['#8bd2ad','#66a6d7','#626dc5'];
-  const refundColors                      ={10:'#f4ddb3',25:'#efba76',50:'#df9664',75:'#df7969',100:'#d46281',125:'#b153a0',150:'#884daa'};
+  const refundColors                      ={50:'#df9664',100:'#d46281',150:'#884daa'};
   let regular             ,rare           ;
   if(kind==='coins'){
     const common=crops.map((_,i)=>i).filter(i=>cropTiers[i]===0&&unlocked(farm,i));
@@ -2195,7 +2243,7 @@ function wheelLayout(farm     ,kind          ,stake       )             {
     const items=Array.from({length:Math.min(3,choices.length)},()=>choices.splice(Math.floor(random()*choices.length),1)[0]);
     rare={type:'choice',choices:items.length?items:['property:growth'],amount:stake*5,weight:rareWeight,color:'#b381d9',locked:rareLocked,label:'Выбор материала ×'+stake*5};
   }
-  const refunds=picked.map(({percent,weight},index)           =>({
+  const refunds=returns.map(({percent,weight})           =>({
     type:'refund',amount:percent,weight:60*weight/weightTotal,color:refundColors[percent],
     label:percent+'% · '+unit+' '+(kind==='diamonds'?stake*percent/100:Math.floor(stake*percent/100)).toLocaleString('ru-RU')
   }));
@@ -2644,7 +2692,8 @@ function render() {
   button('expand').disabled = farm.resources.orbs < expansionPrice(farm);
   button('expand').textContent = '🔮 ' + number(expansionPrice(farm));
   button('expand').setAttribute('aria-describedby','expand-note');
-  get('expand-note').textContent = farm.size === maxSize ? 'Поле полностью открыто в этой версии.' :
+  get('upgrade-field').classList.toggle('field-expansion-complete',farm.size===maxSize);
+  get('expand-note').textContent = farm.size === maxSize ? '8×8 · Максимум' :
     'Поле ' + (farm.size+1) + ' × ' + (farm.size+1);
   document.querySelectorAll                   ('.swatch').forEach((item,i) =>
     item.setAttribute('aria-pressed',String(i === farm.accent)));
@@ -3105,6 +3154,17 @@ function offerSale(index       ) {
   saleDialog.showModal();
   renderSaleQuote();
 }
+button('sale-extract').onclick=()=>{
+  if(selling<0||!farm.harvest[selling])return;
+  const slot=Array.from({length:farm.extraction.slots??1},(_,i)=>i).find(i=>!extractionJobs(farm.extraction)[i]);
+  if(slot===undefined){
+    get('sale-hint').textContent='Все слоты экстрактора заняты.';
+    return;
+  }
+  const crop=selling;
+  saleDialog.close();
+  openExtractionPicker(slot,crop);
+};
 button('basket').onclick = () => {skipConfirmation=false; basket.showModal();};
 basket.onclose = () => {skipConfirmation=false;};
 saleDialog.onclose = () => {selling=-1;};
@@ -3380,7 +3440,7 @@ window.addEventListener('blur',syncFocus);
 document.addEventListener('visibilitychange',syncFocus);
 syncFocus();
 const canTilt = matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
-const tiltTargets = '.seed:not(.out-of-stock), .square-card, .harvest-item, #shop-seeds button, #seed-shop, #open-pack, #upgrades-open, #upgrade-catalog button';
+const tiltTargets = '.seed:not(.out-of-stock), .square-card, .harvest-item, #shop-seeds button, #seed-shop, #open-pack, #upgrades-open, #upgrade-catalog button, .glass.panel, .resource-card, .hybrid-card, .pack-result, .extractor-slot';
 let tilted                  = null;
 function resetTilt() {
   tilted?.classList.remove('tilting');
@@ -3389,7 +3449,8 @@ function resetTilt() {
 document.addEventListener('pointermove',event => {
   if (!canTilt.matches || event.pointerType !== 'mouse' || event.buttons ||
       !(event.target instanceof Element)) return resetTilt();
-  const card = event.target.closest             (tiltTargets);
+  const card = event.target.closest             ('.workspace .glass.panel') ??
+    event.target.closest             (tiltTargets);
   if (card !== tilted) resetTilt();
   if (!card || card.matches(':disabled')) return;
   const bounds = card.getBoundingClientRect();
@@ -3398,8 +3459,6 @@ document.addEventListener('pointermove',event => {
   const y = Math.max(-.5,Math.min(.5,(event.clientY-bounds.top)/bounds.height-.5));
   card.style.setProperty('--glare-x',((x+.5)*100)+'%');
   card.style.setProperty('--glare-y',((y+.5)*100)+'%');
-  card.style.setProperty('--tilt-x',(-y*7)+'deg');
-  card.style.setProperty('--tilt-y',(x*7)+'deg');
   card.classList.add('tilting');
   tilted = card;
 });
@@ -3408,7 +3467,145 @@ document.addEventListener('pointerdown',resetTilt);
 window.addEventListener('blur',resetTilt);
 canTilt.addEventListener('change',resetTilt);
 
+function renderUpgradeChange(host            ,level       ,current       ,next        ,note=''){
+  const before='Ур. '+level+' · '+current;
+  const after=next===undefined?'':'Ур. '+(level+1)+' · '+next;
+  const signature=JSON.stringify([before,after,note]);
+  if(host.dataset.change===signature)return;
+  host.dataset.change=signature;
+  host.textContent=before;
+  if(after){
+    const result=document.createElement('strong');
+    result.className='upgrade-next';
+    result.textContent=after;
+    const arrow=document.createElement('span');
+    arrow.className='upgrade-arrow';
+    arrow.textContent='↓';
+    arrow.setAttribute('aria-hidden','true');
+    host.append(arrow,result);
+  }
+  if(note){
+    const hint=document.createElement('small');
+    hint.className='upgrade-note';
+    hint.textContent=note;
+    host.append(hint);
+  }
+}
+
+function addUpgradeDetails(anchor            ,description       ){
+  const details=document.createElement('div');
+  details.className='upgrade-details';
+  const summary=document.createElement('span');
+  summary.textContent='Наведи для подробностей';
+  summary.tabIndex=0;
+  const content=document.createElement('span');
+  content.id=anchor.id?anchor.id+'-help':'upgrade-help-'+document.querySelectorAll('.upgrade-details').length;
+  content.className='upgrade-tooltip';
+  content.setAttribute('role','tooltip');
+  summary.setAttribute('aria-describedby',content.id);
+  content.textContent=description;
+  details.append(summary,content);
+  anchor.after(details);
+  bindUpgradeTooltip(summary,content);
+}
+
+function bindUpgradeTooltip(trigger            ,tip            ){
+  tip.setAttribute('popover','manual');
+  tip.classList.add('upgrade-tooltip-card','glass','panel');
+  let closeTimer                              ;
+  const hide=()=>{clearTimeout(closeTimer);if(tip.matches(':popover-open'))tip.hidePopover();};
+  const hideSoon=()=>{clearTimeout(closeTimer);closeTimer=setTimeout(hide,180);};
+  const show=()=>{
+    clearTimeout(closeTimer);
+    const dialog=trigger.closest('dialog');
+    if(!dialog?.open||tip.hidden||tip.matches(':popover-open'))return;
+    const card=trigger.closest('.panel')??trigger.parentElement??trigger;
+    const bounds=card.getBoundingClientRect(),gap=10;
+    const width=Math.min(bounds.width,innerWidth-2*gap);
+    const height=Math.min(bounds.height,innerHeight-2*gap);
+    let left=bounds.right+gap,top=bounds.top;
+    if(left+width>innerWidth-gap){
+      left=bounds.left-width-gap;
+      if(left<gap){
+        left=bounds.left;
+        top=bounds.bottom+gap;
+        if(top+height>innerHeight-gap)top=bounds.top-height-gap;
+      }
+    }
+    tip.style.left=Math.max(gap,Math.min(left,innerWidth-width-gap))+'px';
+    tip.style.top=Math.max(gap,Math.min(top,innerHeight-height-gap))+'px';
+    tip.style.width=width+'px';
+    tip.style.height=height+'px';
+    tip.style.borderRadius=getComputedStyle(card).borderRadius;
+    if(!tip.querySelector('.upgrade-tooltip-title')){
+      const title=document.createElement('strong');
+      title.className='upgrade-tooltip-title';
+      title.textContent=card.querySelector(':scope > :is(h2,h3,strong)')?.textContent?.trim()||'Подробности';
+      tip.prepend(title);
+    }
+    tip.showPopover();
+  };
+  trigger.addEventListener('pointerenter',show);
+  trigger.addEventListener('pointerleave',hideSoon);
+  tip.addEventListener('pointerenter',()=>clearTimeout(closeTimer));
+  tip.addEventListener('pointerleave',hideSoon);
+  trigger.addEventListener('focusin',show);
+  trigger.addEventListener('focusout',hide);
+  trigger.closest('dialog')?.addEventListener('close',hide);
+}
+
 const upgradesDialog = get                   ('upgrades-dialog');
+document.addEventListener('DOMContentLoaded',()=>{
+  for(const heading of document.querySelectorAll             (
+    '#upgrades-dialog .panel > :is(h2,h3), #trait-list .panel > strong, #diamonds-dialog .panel > h3, .workspace .panel > h2'
+  )){
+    if(heading.children.length)continue;
+    const label=heading.textContent?.trim()??'';
+    const match=label.match(/^([\p{Extended_Pictographic}↩]\uFE0F?)\s+(.+)$/u);
+    const icons                      ={'Частота проверок':'⏱','Наследование генов':'🧬','Созревание находок':'🌱','Вместимость инвентаря':'📦'};
+    const badge=document.createElement('span');
+    badge.className='extractor-upgrade-icon';
+    badge.setAttribute('aria-hidden','true');
+    badge.textContent=match?.[1]??icons[label]??'✦';
+    heading.replaceChildren(badge,document.createTextNode(match?.[2]??label));
+  }
+});
+function renderMaterialPriceTip(buy                  ,ids         ){
+  let price=buy.parentElement ;
+  if(!price.classList.contains('upgrade-price')){
+    if(!ids.length)return;
+    price=document.createElement('div');
+    price.className='upgrade-price';
+    buy.before(price);
+    const tip=document.createElement('span');
+    tip.className='upgrade-tooltip';
+    tip.id='upgrade-price-help-'+document.querySelectorAll('.upgrade-price').length;
+    tip.setAttribute('role','tooltip');
+    price.append(buy,tip);
+    bindUpgradeTooltip(price,tip);
+  }
+  const tip=price.querySelector             ('.upgrade-tooltip') ;
+  tip.hidden=!ids.length;
+  if(!ids.length&&tip.matches(':popover-open'))tip.hidePopover();
+  price.tabIndex=ids.length&&buy.disabled?0:-1;
+  for(const target of [price,buy]){
+    if(ids.length)target.setAttribute('aria-describedby',tip.id);
+    else target.removeAttribute('aria-describedby');
+  }
+  const signature=ids.join(',');
+  if(price.dataset.materials===signature)return;
+  price.dataset.materials=signature;
+  const heading=document.createElement('strong');
+  heading.className='upgrade-tooltip-title';
+  heading.textContent=ids.length===1?materialsBySaveKey.get(ids[0]) .name:'Материалы для покупки';
+  tip.replaceChildren(heading,ids.map(id=>{
+    const item=materialsBySaveKey.get(id) ;
+    if(id==='set0')return item.description;
+    const sources=crops.filter(crop=>id.startsWith('set')?'set'+crop.set===id:
+      Object.keys(crop.powers).some(power=>propertyMaterialId(power)===id));
+    return item.icon+' '+item.name+' — '+(id==='duplication'?'обычный урожай любой культуры':sources.map(crop=>crop.name).join(', '))+'.';
+  }).join('\n'));
+}
 const upgradeWallet=get('upgrade-wallet');
 const upgradeMaterialTip=document.createElement('span');
 upgradeMaterialTip.id='upgrade-material-tip';
@@ -3525,7 +3722,7 @@ function renderTraits() {
   get('crop-rarity-time').textContent=locked?'':baseRarityNames[cropTiers[index]]+' · Базовое время '+clock(crop.seconds*1000);
   get('trait-list').hidden=locked;
   get('trait-lock').hidden = !locked;
-  get('trait-lock').textContent = 'Открой культуру в коллекции.';
+  get('trait-lock').textContent = 'Открой культуру из пакета семян.';
   get('crop-ability').textContent = locked ? '' : Object.keys(basePowers[index]).map(id=>powerLabel({name:'',crop:index,seeds:0,traits:[id],powers:basePowers[index]},id)).join(' · ');
   crops.forEach((crop,i) => {
     const card=button('upgrade-crop-'+i);
@@ -3544,13 +3741,11 @@ function renderTraits() {
     const orbs=traitOrbPrice(index,farm.levels[index][id]);
     const effect = (n       ) => id === 'growth' ? clock(growthTime(index,n)) :
       id === 'yield' ? formatChance(n)+'%' : clock(wateringDuration(farm,{crop:index,planted:0,ready:null},n));
-    const explanation = id === 'growth' ? ' до сбора после полива' :
-      id === 'yield' ? ' стартового шанса дополнительного урожая' : ' влаги от лейки';
-    get('trait-detail-'+id).textContent = 'Ур. '+level+' · '+effect(level)+
-      (maxed ? '' : ' → '+effect(level+1))+explanation;
+    const unit=id==='growth'?' роста':id==='yield'?' на дополнительный плод':' влаги от лейки';
+    renderUpgradeChange(get('trait-detail-'+id),level,effect(level)+unit,maxed?undefined:effect(level+1)+unit);
     const buy = button('trait-buy-'+id);
     buy.disabled = locked || maxed || farm.coins < price || farm.resources.orbs<orbs;
-    buy.textContent = maxed ? 'Максимальный уровень' : 'Улучшить · 🪙 '+number(price)+(orbs?' · 🔮 '+number(orbs):'');
+    buy.textContent = maxed ? 'Максимальный уровень' : '🪙 '+number(price)+(orbs?' · 🔮 '+number(orbs):'');
     buy.removeAttribute('title');
     if(!locked&&barrierClosed(farm,index,id)){
       const cost=barrierPrice(farm,index,id);
@@ -3560,6 +3755,7 @@ function renderTraits() {
       buy.title=guarded?'Отведи курсор от кнопки, чтобы открыть барьер':material.name;
       buy.disabled=guarded||(farm.resources.items[material.id]??0)<cost;
     }
+    renderMaterialPriceTip(buy,!locked&&barrierClosed(farm,index,id)?[barrierMaterial(index,id).id]:[]);
   }
   applyPlantGlows();
 }
@@ -3589,7 +3785,7 @@ function renderConveniences(){
     const owned=farm.convenience[option.id];
     const buy=button('convenience-'+option.id);
     buy.disabled=owned||farm.coins<option.price;
-    buy.textContent=owned?'Открыто':'Купить · 🪙 '+option.price;
+    buy.textContent=owned?'Открыто':'🪙 '+option.price;
   }
 }
 function applyGlass() {
@@ -3791,6 +3987,13 @@ button('extraction-toast').onclick=()=>{extractionDialog.showModal();renderExtra
 extractionDialog.onclose=renderExtraction;
 const extractionPicker=get                   ('extractor-picker');
 let selectedExtractionSlot=0;
+function openExtractionPicker(slot       ,crop=farm.harvest.findIndex(count=>count>0)){
+  selectedExtractionSlot=slot;
+  extractionCrop=Math.max(0,crop);
+  extractionInput.value='1';
+  extractionPicker.showModal();
+  renderExtraction();
+}
 const extractionCards=Array.from({length:3},(_,slot)=>{
   const card=document.createElement('button');
   card.className='glass extractor-slot';
@@ -3806,22 +4009,27 @@ const extractionCards=Array.from({length:3},(_,slot)=>{
       if(confirm('Остановить эту партию и вернуть оставшиеся плоды?')&&stopExtraction(farm,nowTime(),slot))commit('Остаток урожая возвращён в корзину.');
       return;
     }
-    selectedExtractionSlot=slot;
-    extractionCrop=farm.harvest.findIndex(count=>count>0);
-    if(extractionCrop<0)extractionCrop=0;
-    extractionInput.value='1';
-    extractionPicker.showModal();
-    renderExtraction();
+    openExtractionPicker(slot);
   };
   get('extractor-slots').append(card);
   return card;
 });
 const extractionSlotUpgrade=document.createElement('button');
 extractionSlotUpgrade.className='quiet';
+function extractorUpgradeHeading(icon       ,label       ){
+  const heading=document.createElement('h3');
+  const badge=document.createElement('span');
+  badge.className='extractor-upgrade-icon';
+  badge.setAttribute('aria-hidden','true');
+  badge.textContent=icon;
+  heading.append(badge,document.createTextNode(label));
+  return heading;
+}
 const extractionSlotPanel=document.createElement('section');
 extractionSlotPanel.className='glass panel';
-extractionSlotPanel.innerHTML='<h3>Слоты переработки</h3><p id="extractor-slot-detail"></p>';
-extractionSlotPanel.append(extractionSlotUpgrade);
+const extractionSlotDetail=document.createElement('p');
+extractionSlotDetail.id='extractor-slot-detail';
+extractionSlotPanel.append(extractorUpgradeHeading('⚙','Слоты экстрактора'),extractionSlotDetail,extractionSlotUpgrade);
 get('extractor-upgrades').append(extractionSlotPanel);
 const extractionSlotCosts=[{orbs:50,material:1},{orbs:250,material:5}];
 extractionSlotUpgrade.onclick=()=>{
@@ -3838,13 +4046,18 @@ for(const [i,crop] of crops.entries()){
   card.onclick=()=>{extractionCrop=i;extractionInput.value='1';renderExtraction();};
   get('extractor-crops').append(card);
 }
-for(const [id,label] of [['speed','⚡ Скорость переработки'],['yield','🌱 Выход семян']]         ){
+for(const [id,icon,label] of [['speed','⚡','Скорость переработки'],['yield','🌱','Выход семян']]         ){
   const panel=document.createElement('section');panel.className='glass panel';
-  const title=document.createElement('h3');title.textContent=label;
+  const title=extractorUpgradeHeading(icon,label);
   const info=document.createElement('p');info.id='extraction-info-'+id;
   const buy=document.createElement('button');buy.id='extraction-buy-'+id;buy.className='quiet';
   buy.onclick=()=>{if(buyExtraction(farm,id))commit('Экстрактор улучшен.');};
   panel.append(title,info,buy);get('extractor-upgrades').append(panel);
+  if(id==='yield')addUpgradeDetails(info,'Сначала экстрактор проверяет, повысится ли максимум. Затем выбирает число семян от 1 до полученного максимума. В этом диапазоне все числа равновероятны. Отдельно есть 1% на неудачу. Последний посевной материал защищён.');
+}
+function seedOutputText(level       ){
+  const {max,extra}=extractionRange(level);
+  return extra?'Максимум '+max+' или '+(max+1)+' семян ('+formatChance(extra*100)+'% на максимум '+(max+1)+')':'1–'+max+' семян';
 }
 function renderExtraction(){
   const machine=farm.extraction,now=nowTime();
@@ -3853,8 +4066,9 @@ function renderExtraction(){
   const jobs=extractionJobs(machine),slots=machine.slots??1;
   const cost=extractionSlotCosts[slots-1];
   extractionSlotUpgrade.disabled=!cost||farm.resources.orbs<cost.orbs||(farm.resources.items.set0??0)<cost.material;
-  get('extractor-slot-detail').textContent=cost?slots+' из 3. Следующее улучшение добавит ещё одну параллельную партию.':'Доступны 3 параллельные партии.';
+  renderUpgradeChange(get('extractor-slot-detail'),slots-1,slots+' из 3 слотов',cost?slots+1+' из 3 слотов':undefined);
   extractionSlotUpgrade.textContent=cost?'🔮 '+number(cost.orbs)+' · 🌱 '+number(cost.material):'Максимум';
+  renderMaterialPriceTip(extractionSlotUpgrade,cost?['set0']:[]);
   extractionCards.forEach((card,slot)=>{
     card.hidden=slot>=slots;
     const current=jobs[slot];
@@ -3884,7 +4098,7 @@ function renderExtraction(){
   const activeJobs=jobs.filter(Boolean);
   const toast=get('extraction-toast');
   toast.hidden=extractionDialog.open||!activeJobs.length;
-  get('extraction-toast-label').textContent='⚙️ Партий в работе: '+activeJobs.length;
+  get('extraction-toast-label').textContent='⚙️ Занято слотов: '+activeJobs.length+' из '+slots;
   get('extraction-toast-time').textContent=activeJobs.length?'До ближайшего результата: '+clock(Math.max(0,Math.min(...activeJobs.map(job=>extractionDeadline(job ,job .done)))-now)):'';
   get('extractor-last').textContent=machine.last||'Результат появится после обработки первого плода.';
   crops.forEach((crop,i)=>{
@@ -3896,17 +4110,16 @@ function renderExtraction(){
   get('extractor-selection').textContent=crops[extractionCrop].symbol+' '+crops[extractionCrop].name+' · доступно '+available;
   extractionInput.max=String(Math.min(extractionCapacity,available));
   const count=extractionInput.valueAsNumber;
-  const bonus=extractionRange(machine.yield);
   get('extractor-estimate').textContent=Number.isSafeInteger(count)&&count>0 ?
-    'Время: '+clock(extractionTime(machine.speed)*count)+' · от 1 до '+bonus.max+' семян с плода'+(bonus.extra?' · '+formatChance(bonus.extra*100)+'% расширить диапазон до '+(bonus.max+1):'')+' · неудача 1%, последний посевной материал защищён.' : 'Введи целое количество.';
+    'Время партии — около '+clock(extractionTime(machine.speed)*count)+'. За плод — '+seedOutputText(machine.yield)+'.' : 'Введи целое количество.';
   const freeSlots=extractionCards.filter((_,slot)=>slot<slots&&!jobs[slot]).length;
   button('extractor-split').hidden=slots<2;
   button('extractor-split').disabled=freeSlots<2||available<2;
   button('extractor-start').disabled=!!jobs[selectedExtractionSlot] || !Number.isSafeInteger(count)||count<1||count>Math.min(extractionCapacity,available);
   for(const id of ['speed','yield']         ){
     const level=machine[id],price=extractionCost(level,id);
-    get('extraction-info-'+id).textContent='Ур. '+level+' · '+(id==='speed'?(extractionTime(level)/1000).toLocaleString('ru-RU',{maximumFractionDigits:2})+' с на плод':
-      'Равномерно 1–'+bonus.max+' · '+formatChance(bonus.extra*100)+'% расширить до 1–'+(bonus.max+1)+'. Каждый уровень +25 п. п.');
+    const effect=id==='yield'?seedOutputText:(rank       )=>(extractionTime(rank)/1000).toLocaleString('ru-RU',{maximumFractionDigits:2})+' с на плод';
+    renderUpgradeChange(get('extraction-info-'+id),level,effect(level),extractionUpgradeMaxed(farm,id)?undefined:effect(level+1));
     const buy=button('extraction-buy-'+id);buy.disabled=extractionUpgradeMaxed(farm,id)||farm.coins<price;buy.textContent=extractionUpgradeMaxed(farm,id)?'Максимум':'🪙 '+number(price);
   }
 }
@@ -3941,6 +4154,12 @@ document.querySelectorAll             ('[data-upgrade-target]').forEach(title=>{
     button('upgrade-tab-'+target).focus();
   };
   title.ondblclick=event=>{event.preventDefault();event.stopPropagation();navigate();};
+  if(title.id==='seed-shop-upgrade-title'||title.closest('#extractor-dialog')){
+    const shortcut=document.createElement('button');
+    shortcut.type='button';shortcut.className='quiet upgrade-shortcut';shortcut.textContent='Улучшения';
+    shortcut.onclick=navigate;
+    title.after(shortcut);
+  }
   title.onkeydown=event=>{
     if(event.key==='Enter'||event.key===' '){event.preventDefault();navigate();}
   };
@@ -4089,14 +4308,16 @@ window.addEventListener('pointerup',finishHybridStroke);
 window.addEventListener('pointercancel',finishHybridStroke);
 let hybridGridSignature="";
 const mutationUpgradeLabels                                        ={
-  interval:['Частота проверок','Каждый уровень сокращает интервал проверок на 6%. Минимум 6 секунд.'],
-  genetics:['Наследование Gr, Ga и Re','На 2 п. п. больше веса сильного родителя и на 1 п. п. выше шанс прибавки к стату за уровень.'],
-  maturity:['Созревание находок','Каждый уровень сокращает время созревания находки на 4%.']
+  interval:['Частота проверок','Как часто теплица проверяет появление гибрида.'],
+  genetics:['Наследование генов','Потомок чаще получает сильные гены родителей.'],
+  maturity:['Созревание находок','Сколько ждать, прежде чем забрать находку.']
 };
 const mutationUpgradeCards=mutationUpgradeIds.map(id=>{
   const card=document.createElement('section');card.className='glass panel';
-  const title=document.createElement('h3'),progress=document.createElement('strong'),description=document.createElement('p'),effect=document.createElement('p'),buy=document.createElement('button');
+  const title=document.createElement('h3'),progress=document.createElement('small'),description=document.createElement('p'),effect=document.createElement('p'),buy=document.createElement('button');
   [title.textContent,description.textContent]=mutationUpgradeLabels[id];
+  progress.className='mutation-upgrade-limit';
+  description.className='mutation-upgrade-description';
   effect.style.whiteSpace='pre-line';
   buy.className='quiet';
   buy.onclick=()=>{if(buyMutationUpgrade(farm,id))commit('Селекция улучшена.');};
@@ -4104,21 +4325,17 @@ const mutationUpgradeCards=mutationUpgradeIds.map(id=>{
   return {id,progress,effect,buy};
 });
 function mutationUpgradeEffect(id                ,level       ){
-  const next=Math.min(level+1,mutationUpgradeMax);
-  const compare=(value                      )=>value(level)+(next===level?'':' → '+value(next));
   const seconds=(ms       )=>(ms/1000).toLocaleString('ru-RU',{maximumFractionDigits:1})+' с';
-  if(id==='interval')return 'При Re 1 — '+compare(rank=>seconds(upgradedMutationInterval(1,rank)))+
-    '\nПри Re 30 — '+compare(rank=>seconds(upgradedMutationInterval(30,rank)));
-  if(id==='maturity')return 'Максимум для находки — '+compare(rank=>seconds(mutationMaturityDuration(120000,rank)));
-  return 'Вес сильного родителя — '+compare(rank=>formatChance(mutationInheritanceWeight(rank)*100)+'%')+
-    '\nБазовый шанс +1 к стату — '+compare(rank=>formatChance(mutationStatGainChance(rank)*100)+'%');
+  if(id==='interval')return seconds(upgradedMutationInterval(1,level))+' при Re 1, '+seconds(upgradedMutationInterval(30,level))+' при Re 30';
+  if(id==='maturity')return 'До '+seconds(mutationMaturityDuration(120000,level));
+  return formatChance(mutationInheritanceWeight(level)*100)+'% веса сильного родителя · '+formatChance(mutationStatGainChance(level)*100)+'% на +1 к гену';
 }
 function renderLines(){
   for(const {id,progress,effect,buy} of mutationUpgradeCards){
     const level=mutationLevel(farm,id),cost=mutationUpgradeCost(level);
-    progress.textContent='Уровень '+level+' из '+mutationUpgradeMax;
-    effect.textContent=mutationUpgradeEffect(id,level);
-    buy.textContent=level===mutationUpgradeMax?'Максимум':'Улучшить · 🧬 '+number(cost);
+    progress.textContent='До '+mutationUpgradeMax+' уровней';
+    renderUpgradeChange(effect,level,mutationUpgradeEffect(id,level),level===mutationUpgradeMax?undefined:mutationUpgradeEffect(id,level+1));
+    buy.textContent=level===mutationUpgradeMax?'Максимум':'🧬 '+number(cost);
     buy.disabled=level===mutationUpgradeMax||(farm.mutationPoints??0)<cost;
   }
   const used=hybridCount(farm);
@@ -4126,8 +4343,9 @@ function renderLines(){
   get('hybrid-capacity').textContent=used+'/'+farm.hybridSlots;
   get('hybrid-coins').textContent=number(farm.coins);
   const price=hybridExpansionPrice(farm);
+  renderUpgradeChange(get('hybrid-expand-effect'),Math.floor((farm.hybridSlots-20)/5),farm.hybridSlots+' мест',farm.hybridSlots+5+' мест');
   button('hybrid-expand').disabled=(farm.mutationPoints??0)<price;
-  button('hybrid-expand').textContent='+5 мест · 🧬 '+number(price);
+  button('hybrid-expand').textContent='🧬 '+number(price);
   button('hybrid-delete-mode').textContent=deleteMode?(markedHybrids.size?'Удалить ('+markedHybrids.size+')':'Отменить'):'Удалить';
   get('hybrid-delete-hint').textContent=deleteMode?'Выдели семена кликом или протягиванием. Двойное нажатие «Удалить» подтверждает.':'';
   const query=searchHybrids.value.trim().toLocaleLowerCase('ru');
@@ -5087,11 +5305,13 @@ resourcesDialog.addEventListener('click',event=>{if(event.target!==resourcesDial
 button('collection-open').addEventListener('click',()=>resourcesDialog.close());
 for(const tab of document.querySelectorAll                   ('[data-resource-tab]'))tab.onclick=()=>{resourceCategory=tab.dataset.resourceTab ;resourceSignature='';renderAlpha();};
 const enhancePanel=document.createElement('section');enhancePanel.className='glass panel';
-enhancePanel.innerHTML='<h2>✨ Усиление свойств</h2><p>Сила свойства сохраняется отдельно. Успех: +1% усиления, неудача: −1 уровень. Материал расходуется всегда. Максимум +100%. Усиление закреплено за линией. На другую линию его можно перенести. Для переноса сначала собери обе линии с грядок.</p><label>Гибрид <select id="enhance-line" aria-label="Гибрид для усиления"></select></label><div id="enhance-options"></div><p id="enhance-result" role="status"></p>';
+enhancePanel.innerHTML='<h2>✨ Усиление свойств</h2><p id="enhance-panel-description">Выбери гибрид и свойство. При успехе усиление растёт на 1 уровень, при неудаче падает на 1.</p><label>Гибрид <select id="enhance-line" aria-label="Гибрид для усиления"></select></label><div id="enhance-options"></div><p id="enhance-result" role="status"></p>';
+addUpgradeDetails(enhancePanel.querySelector('p') ,'Попытка всегда тратит один материал. Максимальное усиление — +100% к силе свойства. Для переноса усиления сначала собери оба гибрида с грядок.');
 get('upgrade-hybrids').prepend(enhancePanel);
 get('enhance-line').onchange=renderEnhancements;
 const duplicatePanel=document.createElement('section');duplicatePanel.className='glass panel';duplicatePanel.innerHTML='<h2>✨ Дублирование материалов</h2><p id="duplicate-info"></p><button class="quiet" id="buy-duplicate"></button>';
 get('upgrade-tools').append(duplicatePanel);
+addUpgradeDetails(get('duplicate-info'),'Бонус действует на найденные материалы. Орбы и алмазы не удваиваются.');
 button('buy-duplicate').onclick=()=>{if(buyDuplication(farm))commit('Дублирование улучшено.');};
 const orbLuckPanel=document.createElement('section');
 orbLuckPanel.className='glass panel';
@@ -5105,15 +5325,21 @@ function renderAlpha(){
  get('mutation-points').textContent=number(farm.mutationPoints??0);
  get('resources-balance').textContent='🪙 '+number(farm.coins)+' · 🔮 '+number(farm.resources.orbs)+' · 🧬 '+number(farm.mutationPoints??0);
  if(typeof refinementReady!=='undefined'&&refinementReady)renderResourceCollections();
- const level=farm.resources.duplication,chance=level?1+(level-1)*.1:0;
- get('duplicate-info').textContent='Шанс: '+formatChance(chance)+'% · '+Math.floor(chance/100)+' дополнительных копий гарантированно + '+formatChance(chance%100)+'% ещё одной. Орбы и кристалл не дублируются.';
- button('buy-duplicate').textContent='Улучшить · ✨ '+number(duplicationPrice(level));button('buy-duplicate').disabled=(farm.resources.items.duplication??0)<duplicationPrice(level);
+ const level=farm.resources.duplication;
+ const duplicationPercent=(rank       )=>rank?1+(rank-1)*.1:0;
+ const copyEffect=(percent       )=>{
+   const copies=1+Math.floor(percent/100),extra=percent%100;
+   if(copies===1)return formatChance(extra)+'% на двойную порцию';
+   return 'Всегда ×'+copies+(extra?' · '+formatChance(extra)+'% получить ×'+(copies+1):'');
+ };
+ renderUpgradeChange(get('duplicate-info'),level,copyEffect(duplicationPercent(level)),copyEffect(duplicationPercent(level+1)));
+ button('buy-duplicate').textContent='✨ '+number(duplicationPrice(level));button('buy-duplicate').disabled=(farm.resources.items.duplication??0)<duplicationPrice(level);
+ renderMaterialPriceTip(button('buy-duplicate'),['duplication']);
  const orbLuck=farm.resources.orbLuck;
  const orbLuckCapped=orbLuck>=orbLuckMax;
- const orbChance=(tier       )=>formatChance(orbMaximumChance(tier,orbLuck)*100)+'%'+
-   (orbLuckCapped?'':' → '+formatChance(orbMaximumChance(tier,orbLuck+1)*100)+'%');
- get('orb-luck-info').textContent='Ур. '+orbLuck+'/'+orbLuckMax+' · Обычные '+orbChance(0)+' · Остальные '+orbChance(1);
- button('buy-orb-luck').textContent=orbLuckCapped?'Максимальный уровень':'Улучшить · 🔮 '+number(orbLuckPrice(orbLuck));
+ const orbEffect=(rank       )=>'Максимум орбов: '+formatChance(orbMaximumChance(0,rank)*100)+'% у обычных, '+formatChance(orbMaximumChance(1,rank)*100)+'% у остальных';
+ renderUpgradeChange(get('orb-luck-info'),orbLuck,orbEffect(orbLuck),orbLuckCapped?undefined:orbEffect(orbLuck+1));
+ button('buy-orb-luck').textContent=orbLuckCapped?'Максимальный уровень':'🔮 '+number(orbLuckPrice(orbLuck));
  button('buy-orb-luck').disabled=orbLuckCapped||farm.resources.orbs<orbLuckPrice(orbLuck);
  const selector=get                   ('enhance-line'),previous=selector.value;
  const ids=farm.lines.map((line,i)=>({line,i})).filter(({line})=>!line.archived&&line.seeds>0);
@@ -5131,7 +5357,7 @@ function renderEnhancements(){
  const level=line.enhancements?.[id]??0,material=materials.find(item=>item.id===propertyMaterialId(id)) ;
  const row=document.createElement('section');row.className='glass enhancement-row';
  const text=document.createElement('p');text.textContent=powerLabel(line,id)+' · успех '+Math.round(enhancementChance(level)*100)+'%';
- const buy=document.createElement('button');buy.className='quiet';buy.textContent=level>=100?'Максимальное усиление':'Усилить · '+material.icon+' 1 (есть '+number(farm.resources.items[material.id]??0)+')';buy.disabled=level>=100||line.powers?.[id]===0||(farm.resources.items[material.id]??0)<1;
+ const buy=document.createElement('button');buy.className='quiet';buy.textContent=level>=100?'Максимум':material.icon+' 1';buy.title=material.name+' · в запасе '+number(farm.resources.items[material.id]??0);buy.disabled=level>=100||line.powers?.[id]===0||(farm.resources.items[material.id]??0)<1;
  if(line.powers?.[id]===0)buy.textContent='Сначала повысь свойство селекцией';
  buy.onclick=()=>{
   const result=enhanceProperty(farm,index,id);
@@ -5181,7 +5407,7 @@ const diamondPercent=(fraction       )=>fraction.toLocaleString('ru-RU',{style:'
 const diamondEffects                                             ={
   find:level=>'+'+level+'% к базовому шансу. Редис: '+diamondPercent(.0005*(1+level/100))+' за грядку.',
   double:level=>diamondPercent(level*.0005)+' дополнительной добычи при находке.',
-  charge:level=>diamondPercent(level?1-.9*.99**(level-1):0)+' ожидаемой добычи добавляется в заряд.',
+  charge:level=>diamondPercent(level?1-.9*.99**(level-1):0)+' от шанса находки в заряд',
   income:level=>level+'% цены плодов начисляется сразу при сборе.',
   seedReturn:level=>diamondPercent(diamondCurve(level))+' шанс получить обычное семя за грядку.',
   dryGrowth:level=>diamondPercent(diamondCurve(level))+' обычной скорости на сухой грядке.',
@@ -5209,16 +5435,21 @@ const diamondCards=Object.entries(diamondBranches).map(([id,label])=>{
     renderDiamondShop();
   };
   card.append(title,detail,buy);
+  const charge=document.createElement('small');
+  if(branch==='charge'){
+    addUpgradeDetails(detail,'Каждый сбор добавляет немного заряда, даже если алмаз не выпал. Чем выше шанс найти алмаз, тем больше заряд за сбор. За каждые 100% заряда получаешь дополнительный алмаз.');
+    buy.before(charge);
+  }
   get('diamond-upgrades').append(card);
-  return {branch,detail,buy};
+  return {branch,detail,buy,charge};
 });
 function renderDiamondShop(){
   const state=farm.diamonds;
   get('diamond-shop-balance').textContent=number(state?.balance??0);
-  for(const {branch,detail,buy} of diamondCards){
+  for(const {branch,detail,buy,charge} of diamondCards){
     const level=diamondLevel(farm,branch),price=diamondPrice(level);
-    const charge=branch==='charge'&&level?' Заряд: '+diamondPercent(state?.charge??0)+'.':'';
-    detail.textContent='Ур. '+level+'. '+diamondEffects[branch](level)+' Далее: '+diamondEffects[branch](level+1)+charge;
+    renderUpgradeChange(detail,level,diamondEffects[branch](level),Number.isFinite(price)?diamondEffects[branch](level+1):undefined);
+    if(branch==='charge')charge.textContent='Накоплено '+diamondPercent(state?.charge??0)+' из 100%';
     buy.textContent=Number.isFinite(price)?'💎 '+number(price):'Цена слишком велика';
     buy.disabled=!Number.isFinite(price)||(state?.balance??0)<price;
   }
@@ -5227,6 +5458,8 @@ button('diamonds-open').onclick=()=>{renderDiamondShop();diamondDialog.showModal
 
 // Unified collections, contextual details and a dedicated enhancement workflow.
 var refinementReady=true;
+const cultureTab=get('resources-dialog').querySelector('[data-resource-tab="cultures"]');
+if(cultureTab)get('resources-dialog').querySelector('[data-resource-tab="seeds"]')?.after(cultureTab);
 var selectingEnhancement=false;
 var skipEnhancementFold=false;
 var enhancementTransfer                               =null;
@@ -5247,6 +5480,41 @@ function collectionOverlay(id       ,title       ){
 }
 const setDetails=collectionOverlay('set-details-dialog','Набор');const setBody=document.createElement('section');setDetails.append(setBody);
 const harvestDetails=collectionOverlay('harvest-details-dialog','Культура');const harvestBody=document.createElement('section');harvestDetails.append(harvestBody);
+const gameHelp=collectionOverlay('game-help-dialog','Справка');
+const gameHelpBody=document.createElement('section');
+gameHelp.append(gameHelpBody);
+function addGameHelp(anchor        ,title       ,paragraphs         ,greenhouseOnly=false){
+ const trigger=document.createElement('button');
+ trigger.type='button';
+ trigger.className='quiet game-help'+(greenhouseOnly?' greenhouse-only':'');
+ trigger.textContent='?';
+ trigger.setAttribute('aria-label','Справка — '+title);
+ trigger.setAttribute('aria-haspopup','dialog');
+ trigger.onclick=()=>{
+   if(gameHelp.open)return;
+   get('game-help-dialog-title').textContent=title;
+   gameHelpBody.replaceChildren(...paragraphs.map(text=>{
+     const paragraph=document.createElement('p');
+     paragraph.textContent=text;
+     return paragraph;
+   }));
+   gameHelp.showModal();
+ };
+ anchor.after(trigger);
+}
+addGameHelp(get('garden-link'),'Теплица',[
+ 'Посади два растения рядом с пустой грядкой. Поставь на неё шпалеру кнопкой «Шпалера» или удерживая Alt.',
+ 'На шпалере может появиться гибрид. Зрелые родители повышают шанс, а высокий Re ускоряет проверки. Когда находка созреет, нажми на неё, чтобы забрать семя.'
+],true);
+addGameHelp(get('resources-dialog').querySelector('.window-heading h2') ,'Коллекция',[
+ '«Семена» показывают, какие культуры открыты и сколько семян осталось. В «Культурах» можно посмотреть прогресс сбора и шансы добычи.',
+ 'Орбы, материалы и алмазы выпадают при сборе обычного урожая. Во вкладках «Предметы» и «Наборы» можно узнать, для чего нужны материалы. За первый полный набор дают алмаз.',
+ 'Очки мутаций дают за созревшие находки и переработку семян гибридов.'
+]);
+addGameHelp(get('fortune-dialog').querySelector('.window-heading h2') ,'Колесо фортуны',[
+ 'Выбери валюту и ставку. Колесо может вернуть половину ставки, всю ставку или полторы ставки. Например, за 100 монет можно получить 50, 100 или 150.',
+ 'Пустой сектор ничего не даёт. У некоторых наград есть минимальная ставка. Джекпот растёт с прокрутками и сбрасывается после выигрыша.'
+]);
 const setLabels=['Корнеплоды','Луковые','Паслёновые','Бахчевые'];
 function renderSetDetails(){
  if(selectedSet<0)return;const set=cropSets[selectedSet],material=materials.find(item=>item.id==='set'+selectedSet) ;
@@ -5607,31 +5875,42 @@ const packUpgradeLabels                           ={speed:'⚡ Скорость 
 for(const id of ['speed','slots','refund']         ){const panel=document.createElement('section');panel.className='glass panel';const heading=document.createElement('h2');heading.textContent=packUpgradeLabels[id];const detail=document.createElement('p');detail.id='pack-upgrade-'+id;const buy=document.createElement('button');buy.className='quiet';buy.id='pack-buy-'+id;buy.onclick=()=>{if(id==='refund'&&farm.packProgress.refund>=3&&!farm.packProgress.refundGate){if(unlockPackGate(farm,'refund'))commit('Барьер возврата открыт.');return;}if(buyPackUpgrade(farm,id))commit('Улучшение мешков куплено.');};panel.append(heading,detail,buy);get('pack-upgrade-list').append(panel);}
 for(const kind of ['luck']         ){const panel=document.createElement('section');panel.className='glass panel';panel.innerHTML='<h2>'+('🍀 Предел легендарной удачи')+'</h2><p id="pack-gate-'+kind+'"></p><button class="quiet" id="pack-gate-buy-'+kind+'"></button>';get('pack-upgrade-list').append(panel);button('pack-gate-buy-'+kind).onclick=()=>{if(unlockPackGate(farm,kind))commit('Барьер мешков открыт.');};}
 button('starter-rescue').onclick=()=>{if(rescueStarterSeed(farm))commit('Стартовое семя редиса восстановлено.');};
+addUpgradeDetails(get('pack-gate-luck'),'Покупка поднимает предел для легендарного пакета. Чтобы приблизиться к нему, повышай удачу пакетов.');
+addUpgradeDetails(get('pack-upgrade-refund'),'Если выпала уже открытая культура, возвращается часть цены в монетах. За культуру другой редкости возвращается 5%.');
 function renderPackWorkshop(){
  const pack=seedPacks[selectedPack],limit=packSlotLimit(farm);selectedOpeningCount=Math.min(limit,selectedOpeningCount);
  for(const control of document.querySelectorAll                   ('[data-pack-count]')){const count=Number(control.dataset.packCount);control.disabled=count>limit||rolling;control.setAttribute('aria-pressed',String(count===selectedOpeningCount));control.title=count>limit?'Открой дополнительные слоты в улучшениях мешков':count+' одновременных открытий';}
  if(pack){for(const i of crops.map((_,i)=>i).sort((a,b)=>cropTiers[a]-cropTiers[b]||cropTimes[a]-cropTimes[b])){const row=get('odds-'+i);row.parentElement .append(row);}const odds=openingOdds(farm,selectedPack),target=total(odds.filter((_,i)=>cropTiers[i]===selectedPack)),cost=packOpeningCost(selectedPack,selectedOpeningCount),price=packCostText(cost);
- get('pack-note').textContent='Открытие вида · первое выпадение дарит 1 семя · целевая редкость: '+preciseChance(target)+'%';
+ get('pack-note').textContent='Новый вид даёт 1 семя. Шанс на культуру редкости этого пакета — '+preciseChance(target)+'%.';
  get('pack-price-total').textContent=selectedOpeningCount+' '+(selectedOpeningCount===1?'открытие':selectedOpeningCount<5?'открытия':'открытий')+' · итог '+price+(selectedOpeningCount>1?' · скидка 25% на монеты':'');
  button('open-pack').textContent='Открыть '+selectedOpeningCount+' · '+price;openAgain.textContent='Открыть ещё '+selectedOpeningCount+' · '+price;openAgain.disabled=rolling||!!farm.packProgress.pending||!canPayPackOffer({...cost,condition:true});button('open-pack').disabled=rolling||!!farm.packProgress.pending||!canPayPackOffer({...cost,condition:true});
  crops.forEach((crop,i)=>{const row=get('odds-'+i);row.hidden=odds[i]<=0;row.textContent=(unlocked(farm,i)?crop.symbol+' '+crop.name:'❔ Неизвестно · '+baseRarityNames[cropTiers[i]])+' · '+preciseChance(odds[i])+'%';row.classList.toggle('unknown-crop',!unlocked(farm,i));});}
  seedPacks.forEach((_,i)=>{get('pack-card-note-'+i).textContent='Упор: '+['обычные','редкие','эпические','легендарные'][i];});
- const chosen=Math.max(0,selectedPack),odds=openingOdds(farm,chosen),target=total(odds.filter((_,i)=>cropTiers[i]===chosen));
- get('luck-preview').textContent='Уровень '+farm.luck+'. Повышает шанс получить культуру редкости выбранного пакета. Для пакета «'+seedPacks[chosen].name+'» суммарный шанс таких культур сейчас '+preciseChance(target)+'%.';
+ const chosen=Math.max(0,selectedPack);
+ const luckEffect=(level       )=>seedPacks[chosen].name+' пакет · '+preciseChance(total(openingOdds(farm,chosen,level).filter((_,i)=>cropTiers[i]===chosen)))+'% на культуру той же редкости';
+ renderUpgradeChange(get('luck-preview'),farm.luck,luckEffect(farm.luck),luckEffect(farm.luck+1));
  button('buy-luck').disabled=farm.coins<luckPrice(farm.luck);button('buy-luck').textContent='🪙 '+number(luckPrice(farm.luck));
  for(const id of ['speed','slots','refund']         ){const level=farm.packProgress[id],blocked=id==='refund'&&level>=3&&!farm.packProgress.refundGate,offer=blocked?packGateOffer(farm,'refund'):packUpgradeOffer(farm,id);
- get('pack-upgrade-'+id).textContent=id==='speed'?'Уровень '+level+' · '+(packOpeningTime(farm)/1000).toLocaleString('ru-RU')+' с · минимум 0,5 с':id==='slots'?limit+' из 5 слотов.':'Уровень '+level+' · '+packRefundRate(farm)+'% за повторку редкости мешка, 5% за остальные.';
+ const detail=get('pack-upgrade-'+id);
+ const effect=(rank       )=>id==='speed'?(packOpeningTime({...farm,packProgress:{...farm.packProgress,speed:rank}})/1000).toLocaleString('ru-RU')+' с на открытие':id==='slots'?rank+1+' из 5 слотов':(5+5*rank)+'% возврата за повтор той же редкости';
+ let note=blocked?'Эта покупка открывает следующие уровни возврата.':'';
  if(id==='slots'&&limit===4&&!offer.condition){
    const missing=[];
    if(farm.size<8)missing.push('поле 8×8');
    const opened=farm.collection.filter(Boolean).length;
    if(opened<crops.length)missing.push('все виды семян ('+opened+'/'+crops.length+')');
-   get('pack-upgrade-slots').textContent+=' Для пятого слота нужны '+missing.join(' и ')+'.';
+   note='Для пятого слота нужны '+missing.join(' и ')+'.';
  }
- button('pack-buy-'+id).disabled=!canPayPackOffer(offer);button('pack-buy-'+id).textContent=offer.max?'Максимум':packCostText(offer);}
+ renderUpgradeChange(detail,level,effect(level),offer.max||blocked?undefined:effect(level+1),note);
+ button('pack-buy-'+id).disabled=!canPayPackOffer(offer);button('pack-buy-'+id).textContent=offer.max?'Максимум':packCostText(offer);
+ renderMaterialPriceTip(button('pack-buy-'+id),offer.max?[]:Object.keys(offer.items));}
  for(const kind of ['luck']         ){const offer=packGateOffer(farm,kind),max=kind==='luck'?farm.packProgress.luckGate>=2:farm.packProgress.refundGate;
- get('pack-gate-'+kind).textContent=max?'Предел легендарной удачи: 8% суммарно.':farm.packProgress.luckGate===0?'Следующий предел: 6% легендарных суммарно. Найди первую легендарную культуру.':'Следующий предел: 8% легендарных суммарно. Найди две легендарные культуры.';
- button('pack-gate-buy-'+kind).textContent=max?'Максимум':packCostText(offer);button('pack-gate-buy-'+kind).disabled=max||!canPayPackOffer(offer);}
+ const rank=farm.packProgress.luckGate;
+ const effect=(level       )=>legendaryLuckLimits[level]+'% — потолок шанса легендарной культуры';
+ const note=!offer.condition&&!max?(rank===0?'Сначала открой одну легендарную культуру.':'Сначала открой две легендарные культуры.'):'';
+ renderUpgradeChange(get('pack-gate-'+kind),rank,effect(rank),max?undefined:effect(rank+1),note);
+ button('pack-gate-buy-'+kind).textContent=max?'Максимум':packCostText(offer);button('pack-gate-buy-'+kind).disabled=max||!canPayPackOffer(offer);
+ renderMaterialPriceTip(button('pack-gate-buy-'+kind),max?[]:Object.keys(offer.items));}
  button('starter-rescue').hidden=!needsStarterRescue(farm);
  applyPlantGlows();
  if(typeof segmentedTracks!=='undefined')updateSegmentedTabs();
@@ -5645,7 +5924,26 @@ async function showPackOpening(results         ){
 function showPackOutcome(outcome                                                  ){
  const grid=get('pack-results'),grouped=new Map                                     ();
  for(const entry of outcome.entries){const group=grouped.get(entry.crop)??{count:0,first:false};group.count++;group.first||=entry.first;grouped.set(entry.crop,group);}
- grid.replaceChildren(...[...grouped].map(([crop,data])=>{const item=resultCard(crop,data.count);const label=document.createElement('small');label.textContent=data.first?'Новый вид · подарочное семя ×1':'Повторка';item.card.append(label);return item.card;}));
+ grid.replaceChildren(...[...grouped].map(([crop,data])=>{
+   const item=resultCard(crop,data.count),label=document.createElement('small');
+   label.textContent=data.first?'Новый вид · семя ×1':'Повторка';
+   item.card.append(label);
+   if(data.first){
+     const buy=document.createElement('button');
+     buy.type='button';buy.className='quiet pack-result-buy';buy.textContent='Купить семена';
+     buy.onclick=()=>{
+       if(rolling||!unlocked(farm,crop))return;
+       modal.close();
+       button('tab-seeds').click();
+       const card=button('buy-seed-'+crop);
+       card.scrollIntoView({block:'nearest'});
+       card.focus({preventScroll:true});
+       showSeedPurchase(crop,card);
+     };
+     item.card.append(buy);
+   }
+   return item.card;
+ }));
  get('reels').hidden=false;get('pack-summary').hidden=false;get('pack-summary').style.visibility='visible';
  const outcomeTitle=[...grouped].map(([crop,data])=>crops[crop].symbol+' '+crops[crop].name+' ×'+data.count).join(' · ');get('pack-opening-title').textContent=outcomeTitle;get('pack-opening-title').title=outcomeTitle;
  outcome.entries.forEach((entry,i)=>{const track=get('reels').children[i]?.querySelector('.reel-track');if(track){const old=track.children[reelFinish];if(old){const revealed=reelItem(entry.crop);cropArt(revealed.children[0]               ,entry.crop,'stage-4',crops[entry.crop].symbol);revealed.children[1].textContent=crops[entry.crop].name;old.replaceWith(revealed);}}});

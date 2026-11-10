@@ -5,6 +5,13 @@ button('extraction-toast').onclick=()=>{extractionDialog.showModal();renderExtra
 extractionDialog.onclose=renderExtraction;
 const extractionPicker=get<HTMLDialogElement>('extractor-picker');
 let selectedExtractionSlot=0;
+function openExtractionPicker(slot:number,crop=farm.harvest.findIndex(count=>count>0)){
+  selectedExtractionSlot=slot;
+  extractionCrop=Math.max(0,crop);
+  extractionInput.value='1';
+  extractionPicker.showModal();
+  renderExtraction();
+}
 const extractionCards=Array.from({length:3},(_,slot)=>{
   const card=document.createElement('button');
   card.className='glass extractor-slot';
@@ -20,22 +27,27 @@ const extractionCards=Array.from({length:3},(_,slot)=>{
       if(confirm('Остановить эту партию и вернуть оставшиеся плоды?')&&stopExtraction(farm,nowTime(),slot))commit('Остаток урожая возвращён в корзину.');
       return;
     }
-    selectedExtractionSlot=slot;
-    extractionCrop=farm.harvest.findIndex(count=>count>0);
-    if(extractionCrop<0)extractionCrop=0;
-    extractionInput.value='1';
-    extractionPicker.showModal();
-    renderExtraction();
+    openExtractionPicker(slot);
   };
   get('extractor-slots').append(card);
   return card;
 });
 const extractionSlotUpgrade=document.createElement('button');
 extractionSlotUpgrade.className='quiet';
+function extractorUpgradeHeading(icon:string,label:string){
+  const heading=document.createElement('h3');
+  const badge=document.createElement('span');
+  badge.className='extractor-upgrade-icon';
+  badge.setAttribute('aria-hidden','true');
+  badge.textContent=icon;
+  heading.append(badge,document.createTextNode(label));
+  return heading;
+}
 const extractionSlotPanel=document.createElement('section');
 extractionSlotPanel.className='glass panel';
-extractionSlotPanel.innerHTML='<h3>Слоты переработки</h3><p id="extractor-slot-detail"></p>';
-extractionSlotPanel.append(extractionSlotUpgrade);
+const extractionSlotDetail=document.createElement('p');
+extractionSlotDetail.id='extractor-slot-detail';
+extractionSlotPanel.append(extractorUpgradeHeading('⚙','Слоты экстрактора'),extractionSlotDetail,extractionSlotUpgrade);
 get('extractor-upgrades').append(extractionSlotPanel);
 const extractionSlotCosts=[{orbs:50,material:1},{orbs:250,material:5}];
 extractionSlotUpgrade.onclick=()=>{
@@ -52,13 +64,18 @@ for(const [i,crop] of crops.entries()){
   card.onclick=()=>{extractionCrop=i;extractionInput.value='1';renderExtraction();};
   get('extractor-crops').append(card);
 }
-for(const [id,label] of [['speed','⚡ Скорость переработки'],['yield','🌱 Выход семян']] as const){
+for(const [id,icon,label] of [['speed','⚡','Скорость переработки'],['yield','🌱','Выход семян']] as const){
   const panel=document.createElement('section');panel.className='glass panel';
-  const title=document.createElement('h3');title.textContent=label;
+  const title=extractorUpgradeHeading(icon,label);
   const info=document.createElement('p');info.id='extraction-info-'+id;
   const buy=document.createElement('button');buy.id='extraction-buy-'+id;buy.className='quiet';
   buy.onclick=()=>{if(buyExtraction(farm,id))commit('Экстрактор улучшен.');};
   panel.append(title,info,buy);get('extractor-upgrades').append(panel);
+  if(id==='yield')addUpgradeDetails(info,'Сначала экстрактор проверяет, повысится ли максимум. Затем выбирает число семян от 1 до полученного максимума. В этом диапазоне все числа равновероятны. Отдельно есть 1% на неудачу. Последний посевной материал защищён.');
+}
+function seedOutputText(level:number){
+  const {max,extra}=extractionRange(level);
+  return extra?'Максимум '+max+' или '+(max+1)+' семян ('+formatChance(extra*100)+'% на максимум '+(max+1)+')':'1–'+max+' семян';
 }
 function renderExtraction(){
   const machine=farm.extraction,now=nowTime();
@@ -67,8 +84,9 @@ function renderExtraction(){
   const jobs=extractionJobs(machine),slots=machine.slots??1;
   const cost=extractionSlotCosts[slots-1];
   extractionSlotUpgrade.disabled=!cost||farm.resources.orbs<cost.orbs||(farm.resources.items.set0??0)<cost.material;
-  get('extractor-slot-detail').textContent=cost?slots+' из 3. Следующее улучшение добавит ещё одну параллельную партию.':'Доступны 3 параллельные партии.';
+  renderUpgradeChange(get('extractor-slot-detail'),slots-1,slots+' из 3 слотов',cost?slots+1+' из 3 слотов':undefined);
   extractionSlotUpgrade.textContent=cost?'🔮 '+number(cost.orbs)+' · 🌱 '+number(cost.material):'Максимум';
+  renderMaterialPriceTip(extractionSlotUpgrade,cost?['set0']:[]);
   extractionCards.forEach((card,slot)=>{
     card.hidden=slot>=slots;
     const current=jobs[slot];
@@ -98,7 +116,7 @@ function renderExtraction(){
   const activeJobs=jobs.filter(Boolean);
   const toast=get('extraction-toast');
   toast.hidden=extractionDialog.open||!activeJobs.length;
-  get('extraction-toast-label').textContent='⚙️ Партий в работе: '+activeJobs.length;
+  get('extraction-toast-label').textContent='⚙️ Занято слотов: '+activeJobs.length+' из '+slots;
   get('extraction-toast-time').textContent=activeJobs.length?'До ближайшего результата: '+clock(Math.max(0,Math.min(...activeJobs.map(job=>extractionDeadline(job!,job!.done)))-now)):'';
   get('extractor-last').textContent=machine.last||'Результат появится после обработки первого плода.';
   crops.forEach((crop,i)=>{
@@ -110,17 +128,16 @@ function renderExtraction(){
   get('extractor-selection').textContent=crops[extractionCrop].symbol+' '+crops[extractionCrop].name+' · доступно '+available;
   extractionInput.max=String(Math.min(extractionCapacity,available));
   const count=extractionInput.valueAsNumber;
-  const bonus=extractionRange(machine.yield);
   get('extractor-estimate').textContent=Number.isSafeInteger(count)&&count>0 ?
-    'Время: '+clock(extractionTime(machine.speed)*count)+' · от 1 до '+bonus.max+' семян с плода'+(bonus.extra?' · '+formatChance(bonus.extra*100)+'% расширить диапазон до '+(bonus.max+1):'')+' · неудача 1%, последний посевной материал защищён.' : 'Введи целое количество.';
+    'Время партии — около '+clock(extractionTime(machine.speed)*count)+'. За плод — '+seedOutputText(machine.yield)+'.' : 'Введи целое количество.';
   const freeSlots=extractionCards.filter((_,slot)=>slot<slots&&!jobs[slot]).length;
   button('extractor-split').hidden=slots<2;
   button('extractor-split').disabled=freeSlots<2||available<2;
   button('extractor-start').disabled=!!jobs[selectedExtractionSlot] || !Number.isSafeInteger(count)||count<1||count>Math.min(extractionCapacity,available);
   for(const id of ['speed','yield'] as const){
     const level=machine[id],price=extractionCost(level,id);
-    get('extraction-info-'+id).textContent='Ур. '+level+' · '+(id==='speed'?(extractionTime(level)/1000).toLocaleString('ru-RU',{maximumFractionDigits:2})+' с на плод':
-      'Равномерно 1–'+bonus.max+' · '+formatChance(bonus.extra*100)+'% расширить до 1–'+(bonus.max+1)+'. Каждый уровень +25 п. п.');
+    const effect=id==='yield'?seedOutputText:(rank:number)=>(extractionTime(rank)/1000).toLocaleString('ru-RU',{maximumFractionDigits:2})+' с на плод';
+    renderUpgradeChange(get('extraction-info-'+id),level,effect(level),extractionUpgradeMaxed(farm,id)?undefined:effect(level+1));
     const buy=button('extraction-buy-'+id);buy.disabled=extractionUpgradeMaxed(farm,id)||farm.coins<price;buy.textContent=extractionUpgradeMaxed(farm,id)?'Максимум':'🪙 '+number(price);
   }
 }
@@ -155,6 +172,12 @@ document.querySelectorAll<HTMLElement>('[data-upgrade-target]').forEach(title=>{
     button('upgrade-tab-'+target).focus();
   };
   title.ondblclick=event=>{event.preventDefault();event.stopPropagation();navigate();};
+  if(title.id==='seed-shop-upgrade-title'||title.closest('#extractor-dialog')){
+    const shortcut=document.createElement('button');
+    shortcut.type='button';shortcut.className='quiet upgrade-shortcut';shortcut.textContent='Улучшения';
+    shortcut.onclick=navigate;
+    title.after(shortcut);
+  }
   title.onkeydown=event=>{
     if(event.key==='Enter'||event.key===' '){event.preventDefault();navigate();}
   };

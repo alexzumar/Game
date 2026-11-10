@@ -87,7 +87,8 @@ function render() {
   button('expand').disabled = farm.resources.orbs < expansionPrice(farm);
   button('expand').textContent = '🔮 ' + number(expansionPrice(farm));
   button('expand').setAttribute('aria-describedby','expand-note');
-  get('expand-note').textContent = farm.size === maxSize ? 'Поле полностью открыто в этой версии.' :
+  get('upgrade-field').classList.toggle('field-expansion-complete',farm.size===maxSize);
+  get('expand-note').textContent = farm.size === maxSize ? '8×8 · Максимум' :
     'Поле ' + (farm.size+1) + ' × ' + (farm.size+1);
   document.querySelectorAll<HTMLButtonElement>('.swatch').forEach((item,i) =>
     item.setAttribute('aria-pressed',String(i === farm.accent)));

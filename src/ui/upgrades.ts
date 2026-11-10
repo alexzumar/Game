@@ -1,4 +1,142 @@
+function renderUpgradeChange(host:HTMLElement,level:number,current:string,next?:string,note=''){
+  const before='Ур. '+level+' · '+current;
+  const after=next===undefined?'':'Ур. '+(level+1)+' · '+next;
+  const signature=JSON.stringify([before,after,note]);
+  if(host.dataset.change===signature)return;
+  host.dataset.change=signature;
+  host.textContent=before;
+  if(after){
+    const result=document.createElement('strong');
+    result.className='upgrade-next';
+    result.textContent=after;
+    const arrow=document.createElement('span');
+    arrow.className='upgrade-arrow';
+    arrow.textContent='↓';
+    arrow.setAttribute('aria-hidden','true');
+    host.append(arrow,result);
+  }
+  if(note){
+    const hint=document.createElement('small');
+    hint.className='upgrade-note';
+    hint.textContent=note;
+    host.append(hint);
+  }
+}
+
+function addUpgradeDetails(anchor:HTMLElement,description:string){
+  const details=document.createElement('div');
+  details.className='upgrade-details';
+  const summary=document.createElement('span');
+  summary.textContent='Наведи для подробностей';
+  summary.tabIndex=0;
+  const content=document.createElement('span');
+  content.id=anchor.id?anchor.id+'-help':'upgrade-help-'+document.querySelectorAll('.upgrade-details').length;
+  content.className='upgrade-tooltip';
+  content.setAttribute('role','tooltip');
+  summary.setAttribute('aria-describedby',content.id);
+  content.textContent=description;
+  details.append(summary,content);
+  anchor.after(details);
+  bindUpgradeTooltip(summary,content);
+}
+
+function bindUpgradeTooltip(trigger:HTMLElement,tip:HTMLElement){
+  tip.setAttribute('popover','manual');
+  tip.classList.add('upgrade-tooltip-card','glass','panel');
+  let closeTimer:ReturnType<typeof setTimeout>;
+  const hide=()=>{clearTimeout(closeTimer);if(tip.matches(':popover-open'))tip.hidePopover();};
+  const hideSoon=()=>{clearTimeout(closeTimer);closeTimer=setTimeout(hide,180);};
+  const show=()=>{
+    clearTimeout(closeTimer);
+    const dialog=trigger.closest('dialog');
+    if(!dialog?.open||tip.hidden||tip.matches(':popover-open'))return;
+    const card=trigger.closest('.panel')??trigger.parentElement??trigger;
+    const bounds=card.getBoundingClientRect(),gap=10;
+    const width=Math.min(bounds.width,innerWidth-2*gap);
+    const height=Math.min(bounds.height,innerHeight-2*gap);
+    let left=bounds.right+gap,top=bounds.top;
+    if(left+width>innerWidth-gap){
+      left=bounds.left-width-gap;
+      if(left<gap){
+        left=bounds.left;
+        top=bounds.bottom+gap;
+        if(top+height>innerHeight-gap)top=bounds.top-height-gap;
+      }
+    }
+    tip.style.left=Math.max(gap,Math.min(left,innerWidth-width-gap))+'px';
+    tip.style.top=Math.max(gap,Math.min(top,innerHeight-height-gap))+'px';
+    tip.style.width=width+'px';
+    tip.style.height=height+'px';
+    tip.style.borderRadius=getComputedStyle(card).borderRadius;
+    if(!tip.querySelector('.upgrade-tooltip-title')){
+      const title=document.createElement('strong');
+      title.className='upgrade-tooltip-title';
+      title.textContent=card.querySelector(':scope > :is(h2,h3,strong)')?.textContent?.trim()||'Подробности';
+      tip.prepend(title);
+    }
+    tip.showPopover();
+  };
+  trigger.addEventListener('pointerenter',show);
+  trigger.addEventListener('pointerleave',hideSoon);
+  tip.addEventListener('pointerenter',()=>clearTimeout(closeTimer));
+  tip.addEventListener('pointerleave',hideSoon);
+  trigger.addEventListener('focusin',show);
+  trigger.addEventListener('focusout',hide);
+  trigger.closest('dialog')?.addEventListener('close',hide);
+}
+
 const upgradesDialog = get<HTMLDialogElement>('upgrades-dialog');
+document.addEventListener('DOMContentLoaded',()=>{
+  for(const heading of document.querySelectorAll<HTMLElement>(
+    '#upgrades-dialog .panel > :is(h2,h3), #trait-list .panel > strong, #diamonds-dialog .panel > h3, .workspace .panel > h2'
+  )){
+    if(heading.children.length)continue;
+    const label=heading.textContent?.trim()??'';
+    const match=label.match(/^([\p{Extended_Pictographic}↩]\uFE0F?)\s+(.+)$/u);
+    const icons:Record<string,string>={'Частота проверок':'⏱','Наследование генов':'🧬','Созревание находок':'🌱','Вместимость инвентаря':'📦'};
+    const badge=document.createElement('span');
+    badge.className='extractor-upgrade-icon';
+    badge.setAttribute('aria-hidden','true');
+    badge.textContent=match?.[1]??icons[label]??'✦';
+    heading.replaceChildren(badge,document.createTextNode(match?.[2]??label));
+  }
+});
+function renderMaterialPriceTip(buy:HTMLButtonElement,ids:string[]){
+  let price=buy.parentElement!;
+  if(!price.classList.contains('upgrade-price')){
+    if(!ids.length)return;
+    price=document.createElement('div');
+    price.className='upgrade-price';
+    buy.before(price);
+    const tip=document.createElement('span');
+    tip.className='upgrade-tooltip';
+    tip.id='upgrade-price-help-'+document.querySelectorAll('.upgrade-price').length;
+    tip.setAttribute('role','tooltip');
+    price.append(buy,tip);
+    bindUpgradeTooltip(price,tip);
+  }
+  const tip=price.querySelector<HTMLElement>('.upgrade-tooltip')!;
+  tip.hidden=!ids.length;
+  if(!ids.length&&tip.matches(':popover-open'))tip.hidePopover();
+  price.tabIndex=ids.length&&buy.disabled?0:-1;
+  for(const target of [price,buy]){
+    if(ids.length)target.setAttribute('aria-describedby',tip.id);
+    else target.removeAttribute('aria-describedby');
+  }
+  const signature=ids.join(',');
+  if(price.dataset.materials===signature)return;
+  price.dataset.materials=signature;
+  const heading=document.createElement('strong');
+  heading.className='upgrade-tooltip-title';
+  heading.textContent=ids.length===1?materialsBySaveKey.get(ids[0])!.name:'Материалы для покупки';
+  tip.replaceChildren(heading,ids.map(id=>{
+    const item=materialsBySaveKey.get(id)!;
+    if(id==='set0')return item.description;
+    const sources=crops.filter(crop=>id.startsWith('set')?'set'+crop.set===id:
+      Object.keys(crop.powers).some(power=>propertyMaterialId(power)===id));
+    return item.icon+' '+item.name+' — '+(id==='duplication'?'обычный урожай любой культуры':sources.map(crop=>crop.name).join(', '))+'.';
+  }).join('\n'));
+}
 const upgradeWallet=get('upgrade-wallet');
 const upgradeMaterialTip=document.createElement('span');
 upgradeMaterialTip.id='upgrade-material-tip';
@@ -115,7 +253,7 @@ function renderTraits() {
   get('crop-rarity-time').textContent=locked?'':baseRarityNames[cropTiers[index]]+' · Базовое время '+clock(crop.seconds*1000);
   get('trait-list').hidden=locked;
   get('trait-lock').hidden = !locked;
-  get('trait-lock').textContent = 'Открой культуру в коллекции.';
+  get('trait-lock').textContent = 'Открой культуру из пакета семян.';
   get('crop-ability').textContent = locked ? '' : Object.keys(basePowers[index]).map(id=>powerLabel({name:'',crop:index,seeds:0,traits:[id],powers:basePowers[index]},id)).join(' · ');
   crops.forEach((crop,i) => {
     const card=button('upgrade-crop-'+i);
@@ -134,13 +272,11 @@ function renderTraits() {
     const orbs=traitOrbPrice(index,farm.levels[index][id]);
     const effect = (n:number) => id === 'growth' ? clock(growthTime(index,n)) :
       id === 'yield' ? formatChance(n)+'%' : clock(wateringDuration(farm,{crop:index,planted:0,ready:null},n));
-    const explanation = id === 'growth' ? ' до сбора после полива' :
-      id === 'yield' ? ' стартового шанса дополнительного урожая' : ' влаги от лейки';
-    get('trait-detail-'+id).textContent = 'Ур. '+level+' · '+effect(level)+
-      (maxed ? '' : ' → '+effect(level+1))+explanation;
+    const unit=id==='growth'?' роста':id==='yield'?' на дополнительный плод':' влаги от лейки';
+    renderUpgradeChange(get('trait-detail-'+id),level,effect(level)+unit,maxed?undefined:effect(level+1)+unit);
     const buy = button('trait-buy-'+id);
     buy.disabled = locked || maxed || farm.coins < price || farm.resources.orbs<orbs;
-    buy.textContent = maxed ? 'Максимальный уровень' : 'Улучшить · 🪙 '+number(price)+(orbs?' · 🔮 '+number(orbs):'');
+    buy.textContent = maxed ? 'Максимальный уровень' : '🪙 '+number(price)+(orbs?' · 🔮 '+number(orbs):'');
     buy.removeAttribute('title');
     if(!locked&&barrierClosed(farm,index,id)){
       const cost=barrierPrice(farm,index,id);
@@ -150,6 +286,7 @@ function renderTraits() {
       buy.title=guarded?'Отведи курсор от кнопки, чтобы открыть барьер':material.name;
       buy.disabled=guarded||(farm.resources.items[material.id]??0)<cost;
     }
+    renderMaterialPriceTip(buy,!locked&&barrierClosed(farm,index,id)?[barrierMaterial(index,id).id]:[]);
   }
   applyPlantGlows();
 }
@@ -179,7 +316,7 @@ function renderConveniences(){
     const owned=farm.convenience[option.id];
     const buy=button('convenience-'+option.id);
     buy.disabled=owned||farm.coins<option.price;
-    buy.textContent=owned?'Открыто':'Купить · 🪙 '+option.price;
+    buy.textContent=owned?'Открыто':'🪙 '+option.price;
   }
 }
 function applyGlass() {

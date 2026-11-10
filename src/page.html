@@ -81,7 +81,7 @@
   <form id="sale"><strong id="sale-title"></strong><p id="sale-hint" role="status"></p>
     <label id="skip-single-row"><input type="checkbox" id="skip-single"> Больше не спрашивать до закрытия корзины</label>
     <div class="sale-options">
-      <button type="button" class="quiet" id="sell-one">Продать 1</button><button type="button" class="quiet" id="sell-half">Половина</button><button type="button" class="quiet" id="sell-all">Всё</button>
+      <button type="button" class="quiet" id="sale-extract">В экстрактор</button><button type="button" class="quiet" id="sell-one">Продать 1</button><button type="button" class="quiet" id="sell-half">Половина</button><button type="button" class="quiet" id="sell-all">Всё</button>
       <label id="quantity-row">Своё число <input id="quantity" type="number" min="1" required></label><button class="quiet" id="sell-custom">Продать</button>
     </div>
   </form>
@@ -137,7 +137,7 @@
 
   </section>
   <section id="upgrade-tools" hidden><div id="convenience-list"></div></section>
-  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><div id="mutation-upgrades"></div><section class="glass panel"><h2>Вместимость инвентаря</h2><button class="quiet" id="hybrid-expand"></button></section></section><section id="trait-panel" class="glass panel trait-panel" hidden>
+  <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><div id="mutation-upgrades"></div><section class="glass panel"><h2>Вместимость инвентаря</h2><p id="hybrid-expand-effect"></p><button class="quiet" id="hybrid-expand"></button></section></section><section id="trait-panel" class="glass panel trait-panel" hidden>
     <button class="quiet close" id="trait-close" aria-label="Закрыть">×</button>
     <h2 id="trait-title"></h2><p id="crop-rarity-time"></p><p id="trait-lock"></p><p id="crop-ability"></p><div id="trait-list"></div>
   </section>

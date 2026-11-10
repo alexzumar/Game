@@ -27,13 +27,8 @@ function wheelLayout(farm:Farm,kind:WheelKind,stake:number):WheelPrize[]{
   const account=wheelAccount(farm,kind),info=wheelInfo[kind],unit=info.icon;
   let seed=account.seed;
   const random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/2**32);
-  const returns=[10,25,50,75,100,125,150];
-  const weights=[8,6,4,3,2,1.5,1];
-  const picked=Array.from({length:3},()=>{
-    const index=Math.floor(random()*returns.length);
-    return {weight:weights.splice(index,1)[0],percent:returns.splice(index,1)[0]};
-  });
-  const weightTotal=total(picked.map(result=>result.weight));
+  const returns=[{percent:50,weight:4},{percent:100,weight:2},{percent:150,weight:1}];
+  const weightTotal=total(returns.map(result=>result.weight));
   const materialPool=[...new Set(crops.flatMap((_,crop)=>unlocked(farm,crop)?Object.keys(basePowers[crop]).map(propertyMaterialId):[]))];
   const itemAt=(index:number)=>materialPool[(Math.floor(random()*materialPool.length)+index)%materialPool.length]??'property:growth';
   const itemPrize=(item:string,amount:number,weight:number,color:string):WheelPrize=>{
@@ -44,7 +39,7 @@ function wheelLayout(farm:Farm,kind:WheelKind,stake:number):WheelPrize[]{
   const rareLocked=stake<info.minimum;
   const rareWeight=.99;
   const colors=['#8bd2ad','#66a6d7','#626dc5'];
-  const refundColors:Record<number,string>={10:'#f4ddb3',25:'#efba76',50:'#df9664',75:'#df7969',100:'#d46281',125:'#b153a0',150:'#884daa'};
+  const refundColors:Record<number,string>={50:'#df9664',100:'#d46281',150:'#884daa'};
   let regular:WheelPrize[],rare:WheelPrize;
   if(kind==='coins'){
     const common=crops.map((_,i)=>i).filter(i=>cropTiers[i]===0&&unlocked(farm,i));
@@ -68,7 +63,7 @@ function wheelLayout(farm:Farm,kind:WheelKind,stake:number):WheelPrize[]{
     const items=Array.from({length:Math.min(3,choices.length)},()=>choices.splice(Math.floor(random()*choices.length),1)[0]);
     rare={type:'choice',choices:items.length?items:['property:growth'],amount:stake*5,weight:rareWeight,color:'#b381d9',locked:rareLocked,label:'Выбор материала ×'+stake*5};
   }
-  const refunds=picked.map(({percent,weight},index):WheelPrize=>({
+  const refunds=returns.map(({percent,weight}):WheelPrize=>({
     type:'refund',amount:percent,weight:60*weight/weightTotal,color:refundColors[percent],
     label:percent+'% · '+unit+' '+(kind==='diamonds'?stake*percent/100:Math.floor(stake*percent/100)).toLocaleString('ru-RU')
   }));

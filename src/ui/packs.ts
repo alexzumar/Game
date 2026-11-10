@@ -11,31 +11,42 @@ const packUpgradeLabels:Record<PackUpgrade,string>={speed:'⚡ Скорость 
 for(const id of ['speed','slots','refund'] as const){const panel=document.createElement('section');panel.className='glass panel';const heading=document.createElement('h2');heading.textContent=packUpgradeLabels[id];const detail=document.createElement('p');detail.id='pack-upgrade-'+id;const buy=document.createElement('button');buy.className='quiet';buy.id='pack-buy-'+id;buy.onclick=()=>{if(id==='refund'&&farm.packProgress.refund>=3&&!farm.packProgress.refundGate){if(unlockPackGate(farm,'refund'))commit('Барьер возврата открыт.');return;}if(buyPackUpgrade(farm,id))commit('Улучшение мешков куплено.');};panel.append(heading,detail,buy);get('pack-upgrade-list').append(panel);}
 for(const kind of ['luck'] as const){const panel=document.createElement('section');panel.className='glass panel';panel.innerHTML='<h2>'+('🍀 Предел легендарной удачи')+'</h2><p id="pack-gate-'+kind+'"></p><button class="quiet" id="pack-gate-buy-'+kind+'"></button>';get('pack-upgrade-list').append(panel);button('pack-gate-buy-'+kind).onclick=()=>{if(unlockPackGate(farm,kind))commit('Барьер мешков открыт.');};}
 button('starter-rescue').onclick=()=>{if(rescueStarterSeed(farm))commit('Стартовое семя редиса восстановлено.');};
+addUpgradeDetails(get('pack-gate-luck'),'Покупка поднимает предел для легендарного пакета. Чтобы приблизиться к нему, повышай удачу пакетов.');
+addUpgradeDetails(get('pack-upgrade-refund'),'Если выпала уже открытая культура, возвращается часть цены в монетах. За культуру другой редкости возвращается 5%.');
 function renderPackWorkshop(){
  const pack=seedPacks[selectedPack],limit=packSlotLimit(farm);selectedOpeningCount=Math.min(limit,selectedOpeningCount);
  for(const control of document.querySelectorAll<HTMLButtonElement>('[data-pack-count]')){const count=Number(control.dataset.packCount);control.disabled=count>limit||rolling;control.setAttribute('aria-pressed',String(count===selectedOpeningCount));control.title=count>limit?'Открой дополнительные слоты в улучшениях мешков':count+' одновременных открытий';}
  if(pack){for(const i of crops.map((_,i)=>i).sort((a,b)=>cropTiers[a]-cropTiers[b]||cropTimes[a]-cropTimes[b])){const row=get('odds-'+i);row.parentElement!.append(row);}const odds=openingOdds(farm,selectedPack),target=total(odds.filter((_,i)=>cropTiers[i]===selectedPack)),cost=packOpeningCost(selectedPack,selectedOpeningCount),price=packCostText(cost);
- get('pack-note').textContent='Открытие вида · первое выпадение дарит 1 семя · целевая редкость: '+preciseChance(target)+'%';
+ get('pack-note').textContent='Новый вид даёт 1 семя. Шанс на культуру редкости этого пакета — '+preciseChance(target)+'%.';
  get('pack-price-total').textContent=selectedOpeningCount+' '+(selectedOpeningCount===1?'открытие':selectedOpeningCount<5?'открытия':'открытий')+' · итог '+price+(selectedOpeningCount>1?' · скидка 25% на монеты':'');
  button('open-pack').textContent='Открыть '+selectedOpeningCount+' · '+price;openAgain.textContent='Открыть ещё '+selectedOpeningCount+' · '+price;openAgain.disabled=rolling||!!farm.packProgress.pending||!canPayPackOffer({...cost,condition:true});button('open-pack').disabled=rolling||!!farm.packProgress.pending||!canPayPackOffer({...cost,condition:true});
  crops.forEach((crop,i)=>{const row=get('odds-'+i);row.hidden=odds[i]<=0;row.textContent=(unlocked(farm,i)?crop.symbol+' '+crop.name:'❔ Неизвестно · '+baseRarityNames[cropTiers[i]])+' · '+preciseChance(odds[i])+'%';row.classList.toggle('unknown-crop',!unlocked(farm,i));});}
  seedPacks.forEach((_,i)=>{get('pack-card-note-'+i).textContent='Упор: '+['обычные','редкие','эпические','легендарные'][i];});
- const chosen=Math.max(0,selectedPack),odds=openingOdds(farm,chosen),target=total(odds.filter((_,i)=>cropTiers[i]===chosen));
- get('luck-preview').textContent='Уровень '+farm.luck+'. Повышает шанс получить культуру редкости выбранного пакета. Для пакета «'+seedPacks[chosen].name+'» суммарный шанс таких культур сейчас '+preciseChance(target)+'%.';
+ const chosen=Math.max(0,selectedPack);
+ const luckEffect=(level:number)=>seedPacks[chosen].name+' пакет · '+preciseChance(total(openingOdds(farm,chosen,level).filter((_,i)=>cropTiers[i]===chosen)))+'% на культуру той же редкости';
+ renderUpgradeChange(get('luck-preview'),farm.luck,luckEffect(farm.luck),luckEffect(farm.luck+1));
  button('buy-luck').disabled=farm.coins<luckPrice(farm.luck);button('buy-luck').textContent='🪙 '+number(luckPrice(farm.luck));
  for(const id of ['speed','slots','refund'] as const){const level=farm.packProgress[id],blocked=id==='refund'&&level>=3&&!farm.packProgress.refundGate,offer=blocked?packGateOffer(farm,'refund'):packUpgradeOffer(farm,id);
- get('pack-upgrade-'+id).textContent=id==='speed'?'Уровень '+level+' · '+(packOpeningTime(farm)/1000).toLocaleString('ru-RU')+' с · минимум 0,5 с':id==='slots'?limit+' из 5 слотов.':'Уровень '+level+' · '+packRefundRate(farm)+'% за повторку редкости мешка, 5% за остальные.';
+ const detail=get('pack-upgrade-'+id);
+ const effect=(rank:number)=>id==='speed'?(packOpeningTime({...farm,packProgress:{...farm.packProgress,speed:rank}})/1000).toLocaleString('ru-RU')+' с на открытие':id==='slots'?rank+1+' из 5 слотов':(5+5*rank)+'% возврата за повтор той же редкости';
+ let note=blocked?'Эта покупка открывает следующие уровни возврата.':'';
  if(id==='slots'&&limit===4&&!offer.condition){
    const missing=[];
    if(farm.size<8)missing.push('поле 8×8');
    const opened=farm.collection.filter(Boolean).length;
    if(opened<crops.length)missing.push('все виды семян ('+opened+'/'+crops.length+')');
-   get('pack-upgrade-slots').textContent+=' Для пятого слота нужны '+missing.join(' и ')+'.';
+   note='Для пятого слота нужны '+missing.join(' и ')+'.';
  }
- button('pack-buy-'+id).disabled=!canPayPackOffer(offer);button('pack-buy-'+id).textContent=offer.max?'Максимум':packCostText(offer);}
+ renderUpgradeChange(detail,level,effect(level),offer.max||blocked?undefined:effect(level+1),note);
+ button('pack-buy-'+id).disabled=!canPayPackOffer(offer);button('pack-buy-'+id).textContent=offer.max?'Максимум':packCostText(offer);
+ renderMaterialPriceTip(button('pack-buy-'+id),offer.max?[]:Object.keys(offer.items));}
  for(const kind of ['luck'] as const){const offer=packGateOffer(farm,kind),max=kind==='luck'?farm.packProgress.luckGate>=2:farm.packProgress.refundGate;
- get('pack-gate-'+kind).textContent=max?'Предел легендарной удачи: 8% суммарно.':farm.packProgress.luckGate===0?'Следующий предел: 6% легендарных суммарно. Найди первую легендарную культуру.':'Следующий предел: 8% легендарных суммарно. Найди две легендарные культуры.';
- button('pack-gate-buy-'+kind).textContent=max?'Максимум':packCostText(offer);button('pack-gate-buy-'+kind).disabled=max||!canPayPackOffer(offer);}
+ const rank=farm.packProgress.luckGate;
+ const effect=(level:number)=>legendaryLuckLimits[level]+'% — потолок шанса легендарной культуры';
+ const note=!offer.condition&&!max?(rank===0?'Сначала открой одну легендарную культуру.':'Сначала открой две легендарные культуры.'):'';
+ renderUpgradeChange(get('pack-gate-'+kind),rank,effect(rank),max?undefined:effect(rank+1),note);
+ button('pack-gate-buy-'+kind).textContent=max?'Максимум':packCostText(offer);button('pack-gate-buy-'+kind).disabled=max||!canPayPackOffer(offer);
+ renderMaterialPriceTip(button('pack-gate-buy-'+kind),max?[]:Object.keys(offer.items));}
  button('starter-rescue').hidden=!needsStarterRescue(farm);
  applyPlantGlows();
  if(typeof segmentedTracks!=='undefined')updateSegmentedTabs();
@@ -49,7 +60,26 @@ async function showPackOpening(results:number[]){
 function showPackOutcome(outcome:NonNullable<ReturnType<typeof finishPackOpening>>){
  const grid=get('pack-results'),grouped=new Map<number,{count:number;first:boolean}>();
  for(const entry of outcome.entries){const group=grouped.get(entry.crop)??{count:0,first:false};group.count++;group.first||=entry.first;grouped.set(entry.crop,group);}
- grid.replaceChildren(...[...grouped].map(([crop,data])=>{const item=resultCard(crop,data.count);const label=document.createElement('small');label.textContent=data.first?'Новый вид · подарочное семя ×1':'Повторка';item.card.append(label);return item.card;}));
+ grid.replaceChildren(...[...grouped].map(([crop,data])=>{
+   const item=resultCard(crop,data.count),label=document.createElement('small');
+   label.textContent=data.first?'Новый вид · семя ×1':'Повторка';
+   item.card.append(label);
+   if(data.first){
+     const buy=document.createElement('button');
+     buy.type='button';buy.className='quiet pack-result-buy';buy.textContent='Купить семена';
+     buy.onclick=()=>{
+       if(rolling||!unlocked(farm,crop))return;
+       modal.close();
+       button('tab-seeds').click();
+       const card=button('buy-seed-'+crop);
+       card.scrollIntoView({block:'nearest'});
+       card.focus({preventScroll:true});
+       showSeedPurchase(crop,card);
+     };
+     item.card.append(buy);
+   }
+   return item.card;
+ }));
  get('reels').hidden=false;get('pack-summary').hidden=false;get('pack-summary').style.visibility='visible';
  const outcomeTitle=[...grouped].map(([crop,data])=>crops[crop].symbol+' '+crops[crop].name+' ×'+data.count).join(' · ');get('pack-opening-title').textContent=outcomeTitle;get('pack-opening-title').title=outcomeTitle;
  outcome.entries.forEach((entry,i)=>{const track=get('reels').children[i]?.querySelector('.reel-track');if(track){const old=track.children[reelFinish];if(old){const revealed=reelItem(entry.crop);cropArt(revealed.children[0] as HTMLElement,entry.crop,'stage-4',crops[entry.crop].symbol);revealed.children[1].textContent=crops[entry.crop].name;old.replaceWith(revealed);}}});

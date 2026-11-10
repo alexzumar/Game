@@ -88,7 +88,7 @@ window.addEventListener('blur',syncFocus);
 document.addEventListener('visibilitychange',syncFocus);
 syncFocus();
 const canTilt = matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
-const tiltTargets = '.seed:not(.out-of-stock), .square-card, .harvest-item, #shop-seeds button, #seed-shop, #open-pack, #upgrades-open, #upgrade-catalog button';
+const tiltTargets = '.seed:not(.out-of-stock), .square-card, .harvest-item, #shop-seeds button, #seed-shop, #open-pack, #upgrades-open, #upgrade-catalog button, .glass.panel, .resource-card, .hybrid-card, .pack-result, .extractor-slot';
 let tilted:HTMLElement|null = null;
 function resetTilt() {
   tilted?.classList.remove('tilting');
@@ -97,7 +97,8 @@ function resetTilt() {
 document.addEventListener('pointermove',event => {
   if (!canTilt.matches || event.pointerType !== 'mouse' || event.buttons ||
       !(event.target instanceof Element)) return resetTilt();
-  const card = event.target.closest<HTMLElement>(tiltTargets);
+  const card = event.target.closest<HTMLElement>('.workspace .glass.panel') ??
+    event.target.closest<HTMLElement>(tiltTargets);
   if (card !== tilted) resetTilt();
   if (!card || card.matches(':disabled')) return;
   const bounds = card.getBoundingClientRect();
@@ -106,8 +107,6 @@ document.addEventListener('pointermove',event => {
   const y = Math.max(-.5,Math.min(.5,(event.clientY-bounds.top)/bounds.height-.5));
   card.style.setProperty('--glare-x',((x+.5)*100)+'%');
   card.style.setProperty('--glare-y',((y+.5)*100)+'%');
-  card.style.setProperty('--tilt-x',(-y*7)+'deg');
-  card.style.setProperty('--tilt-y',(x*7)+'deg');
   card.classList.add('tilting');
   tilted = card;
 });

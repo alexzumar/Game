@@ -153,6 +153,18 @@ const smoke=`<script>setTimeout(async()=>{try{
  button('hybrid-recycle').click();button('hybrid-recycle-confirm').click();
  assert(!recycleDialog.open&&extractionDialog.open&&recycleTestLine.seeds===0&&farm.extraction.job.recycledHybrid===recycleTestLine.name,'Confirmed recycling failed');
  extractionDialog.close();
+ document.getElementById('upgrades-open').click();
+ button('upgrade-tab-extractor').click();
+ const extractorPrices=[...document.querySelectorAll('#extractor-upgrades .panel button')];
+ const priceBottom=extractorPrices[0].getBoundingClientRect().bottom;
+ assert(extractorPrices.every(price=>Math.abs(price.getBoundingClientRect().bottom-priceBottom)<2),'Extractor prices are not aligned');
+ const priceTip=extractorPrices[0].parentElement.querySelector('[role=tooltip]');
+ extractorPrices[0].parentElement.dispatchEvent(new PointerEvent('pointerenter'));
+ const tipBounds=priceTip.getBoundingClientRect(),slotBounds=extractorPrices[0].closest('.panel').getBoundingClientRect();
+ assert(priceTip.matches(':popover-open')&&Math.abs(tipBounds.width-slotBounds.width)<2&&Math.abs(tipBounds.height-slotBounds.height)<2,'Material tooltip did not match the card size');
+ assert(tipBounds.left>=slotBounds.right&&priceTip.querySelector('strong').textContent==='Ростовой концентрат','Material tooltip did not open beside the card with the item title');
+ extractorPrices[0].parentElement.dispatchEvent(new PointerEvent('pointerleave'));
+ upgradesDialog.close();
  ${captureScene}
  assert(alphaErrors.length===0,alphaErrors.join(';'));const pre=document.createElement('pre');pre.id='alpha-smoke-result';pre.textContent='PASS UI: real sets and tooltips, sorted harvest collection, exact and held purchases, inventory enhancement picker, best-parent comparison, upgrade spacing and scroll access';document.body.append(pre);
  }catch(e){const pre=document.createElement('pre');pre.id='alpha-smoke-result';pre.textContent='FAIL '+e.stack+' Errors: '+alphaErrors.join(';');document.body.append(pre);}},1000);</script>`;

@@ -1,5 +1,7 @@
 // Unified collections, contextual details and a dedicated enhancement workflow.
 var refinementReady=true;
+const cultureTab=get('resources-dialog').querySelector('[data-resource-tab="cultures"]');
+if(cultureTab)get('resources-dialog').querySelector('[data-resource-tab="seeds"]')?.after(cultureTab);
 var selectingEnhancement=false;
 var skipEnhancementFold=false;
 var enhancementTransfer:{target:number;id:string}|null=null;
@@ -20,6 +22,41 @@ function collectionOverlay(id:string,title:string){
 }
 const setDetails=collectionOverlay('set-details-dialog','Набор');const setBody=document.createElement('section');setDetails.append(setBody);
 const harvestDetails=collectionOverlay('harvest-details-dialog','Культура');const harvestBody=document.createElement('section');harvestDetails.append(harvestBody);
+const gameHelp=collectionOverlay('game-help-dialog','Справка');
+const gameHelpBody=document.createElement('section');
+gameHelp.append(gameHelpBody);
+function addGameHelp(anchor:Element,title:string,paragraphs:string[],greenhouseOnly=false){
+ const trigger=document.createElement('button');
+ trigger.type='button';
+ trigger.className='quiet game-help'+(greenhouseOnly?' greenhouse-only':'');
+ trigger.textContent='?';
+ trigger.setAttribute('aria-label','Справка — '+title);
+ trigger.setAttribute('aria-haspopup','dialog');
+ trigger.onclick=()=>{
+   if(gameHelp.open)return;
+   get('game-help-dialog-title').textContent=title;
+   gameHelpBody.replaceChildren(...paragraphs.map(text=>{
+     const paragraph=document.createElement('p');
+     paragraph.textContent=text;
+     return paragraph;
+   }));
+   gameHelp.showModal();
+ };
+ anchor.after(trigger);
+}
+addGameHelp(get('garden-link'),'Теплица',[
+ 'Посади два растения рядом с пустой грядкой. Поставь на неё шпалеру кнопкой «Шпалера» или удерживая Alt.',
+ 'На шпалере может появиться гибрид. Зрелые родители повышают шанс, а высокий Re ускоряет проверки. Когда находка созреет, нажми на неё, чтобы забрать семя.'
+],true);
+addGameHelp(get('resources-dialog').querySelector('.window-heading h2')!,'Коллекция',[
+ '«Семена» показывают, какие культуры открыты и сколько семян осталось. В «Культурах» можно посмотреть прогресс сбора и шансы добычи.',
+ 'Орбы, материалы и алмазы выпадают при сборе обычного урожая. Во вкладках «Предметы» и «Наборы» можно узнать, для чего нужны материалы. За первый полный набор дают алмаз.',
+ 'Очки мутаций дают за созревшие находки и переработку семян гибридов.'
+]);
+addGameHelp(get('fortune-dialog').querySelector('.window-heading h2')!,'Колесо фортуны',[
+ 'Выбери валюту и ставку. Колесо может вернуть половину ставки, всю ставку или полторы ставки. Например, за 100 монет можно получить 50, 100 или 150.',
+ 'Пустой сектор ничего не даёт. У некоторых наград есть минимальная ставка. Джекпот растёт с прокрутками и сбрасывается после выигрыша.'
+]);
 const setLabels=['Корнеплоды','Луковые','Паслёновые','Бахчевые'];
 function renderSetDetails(){
  if(selectedSet<0)return;const set=cropSets[selectedSet],material=materials.find(item=>item.id==='set'+selectedSet)!;

@@ -190,6 +190,11 @@ vm.runInContext(`
 const gambler=newFarm();
 gambler.coins=1000000;
 const layout=wheelLayout(gambler,'coins',1000000);
+for(const kind of wheelKinds){
+  const refunds=wheelLayout(gambler,kind,1000000).filter(prize=>prize.type==='refund');
+  assert.deepEqual(refunds.map(prize=>prize.amount),[50,100,150]);
+  assert.ok(Math.abs(total(refunds.map(prize=>prize.weight))-60)<1e-8);
+}
 assert.equal(layout.length,10);
 assert.ok(Math.abs(total(layout.map(prize=>prize.weight))-100)<1e-9);
 assert.equal(layout.filter(prize=>prize.type==='empty')[0].color,layout.filter(prize=>prize.type==='empty')[1].color);

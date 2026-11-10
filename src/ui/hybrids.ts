@@ -117,14 +117,16 @@ window.addEventListener('pointerup',finishHybridStroke);
 window.addEventListener('pointercancel',finishHybridStroke);
 let hybridGridSignature="";
 const mutationUpgradeLabels:Record<MutationUpgrade,[string,string]>={
-  interval:['Частота проверок','Каждый уровень сокращает интервал проверок на 6%. Минимум 6 секунд.'],
-  genetics:['Наследование Gr, Ga и Re','На 2 п. п. больше веса сильного родителя и на 1 п. п. выше шанс прибавки к стату за уровень.'],
-  maturity:['Созревание находок','Каждый уровень сокращает время созревания находки на 4%.']
+  interval:['Частота проверок','Как часто теплица проверяет появление гибрида.'],
+  genetics:['Наследование генов','Потомок чаще получает сильные гены родителей.'],
+  maturity:['Созревание находок','Сколько ждать, прежде чем забрать находку.']
 };
 const mutationUpgradeCards=mutationUpgradeIds.map(id=>{
   const card=document.createElement('section');card.className='glass panel';
-  const title=document.createElement('h3'),progress=document.createElement('strong'),description=document.createElement('p'),effect=document.createElement('p'),buy=document.createElement('button');
+  const title=document.createElement('h3'),progress=document.createElement('small'),description=document.createElement('p'),effect=document.createElement('p'),buy=document.createElement('button');
   [title.textContent,description.textContent]=mutationUpgradeLabels[id];
+  progress.className='mutation-upgrade-limit';
+  description.className='mutation-upgrade-description';
   effect.style.whiteSpace='pre-line';
   buy.className='quiet';
   buy.onclick=()=>{if(buyMutationUpgrade(farm,id))commit('Селекция улучшена.');};
@@ -132,21 +134,17 @@ const mutationUpgradeCards=mutationUpgradeIds.map(id=>{
   return {id,progress,effect,buy};
 });
 function mutationUpgradeEffect(id:MutationUpgrade,level:number){
-  const next=Math.min(level+1,mutationUpgradeMax);
-  const compare=(value:(rank:number)=>string)=>value(level)+(next===level?'':' → '+value(next));
   const seconds=(ms:number)=>(ms/1000).toLocaleString('ru-RU',{maximumFractionDigits:1})+' с';
-  if(id==='interval')return 'При Re 1 — '+compare(rank=>seconds(upgradedMutationInterval(1,rank)))+
-    '\nПри Re 30 — '+compare(rank=>seconds(upgradedMutationInterval(30,rank)));
-  if(id==='maturity')return 'Максимум для находки — '+compare(rank=>seconds(mutationMaturityDuration(120000,rank)));
-  return 'Вес сильного родителя — '+compare(rank=>formatChance(mutationInheritanceWeight(rank)*100)+'%')+
-    '\nБазовый шанс +1 к стату — '+compare(rank=>formatChance(mutationStatGainChance(rank)*100)+'%');
+  if(id==='interval')return seconds(upgradedMutationInterval(1,level))+' при Re 1, '+seconds(upgradedMutationInterval(30,level))+' при Re 30';
+  if(id==='maturity')return 'До '+seconds(mutationMaturityDuration(120000,level));
+  return formatChance(mutationInheritanceWeight(level)*100)+'% веса сильного родителя · '+formatChance(mutationStatGainChance(level)*100)+'% на +1 к гену';
 }
 function renderLines(){
   for(const {id,progress,effect,buy} of mutationUpgradeCards){
     const level=mutationLevel(farm,id),cost=mutationUpgradeCost(level);
-    progress.textContent='Уровень '+level+' из '+mutationUpgradeMax;
-    effect.textContent=mutationUpgradeEffect(id,level);
-    buy.textContent=level===mutationUpgradeMax?'Максимум':'Улучшить · 🧬 '+number(cost);
+    progress.textContent='До '+mutationUpgradeMax+' уровней';
+    renderUpgradeChange(effect,level,mutationUpgradeEffect(id,level),level===mutationUpgradeMax?undefined:mutationUpgradeEffect(id,level+1));
+    buy.textContent=level===mutationUpgradeMax?'Максимум':'🧬 '+number(cost);
     buy.disabled=level===mutationUpgradeMax||(farm.mutationPoints??0)<cost;
   }
   const used=hybridCount(farm);
@@ -154,8 +152,9 @@ function renderLines(){
   get('hybrid-capacity').textContent=used+'/'+farm.hybridSlots;
   get('hybrid-coins').textContent=number(farm.coins);
   const price=hybridExpansionPrice(farm);
+  renderUpgradeChange(get('hybrid-expand-effect'),Math.floor((farm.hybridSlots-20)/5),farm.hybridSlots+' мест',farm.hybridSlots+5+' мест');
   button('hybrid-expand').disabled=(farm.mutationPoints??0)<price;
-  button('hybrid-expand').textContent='+5 мест · 🧬 '+number(price);
+  button('hybrid-expand').textContent='🧬 '+number(price);
   button('hybrid-delete-mode').textContent=deleteMode?(markedHybrids.size?'Удалить ('+markedHybrids.size+')':'Отменить'):'Удалить';
   get('hybrid-delete-hint').textContent=deleteMode?'Выдели семена кликом или протягиванием. Двойное нажатие «Удалить» подтверждает.':'';
   const query=searchHybrids.value.trim().toLocaleLowerCase('ru');

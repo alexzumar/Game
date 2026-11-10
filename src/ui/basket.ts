@@ -50,6 +50,17 @@ function offerSale(index:number) {
   saleDialog.showModal();
   renderSaleQuote();
 }
+button('sale-extract').onclick=()=>{
+  if(selling<0||!farm.harvest[selling])return;
+  const slot=Array.from({length:farm.extraction.slots??1},(_,i)=>i).find(i=>!extractionJobs(farm.extraction)[i]);
+  if(slot===undefined){
+    get('sale-hint').textContent='Все слоты экстрактора заняты.';
+    return;
+  }
+  const crop=selling;
+  saleDialog.close();
+  openExtractionPicker(slot,crop);
+};
 button('basket').onclick = () => {skipConfirmation=false; basket.showModal();};
 basket.onclose = () => {skipConfirmation=false;};
 saleDialog.onclose = () => {selling=-1;};

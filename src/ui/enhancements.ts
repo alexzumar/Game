@@ -6,11 +6,13 @@ resourcesDialog.addEventListener('click',event=>{if(event.target!==resourcesDial
 button('collection-open').addEventListener('click',()=>resourcesDialog.close());
 for(const tab of document.querySelectorAll<HTMLButtonElement>('[data-resource-tab]'))tab.onclick=()=>{resourceCategory=tab.dataset.resourceTab!;resourceSignature='';renderAlpha();};
 const enhancePanel=document.createElement('section');enhancePanel.className='glass panel';
-enhancePanel.innerHTML='<h2>✨ Усиление свойств</h2><p>Сила свойства сохраняется отдельно. Успех: +1% усиления, неудача: −1 уровень. Материал расходуется всегда. Максимум +100%. Усиление закреплено за линией. На другую линию его можно перенести. Для переноса сначала собери обе линии с грядок.</p><label>Гибрид <select id="enhance-line" aria-label="Гибрид для усиления"></select></label><div id="enhance-options"></div><p id="enhance-result" role="status"></p>';
+enhancePanel.innerHTML='<h2>✨ Усиление свойств</h2><p id="enhance-panel-description">Выбери гибрид и свойство. При успехе усиление растёт на 1 уровень, при неудаче падает на 1.</p><label>Гибрид <select id="enhance-line" aria-label="Гибрид для усиления"></select></label><div id="enhance-options"></div><p id="enhance-result" role="status"></p>';
+addUpgradeDetails(enhancePanel.querySelector('p')!,'Попытка всегда тратит один материал. Максимальное усиление — +100% к силе свойства. Для переноса усиления сначала собери оба гибрида с грядок.');
 get('upgrade-hybrids').prepend(enhancePanel);
 get('enhance-line').onchange=renderEnhancements;
 const duplicatePanel=document.createElement('section');duplicatePanel.className='glass panel';duplicatePanel.innerHTML='<h2>✨ Дублирование материалов</h2><p id="duplicate-info"></p><button class="quiet" id="buy-duplicate"></button>';
 get('upgrade-tools').append(duplicatePanel);
+addUpgradeDetails(get('duplicate-info'),'Бонус действует на найденные материалы. Орбы и алмазы не удваиваются.');
 button('buy-duplicate').onclick=()=>{if(buyDuplication(farm))commit('Дублирование улучшено.');};
 const orbLuckPanel=document.createElement('section');
 orbLuckPanel.className='glass panel';
@@ -24,15 +26,21 @@ function renderAlpha(){
  get('mutation-points').textContent=number(farm.mutationPoints??0);
  get('resources-balance').textContent='🪙 '+number(farm.coins)+' · 🔮 '+number(farm.resources.orbs)+' · 🧬 '+number(farm.mutationPoints??0);
  if(typeof refinementReady!=='undefined'&&refinementReady)renderResourceCollections();
- const level=farm.resources.duplication,chance=level?1+(level-1)*.1:0;
- get('duplicate-info').textContent='Шанс: '+formatChance(chance)+'% · '+Math.floor(chance/100)+' дополнительных копий гарантированно + '+formatChance(chance%100)+'% ещё одной. Орбы и кристалл не дублируются.';
- button('buy-duplicate').textContent='Улучшить · ✨ '+number(duplicationPrice(level));button('buy-duplicate').disabled=(farm.resources.items.duplication??0)<duplicationPrice(level);
+ const level=farm.resources.duplication;
+ const duplicationPercent=(rank:number)=>rank?1+(rank-1)*.1:0;
+ const copyEffect=(percent:number)=>{
+   const copies=1+Math.floor(percent/100),extra=percent%100;
+   if(copies===1)return formatChance(extra)+'% на двойную порцию';
+   return 'Всегда ×'+copies+(extra?' · '+formatChance(extra)+'% получить ×'+(copies+1):'');
+ };
+ renderUpgradeChange(get('duplicate-info'),level,copyEffect(duplicationPercent(level)),copyEffect(duplicationPercent(level+1)));
+ button('buy-duplicate').textContent='✨ '+number(duplicationPrice(level));button('buy-duplicate').disabled=(farm.resources.items.duplication??0)<duplicationPrice(level);
+ renderMaterialPriceTip(button('buy-duplicate'),['duplication']);
  const orbLuck=farm.resources.orbLuck;
  const orbLuckCapped=orbLuck>=orbLuckMax;
- const orbChance=(tier:number)=>formatChance(orbMaximumChance(tier,orbLuck)*100)+'%'+
-   (orbLuckCapped?'':' → '+formatChance(orbMaximumChance(tier,orbLuck+1)*100)+'%');
- get('orb-luck-info').textContent='Ур. '+orbLuck+'/'+orbLuckMax+' · Обычные '+orbChance(0)+' · Остальные '+orbChance(1);
- button('buy-orb-luck').textContent=orbLuckCapped?'Максимальный уровень':'Улучшить · 🔮 '+number(orbLuckPrice(orbLuck));
+ const orbEffect=(rank:number)=>'Максимум орбов: '+formatChance(orbMaximumChance(0,rank)*100)+'% у обычных, '+formatChance(orbMaximumChance(1,rank)*100)+'% у остальных';
+ renderUpgradeChange(get('orb-luck-info'),orbLuck,orbEffect(orbLuck),orbLuckCapped?undefined:orbEffect(orbLuck+1));
+ button('buy-orb-luck').textContent=orbLuckCapped?'Максимальный уровень':'🔮 '+number(orbLuckPrice(orbLuck));
  button('buy-orb-luck').disabled=orbLuckCapped||farm.resources.orbs<orbLuckPrice(orbLuck);
  const selector=get<HTMLSelectElement>('enhance-line'),previous=selector.value;
  const ids=farm.lines.map((line,i)=>({line,i})).filter(({line})=>!line.archived&&line.seeds>0);
@@ -50,7 +58,7 @@ function renderEnhancements(){
  const level=line.enhancements?.[id]??0,material=materials.find(item=>item.id===propertyMaterialId(id))!;
  const row=document.createElement('section');row.className='glass enhancement-row';
  const text=document.createElement('p');text.textContent=powerLabel(line,id)+' · успех '+Math.round(enhancementChance(level)*100)+'%';
- const buy=document.createElement('button');buy.className='quiet';buy.textContent=level>=100?'Максимальное усиление':'Усилить · '+material.icon+' 1 (есть '+number(farm.resources.items[material.id]??0)+')';buy.disabled=level>=100||line.powers?.[id]===0||(farm.resources.items[material.id]??0)<1;
+ const buy=document.createElement('button');buy.className='quiet';buy.textContent=level>=100?'Максимум':material.icon+' 1';buy.title=material.name+' · в запасе '+number(farm.resources.items[material.id]??0);buy.disabled=level>=100||line.powers?.[id]===0||(farm.resources.items[material.id]??0)<1;
  if(line.powers?.[id]===0)buy.textContent='Сначала повысь свойство селекцией';
  buy.onclick=()=>{
   const result=enhanceProperty(farm,index,id);
@@ -100,7 +108,7 @@ const diamondPercent=(fraction:number)=>fraction.toLocaleString('ru-RU',{style:'
 const diamondEffects:Record<DiamondBranch,(level:number)=>string>={
   find:level=>'+'+level+'% к базовому шансу. Редис: '+diamondPercent(.0005*(1+level/100))+' за грядку.',
   double:level=>diamondPercent(level*.0005)+' дополнительной добычи при находке.',
-  charge:level=>diamondPercent(level?1-.9*.99**(level-1):0)+' ожидаемой добычи добавляется в заряд.',
+  charge:level=>diamondPercent(level?1-.9*.99**(level-1):0)+' от шанса находки в заряд',
   income:level=>level+'% цены плодов начисляется сразу при сборе.',
   seedReturn:level=>diamondPercent(diamondCurve(level))+' шанс получить обычное семя за грядку.',
   dryGrowth:level=>diamondPercent(diamondCurve(level))+' обычной скорости на сухой грядке.',
@@ -128,16 +136,21 @@ const diamondCards=Object.entries(diamondBranches).map(([id,label])=>{
     renderDiamondShop();
   };
   card.append(title,detail,buy);
+  const charge=document.createElement('small');
+  if(branch==='charge'){
+    addUpgradeDetails(detail,'Каждый сбор добавляет немного заряда, даже если алмаз не выпал. Чем выше шанс найти алмаз, тем больше заряд за сбор. За каждые 100% заряда получаешь дополнительный алмаз.');
+    buy.before(charge);
+  }
   get('diamond-upgrades').append(card);
-  return {branch,detail,buy};
+  return {branch,detail,buy,charge};
 });
 function renderDiamondShop(){
   const state=farm.diamonds;
   get('diamond-shop-balance').textContent=number(state?.balance??0);
-  for(const {branch,detail,buy} of diamondCards){
+  for(const {branch,detail,buy,charge} of diamondCards){
     const level=diamondLevel(farm,branch),price=diamondPrice(level);
-    const charge=branch==='charge'&&level?' Заряд: '+diamondPercent(state?.charge??0)+'.':'';
-    detail.textContent='Ур. '+level+'. '+diamondEffects[branch](level)+' Далее: '+diamondEffects[branch](level+1)+charge;
+    renderUpgradeChange(detail,level,diamondEffects[branch](level),Number.isFinite(price)?diamondEffects[branch](level+1):undefined);
+    if(branch==='charge')charge.textContent='Накоплено '+diamondPercent(state?.charge??0)+' из 100%';
     buy.textContent=Number.isFinite(price)?'💎 '+number(price):'Цена слишком велика';
     buy.disabled=!Number.isFinite(price)||(state?.balance??0)<price;
   }
