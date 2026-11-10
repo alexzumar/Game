@@ -1,7 +1,7 @@
 const gardenHelperDialog=collectionOverlay('garden-helper-dialog','Помощник сада');
 const gardenHelperPanel=document.createElement('section');
 gardenHelperPanel.className='glass panel garden-helper-panel';
-gardenHelperPanel.innerHTML='<p>Сажает, поливает и собирает выбранную культуру в саду. В экстрактор отправляет урожай для запаса семян на поле. Остальное оставляет в корзине.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
+gardenHelperPanel.innerHTML='<p>Для выбранной культуры помощник может сажать, поливать, собирать и пополнять семена через экстрактор. В режиме «Любая доступная» он поливает и собирает все посадки в саду, если эти действия включены. Посев и автопереработка в этом режиме недоступны.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
 gardenHelperDialog.append(gardenHelperPanel);
 const helperHistory=document.createElement('section');
 helperHistory.className='glass panel helper-history';
@@ -20,6 +20,29 @@ function renderHelperHistory(){
 const helperGate=gardenHelperPanel.querySelector<HTMLElement>('.garden-helper-gate')!;
 const helperCrop=gardenHelperPanel.querySelector<HTMLSelectElement>('select')!;
 const helperToggle=gardenHelperPanel.querySelector<HTMLButtonElement>('button')!;
+function helperActionLabel(action:GardenHelperAction){return {collect:'Сбор',sow:'Посадка',water:'Полив'}[action];}
+const helperActionsRow=document.createElement('div');
+helperActionsRow.className='helper-actions-row';
+helperToggle.before(helperActionsRow);
+const helperActionControls=(['collect','sow','water'] as const).map(action=>{
+  const control=document.createElement('button');
+  control.type='button';
+  control.className='quiet helper-switch';
+  control.textContent=helperActionLabel(action);
+  if(action==='sow')control.title='Посадка и пополнение семян через экстрактор';
+  control.onclick=()=>{
+    if(!gardenHelperUnlocked(farm))return;
+    const helper=farm.gardenHelper??=newGardenHelper();
+    if(action==='sow'&&helper.crop===null)return;
+    const actions=helper.actions??={collect:true,sow:true,water:true};
+    actions[action]=!actions[action];
+    commit();
+    renderGardenHelper();
+  };
+  helperActionsRow.append(control);
+  return {action,control};
+});
+helperToggle.classList.add('helper-switch');
 const helperUnlockText='Для открытия расширь поле до 2 × 2, собери 4 плода и переработай хотя бы один в экстракторе.';
 const helperOpen=document.createElement('button');
 helperOpen.type='button';
@@ -31,8 +54,12 @@ renderHelperIndicator();
 
 function renderHelperIndicator(){
   const helper=farm.gardenHelper;
-  const running=!!helper?.enabled&&helper.crop!==null&&gardenHelperUnlocked(farm)&&unlocked(farm,helper.crop);
-  get('helper-island-dot').hidden=!running;
+  const actions=gardenHelperActions.filter(action=>helper&&helperActionEnabled(helper,action));
+  const running=!!helper?.enabled&&gardenHelperUnlocked(farm)&&(helper.crop===null||unlocked(farm,helper.crop))&&actions.length>0;
+  const dot=get('helper-island-dot');
+  dot.hidden=!running;
+  const description='Помощник сада работает · '+actions.map(helperActionLabel).join(', ');
+  if(dot.title!==description){dot.title=description;dot.setAttribute('aria-label',description);}
   const control=get('garden-helper-open');
   const label='🌱 Помощник сада'+(running?' · Работает':'');
   if(control&&control.textContent!==label)control.textContent=label;
@@ -43,25 +70,29 @@ function renderGardenHelper(){
   const open=gardenHelperUnlocked(farm);
   helperGate.hidden=open;
   helperGate.textContent=helperUnlockText;
-  helperCrop.replaceChildren(new Option('Выбери культуру',''),...crops.flatMap((crop,index)=>
+  helperCrop.replaceChildren(new Option('Любая доступная',''),...crops.flatMap((crop,index)=>
     unlocked(farm,index)?[new Option(crop.symbol+' '+crop.name,String(index))]:[]));
   helperCrop.value=helper.crop===null?'':String(helper.crop);
   helperCrop.disabled=!open;
-  helperToggle.disabled=!open||helper.crop===null;
+  helperToggle.disabled=!open;
   helperToggle.textContent=helper.enabled?'Выключить':'Включить';
+  helperToggle.setAttribute('aria-pressed',String(helper.enabled));
+  for(const {action,control} of helperActionControls){
+    control.disabled=!open||action==='sow'&&helper.crop===null;
+    control.setAttribute('aria-pressed',String(helperActionEnabled(helper,action)));
+  }
 }
 helperOpen.onclick=()=>{renderGardenHelper();gardenHelperDialog.showModal();renderHelperHistory();};
 helperCrop.onchange=()=>{
   if(!gardenHelperUnlocked(farm))return;
   const helper=farm.gardenHelper??=newGardenHelper();
   helper.crop=helperCrop.value===''?null:Number(helperCrop.value);
-  if(helper.crop===null)helper.enabled=false;
   commit();
   renderGardenHelper();
 };
 helperToggle.onclick=()=>{
-  const helper=farm.gardenHelper;
-  if(!gardenHelperUnlocked(farm)||!helper||helper.crop===null)return;
+  if(!gardenHelperUnlocked(farm))return;
+  const helper=farm.gardenHelper??=newGardenHelper();
   helper.enabled=!helper.enabled;
   commit();
   renderGardenHelper();
@@ -93,8 +124,8 @@ function renderGardenHelperUpgrades(){
     const interval=(rank:number)=>'1 грядка каждые '+number(gardenHelperIntervals[rank]/1000)+' с';
     const price=gardenHelperUpgrade(farm,action);
     renderUpgradeChange(effect,level,interval(level),price?interval(level+1):undefined);
-    const material=price&&materialsBySaveKey.get(price.id)!;
-    buy.textContent=price&&material?material.icon+' '+price.cost+(ranks<price.ranks?' · нужно '+price.ranks+' рангов узелков':''):'Максимум';
-    buy.disabled=!open||!price||ranks<price.ranks||(farm.resources.items[price.id]??0)<price.cost;
+    const icon=price?.id?materialsBySaveKey.get(price.id)!.icon:'🔮';
+    buy.textContent=price?icon+' '+price.cost+(ranks<price.ranks?' · нужно '+price.ranks+' рангов узелков':''):'Максимум';
+    buy.disabled=!open||!price||ranks<price.ranks||gardenHelperUpgradeBalance(farm,price)<price.cost;
   }
 }

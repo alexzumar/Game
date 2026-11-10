@@ -2,6 +2,9 @@ const extractionDialog=get<HTMLDialogElement>('extractor-dialog');
 let extractionCrop=0;
 button('extractor-open').onclick=()=>{extractionDialog.showModal();renderExtraction();};
 const extractorIsland=button('extractor-island');
+const extractorIslandTip=document.createElement('span');
+extractorIslandTip.className='glass extractor-island-tip';
+extractorIslandTip.setAttribute('role','tooltip');
 extractorIsland.onclick=()=>{if(!extractionDialog.open)button('extractor-open').click();};
 const extractorIslandSlots=Array.from({length:3},(_,index)=>{
   const slot=document.createElement('span');
@@ -13,6 +16,7 @@ const extractorIslandSlots=Array.from({length:3},(_,index)=>{
   extractorIsland.append(slot);
   return {slot,ring,label};
 });
+extractorIsland.append(extractorIslandTip);
 extractionDialog.onclose=renderExtraction;
 const extractionPicker=get<HTMLDialogElement>('extractor-picker');
 let selectedExtractionSlot=0;
@@ -129,7 +133,7 @@ function renderExtraction(){
       const left=current.input-current.done;
       const remaining=Math.max(0,period-elapsed);
       chip.label.textContent=crops[current.crop].symbol+' ×'+number(left);
-      chip.slot.title='Слот №'+(slot+1)+' · '+(current.recycledHybrid??crops[current.crop].name)+' · осталось '+number(left)+' · текущая обработка '+clock(remaining);
+      chip.slot.dataset.detail='Слот №'+(slot+1)+' · '+(current.recycledHybrid??crops[current.crop].name)+' · осталось '+number(left)+' · текущая обработка '+clock(remaining);
       if(chip.ring.dataset.cycle!==cycle){
         chip.ring.getAnimations().forEach(animation=>animation.cancel());
         chip.ring.dataset.cycle=cycle;
@@ -148,7 +152,10 @@ function renderExtraction(){
     islandHeader.classList.toggle('has-extractor-island',!idle);
     placeTopIslands();
   }
-  extractorIsland.setAttribute('aria-label','Открыть экстрактор. '+extractorIslandSlots.filter(({slot})=>!slot.hidden).map(({slot})=>slot.title).join('. '));
+  const details=extractorIslandSlots.filter(({slot})=>!slot.hidden).map(({slot})=>slot.dataset.detail);
+  const tipText=details.join('\n');
+  if(extractorIslandTip.textContent!==tipText)extractorIslandTip.textContent=tipText;
+  extractorIsland.setAttribute('aria-label','Открыть экстрактор. '+details.join('. '));
   get('extractor-last').textContent=machine.last||'Результат появится после обработки первого плода.';
   crops.forEach((crop,i)=>{
     const card=button('extractor-crop-'+i);card.hidden=!farm.harvest[i];

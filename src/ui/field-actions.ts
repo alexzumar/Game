@@ -1,3 +1,7 @@
+button('knot-renew-toggle').onclick=()=>{
+  farm.knotRenewDisabled=!farm.knotRenewDisabled;
+  commit();
+};
 function sow(index:number,crop:number) {
   get('quick-seeds').hidden=true;
   if (!unlocked(farm,crop) || farm.plots[index] || !(selectedLine===undefined?farm.seeds[crop]>0:farm.lines[selectedLine]?.seeds>0)) return;
@@ -5,6 +9,7 @@ function sow(index:number,crop:number) {
   selected = index;
   seed = crop;
   watering = false;gathering=false;
+  shoveling=false;
   applyRain(farm,now);
   plant(farm,index,crop,now,selectedLine);
   commit('Семя посажено.');
@@ -12,6 +17,7 @@ function sow(index:number,crop:number) {
 button('water').onclick = event => {
   if (event.detail > 1 && farm.convenience.waterAll) return;
   gathering=false;
+  shoveling=false;
   watering = !watering;
   seed = -1;
   render();
@@ -68,7 +74,7 @@ for (const [i,crop] of crops.entries()) {
     selectedLine=undefined;
     if (event.detail > 1 && farm.convenience.sowAll) return;
     seed=!isWatering() && seed===i ? -1 : i;
-    watering=false;gathering=false;
+    watering=false;gathering=false;shoveling=false;
     render();
   };
   row.ondblclick = () => {
@@ -76,7 +82,7 @@ for (const [i,crop] of crops.entries()) {
     if (!farm.convenience.sowAll) return;
     const now = nowTime();
     seed = i;
-    watering = false;gathering=false;
+    watering = false;gathering=false;shoveling=false;
     const count = sowAll(farm,i,now);
     const weatherChanged = applyRain(farm,now);
     if (count || weatherChanged) commit(count ? 'Засажено грядок: '+count+'.' : notice);

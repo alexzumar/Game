@@ -47,6 +47,8 @@ type Farm = {
   knotRanks?:number[][];
   knotPremiumFruit?:number;
   gardenHelper?:GardenHelper;
+  knotRenewDisabled?:boolean;
+  pots?:(GreenhousePot|null)[];
   saveName?:string;
   mutationUpgrades?: Partial<Record<MutationUpgrade,number>>;
   saveCheats?:boolean;

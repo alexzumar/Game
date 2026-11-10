@@ -170,6 +170,8 @@ function renderLines(){
     if(query&&!haystack.includes(query))return [];
     const card=document.createElement('button');card.className='glass hybrid-card';
     card.dataset.hybridIndex=String(i);
+    card.draggable=true;
+    card.ondragstart=event=>event.dataTransfer?.setData('application/x-farm-hybrid',String(i));
     card.setAttribute('aria-pressed',String(markedHybrids.has(i)));
     const title=document.createElement('strong');title.className='hybrid-card-title';
     title.textContent=line.name+' ×'+number(line.seeds);
@@ -284,7 +286,7 @@ function setDockState(state:DockState){
 }
 button('dock-close').onclick=event=>{
   event.stopPropagation();
-  setDockState(dockState==='open'?'peek':'hidden');
+  setDockState('hidden');
 };
 button('dock-handle').onclick=event=>{event.stopPropagation();setDockState('open');};
 dockWrap.addEventListener('click',event=>{
@@ -426,6 +428,7 @@ document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('clo
 window.addEventListener('blur',hideSeedTooltip);
 get('seeds').addEventListener('scroll',hideSeedTooltip);
 button('gather').onclick=()=>{
+  shoveling=false;
   gathering=!gathering;watering=false;seed=-1;selectedLine=undefined;render();
 };
 for(const id of ['basket-sort','basket-direction','hybrid-direction','hybrid-sort'])get(id).onchange=render;

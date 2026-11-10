@@ -31,6 +31,11 @@ let seed = -1;
 let selectedLine:number|undefined;
 let watering = false;
 let gathering = false;
+let shoveling = false;
+let middleDigging=false;
+function renderShovelStatus(){
+  get('shovel-warning').hidden=document.body.classList.contains('in-greenhouse')||!(shoveling||middleDigging);
+}
 let shiftGather=false;
 let controlWater=false;
 const isWatering=()=>watering||controlWater;
@@ -67,6 +72,11 @@ function render() {
   document.body.classList.toggle('raining',rain);
   renderIslandWeather(rain,now);
   renderHelperIndicator();
+  const renew=button('knot-renew-toggle');
+  renew.hidden=!knotEffect(farm,3,3);
+  renew.textContent='🔄 Второй оборот: '+(farm.knotRenewDisabled?'выкл.':'вкл.');
+  renew.setAttribute('aria-pressed',String(!farm.knotRenewDisabled));
+  if(greenhousePotsReady)renderGreenhousePots();
   get('theme').textContent = farm.theme === 'light' ? '☾ Тёмная' : '☀ Светлая';
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
@@ -79,6 +89,8 @@ function render() {
   for (const id of ['coins','seed-shop-coins','upgrade-coins']) get(id).textContent = number(farm.coins);
   button('water').setAttribute('aria-pressed',String(isWatering()));
   button('gather').setAttribute('aria-pressed',String(isGathering()));
+  button('shovel').setAttribute('aria-pressed',String(shoveling));
+  renderShovelStatus();
   button('water').title = farm.convenience.waterAll ? 'Двойной клик: полить все посадки' : '';
 
 

@@ -34,7 +34,7 @@ function advanceDryGrowth(farm:Farm,plot:Plant,now:number){
   if(plot.remaining===0){plot.ready=now;plot.wetUntil=now;delete plot.remaining;}
   return now>from;
 }
-function updatePlantAbilities(farm:Farm,now:number,random=Math.random,area:PlotArea=farm){
+function updatePlantAbilities(farm:Farm,now:number,random=Math.random,area:PlotArea=farm,onSunHarvest?:(crop:number,amount:number)=>void){
   let changed=false;
   for(const plot of area.plots){
     if(!plot||plot.mystery)continue;
@@ -59,6 +59,7 @@ function updatePlantAbilities(farm:Farm,now:number,random=Math.random,area:PlotA
         const amount=Math.floor(expected)+Number(random()<expected%1);
         farm.harvest[plot.crop]+=amount;
         farm.harvestValue[plot.crop]+=amount*cropPrices[plot.crop];
+        if(amount)onSunHarvest?.(plot.crop,amount);
         changed=true;
       }
     }

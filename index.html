@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
-<meta name="farm-build" content="4c7a145ade06f317">
+<meta name="farm-build" content="14b27886157893e1">
 <style>*{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{--mint:#a6d8ba;--lilac:#c9b6e7;--peach:#f2c1a5;--blue:#a9caed;--pink:#e8b0c9;--accent:var(--mint);--base:#e9eee6;--ink:#22362e;--soft:#53655b;--glass:#ffffff76;--line:#ffffffb8;--edge:#243f3026;--soil:#d9c9ae;--soil-dark:#a68a69;--shade:#283d2521;color-scheme:light;font:15px system-ui,sans-serif}
@@ -366,6 +366,27 @@ body.in-greenhouse::after{background-image:url('assets/greenhouse/rain.png')}
 .in-greenhouse #greenhouse-pots{display:grid;grid-template-rows:auto repeat(3,minmax(0,1fr));justify-items:center;height:var(--greenhouse-pots-height,clamp(330px,66vh,660px));max-height:calc(100dvh - 135px);overflow:hidden}
 #greenhouse-pots h2{justify-self:start}
 #greenhouse-pots img{display:block;width:100%;height:100%;min-height:0;object-fit:contain;transform:scale(1.23)}
+.greenhouse-pot{position:relative;min-height:0;width:100%;padding:0;border:0;background:none;cursor:pointer}
+.greenhouse-pot>span{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;color:var(--ink);font-weight:700}
+.pot-plant-icon{top:22%;font-size:1rem;line-height:1}
+.pot-plant-icon.pot-ripe{top:10%;font-size:clamp(2.2rem,3.7vw,3.5rem)}
+.pot-timer{top:66%;padding:3px 8px;border-radius:999px;font-size:.75rem;box-shadow:0 3px 9px #0004}
+.greenhouse-pot img{pointer-events:none}
+.pot-tooltip{position:fixed;z-index:25;max-width:min(320px,calc(100vw - 16px));padding:10px;white-space:pre-line;pointer-events:none;color:var(--ink);background:var(--base)}
+.pot-body{display:grid;gap:8px;margin-bottom:16px}
+.pot-summary{white-space:pre-line;margin:0}
+.pot-identity{position:relative;display:grid;justify-items:start;gap:3px}
+.pot-identity>span{color:var(--soft);font-size:.82rem}
+.pot-trait-tip{position:absolute;top:100%;left:0;z-index:2;visibility:hidden;max-width:100%;padding:10px 14px;white-space:pre-line;background:var(--base);pointer-events:none}
+.pot-identity>strong:is(:hover,:focus-visible)~.pot-trait-tip{visibility:visible}
+.in-greenhouse #knot-renew-toggle{display:none}
+.in-greenhouse :is(#shovel,#shovel-help){display:none}
+#shovel[aria-pressed=true]{background:#f3b383;color:#4b2214;border-color:#aa5429;box-shadow:0 0 0 2px #da7c41}
+#shovel-warning{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#a52e1d;text-shadow:0 1px 2px #fff;font-size:clamp(1.2rem,3vw,2.5rem);font-weight:900;letter-spacing:.045em;white-space:nowrap;pointer-events:none}
+body:has(#shovel-warning:not([hidden])) :is(#activity-island,#extractor-island){visibility:hidden}
+@media(max-width:760px){#shovel-warning{top:66px}}
+.in-greenhouse .pot-drop-row{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.pot-drop-row>span{padding:6px 10px;font-size:.78rem}
 .in-greenhouse #greenhouse-expansion,.in-greenhouse #greenhouse-tools,.in-greenhouse #greenhouse-board{display:block}
 #greenhouse-tools{margin-top:8px}
 #greenhouse-tools [aria-pressed=true],#greenhouse-expansion [aria-pressed=true]{background:var(--accent);color:#21372b}
@@ -702,6 +723,12 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 .island-event-list li+li{border-top:1px solid var(--edge)}
 @property --extractor-progress{syntax:"<percentage>";inherits:false;initial-value:0%}
 #extractor-island{gap:7px;cursor:pointer}
+.extractor-island-tip{position:absolute;z-index:4;top:calc(100% + 5px);left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 24px);padding:8px 12px;white-space:pre-line;text-align:left;background:var(--base);pointer-events:none;visibility:hidden}
+.masthead:has(#extractor-island:is(:hover,:focus-visible)){z-index:20}
+#extractor-island:is(:hover,:focus-visible) .extractor-island-tip{visibility:visible}
+.helper-actions-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.helper-switch[aria-pressed=true]{background:color-mix(in srgb,var(--base) 68%,#75c99c);color:var(--ink)}
+.helper-switch[aria-pressed=false]{background:color-mix(in srgb,var(--base) 72%,#e69a98);color:var(--ink)}
 body:not(.in-greenhouse) #enhancement-open{display:none}
 .extractor-island-slot{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
 .extractor-island-slot b{display:grid;place-items:center;width:23px;height:23px;border-radius:50%;background:radial-gradient(circle,var(--base) 57%,transparent 59%),conic-gradient(var(--accent) var(--extractor-progress),var(--line) 0)}
@@ -841,6 +868,7 @@ button{user-select:none}
 <div class="rain" aria-hidden="true"></div>
 <header class="masthead glass">
   <div class="brand"><span class="brand-icon" aria-hidden="true">✦</span><div><strong>Всходы</strong><small>СЕМЕННАЯ ФЕРМА</small></div></div>
+  <strong id="shovel-warning" role="status" hidden>⚠ ЛОПАТА ВКЛЮЧЕНА</strong>
   <div id="activity-island" class="glass"><i id="helper-island-dot" role="img" aria-label="Помощник сада работает" title="Помощник сада работает" hidden></i><span class="weather" id="weather" data-upgrade-target="weather"></span><span id="island-event" role="status" hidden></span></div>
   <button type="button" id="extractor-island" class="glass" aria-label="Открыть экстрактор" hidden></button>
   <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🪴 Теплица</a>
@@ -871,7 +899,7 @@ button{user-select:none}
   </section>
   <aside class="right" aria-label="Управление фермой">
     <section class="glass panel"><span class="kicker">УХОД</span>
-      <button class="quiet wide" id="gather" title="Можно удерживать Shift для временного сбора" aria-pressed="false">🧺 Сбор</button><button class="quiet wide" id="water" title="Удерживай Ctrl для временного полива" aria-pressed="false">🚿 Лейка</button><small class="gather-help">Shift — сбор · Ctrl — полив</small>
+      <button class="quiet wide" id="gather" title="Можно удерживать Shift для временного сбора" aria-pressed="false">🧺 Сбор</button><button class="quiet wide" id="water" title="Удерживай Ctrl для временного полива" aria-pressed="false">🚿 Лейка</button><button type="button" id="shovel" class="quiet wide" aria-pressed="false" title="Удаляет посадку. Можно удерживать среднюю кнопку мыши.">🪏 Лопата</button><small class="gather-help" id="shovel-help">СКМ (MMB) — удалить посадку</small><button type="button" id="knot-renew-toggle" class="quiet wide" title="Отключает повторный рост от узелка сельдерея в саду" hidden>🔄 Второй оборот</button><small class="gather-help">Shift — сбор · Ctrl — полив</small>
       <div class="greenhouse-only" id="greenhouse-tools">
         <button class="quiet wide" id="greenhouse-trellis" aria-pressed="false">Шпалера</button>
         <small class="gather-help">Alt — шпалера · M — перенос пустой грядки</small>
@@ -1039,7 +1067,7 @@ button{user-select:none}
     <button type="button" class="primary" id="hybrid-recycle-confirm">Переработать</button>
   </form>
 </dialog>
-<div id="hybrid-dock-wrap" class="glass" hidden><button id="dock-close" class="quiet" aria-label="Свернуть или скрыть панель">×</button><button id="dock-handle" aria-label="Открыть панель гибридов">Гибриды</button><div id="hybrid-dock" aria-label="Быстрая посадка гибридов"></div><small class="dock-instruction">Перетяните, чтобы посадить. Нажмите, чтобы открыть инвентарь.</small></div><div class="glass" id="dock-tooltip" role="tooltip" hidden></div><div id="quick-seeds" class="glass" role="group" aria-label="Быстрая посадка" hidden></div><div id="seed-tooltip" class="glass" role="tooltip" hidden></div><dialog id="rot-dialog" class="glass"><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><h2>🍂 Растение сгнило</h2><p id="rot-description"></p><div id="rot-genetics"></div><div id="rot-properties"></div><button class="quiet" id="rot-clear">Убрать остатки</button></dialog><dialog id="resources-dialog" class="glass basket"><div class="window-heading"><h2 class="glass basket-chip"><span id="resource-upgrade-title" data-upgrade-target="discovery">📖 Коллекция</span></h2><span class="basket-wallet glass basket-chip" id="resources-balance"></span><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><nav class="shop-tabs" aria-label="Категории коллекции"><button class="quiet" data-resource-tab="cultures">Культуры</button><button class="quiet" data-resource-tab="materials">Предметы</button><button class="quiet" data-resource-tab="sets">Наборы</button><button class="quiet" data-resource-tab="stats">Статистика</button></nav></div><section id="resource-cultures"><button id="collection-open" class="primary">📖 Коллекция культур</button><div id="resource-crop-grid"></div></section><div id="resource-grid"></div><section id="resource-stats" hidden></section><p id="resource-note" class="muted"></p></dialog><script>// legacySlot is the numeric identity stored in existing saves. Never reuse it.
+<div id="hybrid-dock-wrap" class="glass" hidden><button id="dock-close" class="quiet" aria-label="Закрыть панель гибридов">×</button><button id="dock-handle" aria-label="Открыть панель гибридов">Гибриды</button><div id="hybrid-dock" aria-label="Быстрая посадка гибридов"></div><small class="dock-instruction">Перетяните, чтобы посадить. Нажмите, чтобы открыть инвентарь.</small></div><div class="glass" id="dock-tooltip" role="tooltip" hidden></div><div id="quick-seeds" class="glass" role="group" aria-label="Быстрая посадка" hidden></div><div id="seed-tooltip" class="glass" role="tooltip" hidden></div><dialog id="rot-dialog" class="glass"><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><h2>🍂 Растение сгнило</h2><p id="rot-description"></p><div id="rot-genetics"></div><div id="rot-properties"></div><button class="quiet" id="rot-clear">Убрать остатки</button></dialog><dialog id="resources-dialog" class="glass basket"><div class="window-heading"><h2 class="glass basket-chip"><span id="resource-upgrade-title" data-upgrade-target="discovery">📖 Коллекция</span></h2><span class="basket-wallet glass basket-chip" id="resources-balance"></span><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><nav class="shop-tabs" aria-label="Категории коллекции"><button class="quiet" data-resource-tab="cultures">Культуры</button><button class="quiet" data-resource-tab="materials">Предметы</button><button class="quiet" data-resource-tab="sets">Наборы</button><button class="quiet" data-resource-tab="stats">Статистика</button></nav></div><section id="resource-cultures"><button id="collection-open" class="primary">📖 Коллекция культур</button><div id="resource-crop-grid"></div></section><div id="resource-grid"></div><section id="resource-stats" hidden></section><p id="resource-note" class="muted"></p></dialog><script>// legacySlot is the numeric identity stored in existing saves. Never reuse it.
 
 
 
@@ -1194,6 +1222,8 @@ function newGreenhouse(now       )           {
     trellises:Array(greenhouseCells).fill(false),plots:Array(greenhouseCells).fill(null),
     rot:Array(greenhouseCells).fill(null),mutationCheck:now+30000};
 }
+
+
 
 
 
@@ -1437,7 +1467,8 @@ function collect(farm     ,index       ,now       ,random=Math.random,area      
   if(random()<(powers.pod??0)/100){if(plot.line===undefined)farm.seeds[plot.crop]+=2;else farm.lines[plot.line].seeds+=2;}
   farm.collected += finalAmount;
   area.plots[index] = null;
-  const renew=random()<Math.min(1,(powers.renew??0)/100+(ordinary?knotEffect(farm,3,3):0));
+  const knotRenew=ordinary&&(area!==farm||!farm.knotRenewDisabled)?knotEffect(farm,3,3):0;
+  const renew=random()<Math.min(1,(powers.renew??0)/100+knotRenew);
   const secondCut=random()<(powers.cut??0)/100;
   if(renew||secondCut||random()<Math.min(1,(powers.regrow??0)/100)) {
     if(plot.line!==undefined)farm.lines[plot.line].seeds--;
@@ -1965,7 +1996,7 @@ function advanceDryGrowth(farm     ,plot      ,now       ){
   if(plot.remaining===0){plot.ready=now;plot.wetUntil=now;delete plot.remaining;}
   return now>from;
 }
-function updatePlantAbilities(farm     ,now       ,random=Math.random,area         =farm){
+function updatePlantAbilities(farm     ,now       ,random=Math.random,area         =farm,onSunHarvest                                   ){
   let changed=false;
   for(const plot of area.plots){
     if(!plot||plot.mystery)continue;
@@ -1990,6 +2021,7 @@ function updatePlantAbilities(farm     ,now       ,random=Math.random,area      
         const amount=Math.floor(expected)+Number(random()<expected%1);
         farm.harvest[plot.crop]+=amount;
         farm.harvestValue[plot.crop]+=amount*cropPrices[plot.crop];
+        if(amount)onSunHarvest?.(plot.crop,amount);
         changed=true;
       }
     }
@@ -2319,6 +2351,8 @@ function buyKnotRank(farm     ,set       ,tier       ){
 const gardenHelperActions=['sow','water','collect']         ;
 
 
+const helperActionEnabled=(helper             ,action                   )=>
+  (action!=='sow'||helper.crop!==null)&&(helper.actions?.[action]??true);
 const gardenHelperCycles=(value       )=>({sow:value,water:value,collect:value});
 const newGardenHelper=()             =>({cycleRevision:2,crop:null,enabled:false,levels:gardenHelperCycles(0),next:gardenHelperCycles(0)});
 const gardenHelperIntervals=[10000,8500,7000,5800,4800,4000,3200,2500,2000,1600,1200,950,700,530,400,300,200,165,140,120,100];
@@ -2328,17 +2362,23 @@ const gardenHelperUnlocked=(farm     )=>farm.size>=2&&farm.collected>=4&&farm.ex
 const gardenHelperRankTotal=(farm     )=>(farm.knotRanks??[]).flat().reduce((sum,rank)=>sum+rank,0);
 function gardenHelperUpgrade(farm     ,action                   ){
   const level=farm.gardenHelper?.levels[action]??0;
+  const starterCosts=[4,9,18];
+  if(level<starterCosts.length)return {ranks:0,cost:starterCosts[level],id:null};
   return level<gardenHelperMax?{
-    ranks:Math.min(40,2+3*level),
-    cost:Math.ceil(1+(level+1)**1.4),
+    ranks:Math.min(40,5+3*(level-starterCosts.length)),
+    cost:Math.ceil((level-starterCosts.length+1)**1.4),
     id:knotMaterials[gardenHelperActions.indexOf(action)][0]
   }:null;
+}
+function gardenHelperUpgradeBalance(farm     ,price                                                    ){
+  return price.id===null?farm.resources.orbs:(farm.resources.items[price.id]??0);
 }
 function buyGardenHelperUpgrade(farm     ,action                   ){
   const price=gardenHelperUpgrade(farm,action);
   if(!gardenHelperUnlocked(farm)||!price||gardenHelperRankTotal(farm)<price.ranks||
-    (farm.resources.items[price.id]??0)<price.cost)return false;
-  farm.resources.items[price.id]-=price.cost;
+    gardenHelperUpgradeBalance(farm,price)<price.cost)return false;
+  if(price.id===null)spendFarmOrbs(farm,price.cost);
+  else farm.resources.items[price.id]-=price.cost;
   const helper=farm.gardenHelper??=newGardenHelper();
   helper.levels[action]++;
   helper.next[action]=0;
@@ -2346,14 +2386,16 @@ function buyGardenHelperUpgrade(farm     ,action                   ){
 }
 function runGardenHelper(farm     ,now       ,harvest=collect,onCare                                                       ){
   const helper=farm.gardenHelper;
-  if(!helper?.enabled||helper.crop===null||!gardenHelperUnlocked(farm)||!unlocked(farm,helper.crop))return false;
+  if(!helper?.enabled||!gardenHelperUnlocked(farm)||helper.crop!==null&&!unlocked(farm,helper.crop))return false;
   const crop=helper.crop;
-  const ownPlot=(plot           )=>plot?.crop===crop&&plot.line===undefined&&!plot.mystery;
+  const ownPlot=(plot           )=>!!plot&&!plot.mystery&&(crop===null||plot.crop===crop&&plot.line===undefined);
   let changed=false;
-  if(now>=helper.next.collect){
+  if(helperActionEnabled(helper,'collect')&&now>=helper.next.collect){
     let index=-1,oldest=Infinity;
     for(const [i,plot] of farm.plots.entries()){
       if(!plot||!ownPlot(plot)||plot.ready===null||plot.ready>now||(plot.wetUntil??Infinity)<plot.ready||plot.ready>=oldest)continue;
+      const line=plot.line===undefined?undefined:farm.lines[plot.line];
+      if(line&&(line.archived||line.seeds===0)&&hybridCount(farm)>=farm.hybridSlots)continue;
       index=i;
       oldest=plot.ready;
     }
@@ -2362,7 +2404,7 @@ function runGardenHelper(farm     ,now       ,harvest=collect,onCare            
       changed=true;
     }
   }
-  if(now>=helper.next.sow){
+  if(crop!==null&&helperActionEnabled(helper,'sow')&&now>=helper.next.sow){
     const index=farm.plots.indexOf(null);
     if(index>=0&&plant(farm,index,crop,now)){
       onCare?.('sow',index,crop);
@@ -2370,7 +2412,7 @@ function runGardenHelper(farm     ,now       ,harvest=collect,onCare            
       changed=true;
     }
   }
-  if(now>=helper.next.water){
+  if(helperActionEnabled(helper,'water')&&now>=helper.next.water){
     let dry                ;
     for(const plot of farm.plots){
       if(!plot||!ownPlot(plot))continue;
@@ -2378,11 +2420,12 @@ function runGardenHelper(farm     ,now       ,harvest=collect,onCare            
       if(needsWater&&(!dry||(plot.watered??plot.planted)<(dry.watered??dry.planted)))dry=plot;
     }
     if(dry&&water(farm,dry,now)){
-      onCare?.('water',farm.plots.indexOf(dry),crop);
+      onCare?.('water',farm.plots.indexOf(dry),dry.crop);
       helper.next.water=now+gardenHelperIntervals[helper.levels.water];
       changed=true;
     }
   }
+  if(crop===null||!helperActionEnabled(helper,'sow'))return changed;
   const jobs=extractionJobs(farm.extraction).slice(0,farm.extraction.slots??1);
   const slot=jobs.findIndex(job=>!job);
   const managed=farm.plots.filter(plot=>plot===null||ownPlot(plot)).length;
@@ -2443,14 +2486,18 @@ function beginPackOpening(farm     ,index       ,count       ,random=Math.random
 function finishPackOpening(farm     ,random=Math.random){
  const pending=farm.packProgress.pending;if(!pending)return null;
  let units=farm.packProgress.refundUnits,newKinds=0;
+ const bonusSeeds                      ={};
  for(const entry of pending.entries){
   if(entry.first){farm.collection[entry.crop]=Math.max(1,farm.collection[entry.crop]);farm.seeds[entry.crop]++;newKinds++;}
   else{const rate=cropTiers[entry.crop]===pending.pack?packRefundRate(farm):5;units+=pending.paid*rate*(60/pending.entries.length);
-   const chance=knotEffect(farm,3,1);if(chance&&random()<chance)farm.seeds[entry.crop]+=2;}
+   const chance=knotEffect(farm,3,1);if(chance&&random()<chance){
+    farm.seeds[entry.crop]+=2;
+    bonusSeeds[entry.crop]=(bonusSeeds[entry.crop]??0)+2;
+   }}
  }
  const returned=Math.floor(units/6000);farm.packProgress.refundUnits=units%6000;
  farm.coins+=returned;farm.packProgress.pending=null;
- return {...pending,returned,newKinds};
+ return {...pending,returned,newKinds,bonusSeeds};
 }
 
 function packUpgradeOffer(farm     ,id            ){
@@ -2610,6 +2657,101 @@ function claimFortuneMaterial(farm     ,item       ){
   return true;
 }
 
+
+const greenhousePotCount=3;
+const potMaterialBonusHour=3_600_000;
+const potMaterialBonus=(pot              ,now       )=>.05*Math.max(0,Math.min(1,(now-pot.ready)/potMaterialBonusHour));
+function potInterval(gr       ){
+  return Math.round(30000*6**(-(Math.max(1,Math.min(30,gr))-1)/29));
+}
+function plantGreenhousePot(farm     ,index       ,lineId       ,now       ){
+  const line=farm.lines[lineId];
+  if(!Number.isInteger(index)||index<0||index>=greenhousePotCount||farm.pots?.[index]||!line||line.archived||line.seeds<1)return false;
+  const plot={crop:line.crop,line:lineId,planted:now,ready:null};
+  const ready=now+plantGrowthTime(farm,plot);
+  const gr=genome(farm,plot).genes.gr;
+  const pots=farm.pots??=Array                    (greenhousePotCount).fill(null);
+  line.seeds--;
+  pots[index]={line:lineId,ready,since:ready,next:ready+potInterval(gr),fruit:0,carry:0,items:{}};
+  return true;
+}
+function tickGreenhousePots(farm     ,now       ,random=Math.random){
+  let changed=false;
+  for(const pot of farm.pots??[]){
+    if(!pot||now<pot.next)continue;
+    const line=farm.lines[pot.line];
+    const crop=line.crop;
+    const {genes,powers}=effectiveGenome(farm,{crop,line:pot.line,planted:pot.ready,ready:pot.ready});
+    const interval=potInterval(genes.gr);
+    const firstCycle=pot.next;
+    const cycles=1+Math.floor((now-firstCycle)/interval);
+    pot.next+=cycles*interval;
+    let expected=genes.ga+(powers.yield??0);
+    let reach=1;
+    for(let chance=(genes.ga-1)*.01;chance>=1e-6;chance/=2){
+      reach*=chance;
+      expected+=reach*(1+(powers.head??0)/100);
+    }
+    expected*=1+(powers.bounty??0)/100;
+    expected+=diamondLevel(farm,'fruit')/100;
+    const fruit=pot.carry+cycles*expected*15/cropTimes[crop];
+    pot.fruit+=Math.floor(fruit);
+    pot.carry=fruit%1;
+    const chance=harvestMaterialChance(crop);
+    const set=cropSets.findIndex(group=>group.crops.includes(crop));
+    const rampCycles=Math.min(cycles,Math.max(0,Math.ceil((pot.ready+potMaterialBonusHour-firstCycle)/interval)));
+    let setDrops=0,propertyDrops=0;
+    for(let i=0;i<rampCycles;i++){
+      const rate=chance*(1+potMaterialBonus(pot,firstCycle+i*interval));
+      const roll=random();
+      if(roll<rate)setDrops++;
+      else if(roll<2*rate)propertyDrops++;
+    }
+    const maxRate=chance*1.05;
+    const matureCycles=cycles-rampCycles;
+    const matureSets=sampleBinomial(matureCycles,maxRate,random);
+    setDrops+=matureSets;
+    propertyDrops+=sampleBinomial(matureCycles-matureSets,maxRate/(1-maxRate),random);
+    const properties=Object.keys(basePowers[crop]);
+    const first=properties.length===1?propertyDrops:sampleBinomial(propertyDrops,.5,random);
+    const add=(id       ,count       )=>{
+      if(count)pot.items[id]=(pot.items[id]??0)+duplicateCount(farm,count,random);
+    };
+    add('set'+set,setDrops);
+    properties.forEach((id,index)=>add(propertyMaterialId(id),index===0?first:propertyDrops-first));
+    changed=true;
+  }
+  return changed;
+}
+function claimGreenhousePot(farm     ,index       ,now       ){
+  const pot=farm.pots?.[index];
+  if(!pot||now<pot.ready)return false;
+  const crop=farm.lines[pot.line].crop;
+  const plot={crop,line:pot.line,planted:pot.ready,ready:pot.ready};
+  const {genes,powers}=effectiveGenome(farm,plot);
+  farm.harvest[crop]+=pot.fruit;
+  farm.harvestValue[crop]+=pot.fruit*cropPrices[crop]*(1+(powers.sweet??0)/100)*(1+collectionLevel(farm.harvested[crop])/100);
+  farm.harvestQuality[crop]+=pot.fruit*((genes.ga-1)/29+(genes.gr-1)/58+(genes.re-1)/58);
+  farm.harvested[crop]+=pot.fruit;
+  farm.collected+=pot.fruit;
+  for(const [id,count] of Object.entries(pot.items))addMaterial(farm,id,count);
+  pot.fruit=0;
+  pot.items={};
+  pot.since=now;
+  return true;
+}
+function removeGreenhousePot(farm     ,index       ,now       ){
+  const pot=farm.pots?.[index];
+  if(!pot)return false;
+  const line=farm.lines[pot.line];
+  if((line.archived||!line.seeds)&&hybridCount(farm)>=farm.hybridSlots)return false;
+  claimGreenhousePot(farm,index,now);
+  line.archived=false;
+  line.seeds++;
+  farm.pots [index]=null;
+  return true;
+}
+
 const activeSlotKey = 'glass-farm.active-slot';
 const slotKey = (slot       ) => slot===1?'glass-farm.v1':'glass-farm.v1.slot-'+slot;
 function readActiveSlot(){
@@ -2664,6 +2806,7 @@ function loadFarm()      {
     if(s.mutationUpgrades!==undefined&&(!s.mutationUpgrades||typeof s.mutationUpgrades!=='object'||Array.isArray(s.mutationUpgrades)||mutationUpgradeIds.some(id=>!int(s.mutationUpgrades?.[id]??0,0,mutationUpgradeMax))))throw new Error('Повреждена прокачка селекции');
     if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
     if(s.knotPremiumFruit!==undefined&&!int(s.knotPremiumFruit,0,19))throw new Error('Повреждён прогресс премии за урожай');
+    if(s.knotRenewDisabled!==undefined&&typeof s.knotRenewDisabled!=='boolean')throw new Error('Повреждена настройка повторного роста');
     if(s.gardenHelper!==undefined){
       const helper=s.gardenHelper;
       if(!helper||helper.crop!==null&&!int(helper.crop,0,crops.length-1))
@@ -2675,6 +2818,8 @@ function loadFarm()      {
       }
       s.gardenHelper.enabled??=s.gardenHelper.crop!==null;
       if(typeof s.gardenHelper.enabled!=='boolean')throw new Error('Повреждено состояние помощника сада');
+      if(helper.actions!==undefined&&(!helper.actions||gardenHelperActions.some(action=>typeof helper.actions[action]!=='boolean')))
+        throw new Error('Повреждены переключатели помощника сада');
       delete s.gardenHelper.waitForFull;
       if(!gardenHelperActions.every(action=>int(s.gardenHelper.levels?.[action],0,gardenHelperMax)&&int(s.gardenHelper.next?.[action],0)))
         throw new Error('Повреждены циклы помощника сада');
@@ -2812,6 +2957,12 @@ function loadFarm()      {
       throw new Error('Повреждена отметка рывка дождя');
     if(s.weather.surged!==undefined&&typeof s.weather.surged!=='boolean')throw new Error('Повреждено состояние рывка дождя');
     if(savedPlots.some((p           )=>p?.line!==undefined && (!int(p.line,0,s.lines.length-1)||s.lines[p.line].crop!==p.crop))) throw new Error("Повреждено растение линии");
+    if(s.pots!==undefined&&(!Array.isArray(s.pots)||s.pots.length!==greenhousePotCount||s.pots.some(pot=>pot!==null&&(
+      !pot||!int(pot.line,0,s.lines.length-1)||!int(pot.ready,0)||!int(pot.since,pot.ready)||!int(pot.next,pot.ready)||
+      !int(pot.fruit,0)||typeof pot.carry!=='number'||!(pot.carry>=0&&pot.carry<1)||
+      !pot.items||typeof pot.items!=='object'||Array.isArray(pot.items)||
+      Object.entries(pot.items).some(([id,count])=>!materialsBySaveKey.has(id)||!int(count,0))
+    ))))throw new Error('Повреждены горшки теплицы');
     if(savedPlots.some((p           )=>p?.mystery && (!Array.isArray(p.mystery.parents)||p.mystery.parents.length!==2||!p.mystery.parents.every(i=>int(i,0,crops.length-1))||!Array.isArray(p.mystery.traits)||p.mystery.traits.length>10||!p.mystery.traits.every(t=>traitNames[t]))))throw new Error("Повреждена мутация");
     if(savedPlots.some((plot           )=>plot?.mystery?.genomes && (plot.mystery.genomes.length!==2 || !plot.mystery.genomes.every(validGenome))))throw new Error("Повреждена генетика родителей");
     for(const plot of savedPlots)if(plot?.mystery){
@@ -2979,6 +3130,11 @@ let seed = -1;
 let selectedLine                 ;
 let watering = false;
 let gathering = false;
+let shoveling = false;
+let middleDigging=false;
+function renderShovelStatus(){
+  get('shovel-warning').hidden=document.body.classList.contains('in-greenhouse')||!(shoveling||middleDigging);
+}
 let shiftGather=false;
 let controlWater=false;
 const isWatering=()=>watering||controlWater;
@@ -3015,6 +3171,11 @@ function render() {
   document.body.classList.toggle('raining',rain);
   renderIslandWeather(rain,now);
   renderHelperIndicator();
+  const renew=button('knot-renew-toggle');
+  renew.hidden=!knotEffect(farm,3,3);
+  renew.textContent='🔄 Второй оборот: '+(farm.knotRenewDisabled?'выкл.':'вкл.');
+  renew.setAttribute('aria-pressed',String(!farm.knotRenewDisabled));
+  if(greenhousePotsReady)renderGreenhousePots();
   get('theme').textContent = farm.theme === 'light' ? '☾ Тёмная' : '☀ Светлая';
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
@@ -3027,6 +3188,8 @@ function render() {
   for (const id of ['coins','seed-shop-coins','upgrade-coins']) get(id).textContent = number(farm.coins);
   button('water').setAttribute('aria-pressed',String(isWatering()));
   button('gather').setAttribute('aria-pressed',String(isGathering()));
+  button('shovel').setAttribute('aria-pressed',String(shoveling));
+  renderShovelStatus();
   button('water').title = farm.convenience.waterAll ? 'Двойной клик: полить все посадки' : '';
 
 
@@ -3110,6 +3273,7 @@ function renderField(now       ) {
         const plot = farm.plots[index];
         if(plot)get('quick-seeds').hidden=true;
         const now = nowTime();
+        if(shoveling){if(clearGardenPlot(index))commit();return;}
         if(!plot && farm.rot[index] && seed<0 && !isWatering()){openRot(index);return;}
         if(plot?.mystery){
           if(isGathering()||(!isWatering()&&(plot.ready??Infinity)>now))openMutation(index);
@@ -3238,8 +3402,15 @@ let basketPulse                    ;
 function collectAnimated(index       ,now       ,tile        ,area         =farm) {
   const plot = area.plots[index];
   const beforeLoot={diamonds:farm.diamonds?.balance??0,orbs:farm.resources.orbs,items:{...farm.resources.items}};
+  const beforeCoins=farm.coins;
+  const beforeSeeds=plot?farm.seeds[plot.crop]:0;
   const amount = collect(farm,index,now,Math.random,area);
-  if(amount)recordIslandHarvest(amount,beforeLoot);
+  if(amount&&plot)recordIslandHarvest(amount,beforeLoot,{
+    coins:farm.coins-beforeCoins,
+    seeds:plot.line===undefined?farm.seeds[plot.crop]-beforeSeeds:0,
+    crop:plot.crop,
+    restarted:area.plots[index]?.crop===plot.crop&&area.plots[index]?.remaining!==undefined
+  });
   if(amount&&typeof packsUiReady!=='undefined'&&packsUiReady)animateCollectedLoot(tile,beforeLoot);
   if(!amount && plot?.line!==undefined && (plot.ready??Infinity)<=now && hybridCount(farm)>=farm.hybridSlots)notice='Инвентарь гибридов заполнен. Освободи место — растение остаётся на грядке.';
   if (!amount || !plot || matchMedia('(prefers-reduced-motion: reduce)').matches) return amount;
@@ -3444,7 +3615,8 @@ activityOval.addEventListener('pointerleave',()=>{
     finishIslandEvent();
   },350);
 });
-function recordIslandHarvest(amount       ,before                                                          ){
+function recordIslandHarvest(amount       ,before                                                          ,
+  extras                                                          ){
   const time=performance.now();
   const batch=islandHarvest??={start:time,last:time,plants:0,fruit:0,loot:{}};
   batch.last=time;
@@ -3453,6 +3625,9 @@ function recordIslandHarvest(amount       ,before                               
   const add=(label       ,count       )=>{if(count>0)batch.loot[label]=(batch.loot[label]??0)+count;};
   add('🔮',(farm.resources.orbs-before.orbs));
   add('💎',(farm.diamonds?.balance??0)-before.diamonds);
+  add('🪙 Монеты со сбора',extras.coins);
+  add('🌱 Семена · '+crops[extras.crop].name,extras.seeds);
+  add('🔄 Новый цикл с половины роста',Number(extras.restarted));
   for(const material of materials)add(material.icon+' '+material.name,(farm.resources.items[material.id]??0)-(before.items[material.id]??0));
   clearTimeout(islandHarvestTimer);
   islandHarvestTimer=setTimeout(()=>{
@@ -3542,6 +3717,10 @@ function resultCard(cropIndex       ,baseCount       ) {
 }
 modal.oncancel=event=>{if(rolling)event.preventDefault();};
 
+button('knot-renew-toggle').onclick=()=>{
+  farm.knotRenewDisabled=!farm.knotRenewDisabled;
+  commit();
+};
 function sow(index       ,crop       ) {
   get('quick-seeds').hidden=true;
   if (!unlocked(farm,crop) || farm.plots[index] || !(selectedLine===undefined?farm.seeds[crop]>0:farm.lines[selectedLine]?.seeds>0)) return;
@@ -3549,6 +3728,7 @@ function sow(index       ,crop       ) {
   selected = index;
   seed = crop;
   watering = false;gathering=false;
+  shoveling=false;
   applyRain(farm,now);
   plant(farm,index,crop,now,selectedLine);
   commit('Семя посажено.');
@@ -3556,6 +3736,7 @@ function sow(index       ,crop       ) {
 button('water').onclick = event => {
   if (event.detail > 1 && farm.convenience.waterAll) return;
   gathering=false;
+  shoveling=false;
   watering = !watering;
   seed = -1;
   render();
@@ -3612,7 +3793,7 @@ for (const [i,crop] of crops.entries()) {
     selectedLine=undefined;
     if (event.detail > 1 && farm.convenience.sowAll) return;
     seed=!isWatering() && seed===i ? -1 : i;
-    watering=false;gathering=false;
+    watering=false;gathering=false;shoveling=false;
     render();
   };
   row.ondblclick = () => {
@@ -3620,7 +3801,7 @@ for (const [i,crop] of crops.entries()) {
     if (!farm.convenience.sowAll) return;
     const now = nowTime();
     seed = i;
-    watering = false;gathering=false;
+    watering = false;gathering=false;shoveling=false;
     const count = sowAll(farm,i,now);
     const weatherChanged = applyRain(farm,now);
     if (count || weatherChanged) commit(count ? 'Засажено грядок: '+count+'.' : notice);
@@ -3912,15 +4093,34 @@ const fieldSurface = get('field');
 
 let sweep            = null;
 let suppressTileClick = false;
+function clearGardenPlot(index       ){
+  if(!farm.plots[index]&&!farm.rot[index])return false;
+  farm.plots[index]=null;
+  farm.rot[index]=null;
+  get('quick-seeds').hidden=true;
+  return true;
+}
+button('shovel').onclick=()=>{
+  shoveling=!shoveling;
+  if(shoveling){watering=false;gathering=false;seed=-1;selectedLine=undefined;}
+  render();
+};
+fieldSurface.addEventListener('auxclick',event=>{if(event.button===1)event.preventDefault();});
 fieldSurface.onpointerdown = event => {
-  if (!event.isPrimary || event.button !== 0) return;
+  if (!event.isPrimary || (event.button !== 0 && event.button !== 1)) return;
   suppressTileClick = false;
-  const tile = (event.target           ).closest             ('.tile');
-  const start = tile ? farm.plots[Number(tile.dataset.index)] : null;
-  const ready = start?.ready != null && start.ready <= nowTime();
-  if(!isGathering()&&!isWatering()&&seed<0)return;
-  const tool = isGathering() ? 'collect' : isWatering() ? 'water' : 'plant';
+  const digging=event.button===1||shoveling;
+  if(!digging&&!isGathering()&&!isWatering()&&seed<0)return;
+  const tool = digging?'dig':isGathering() ? 'collect' : isWatering() ? 'water' : 'plant';
   sweep = {id:event.pointerId,x:event.clientX,y:event.clientY,active:false,tool,crop:seed,visited:new Set()};
+  if(event.button===1){
+    event.preventDefault();
+    middleDigging=true;
+    renderShovelStatus();
+    sweep.active=true;
+    fieldSurface.setPointerCapture(event.pointerId);
+    if(workAt(sweep,event.clientX,event.clientY,nowTime()))commit();
+  }
 };
 function workAt(stroke      ,x       ,y       ,now       ) {
   const tile = document.elementFromPoint(x,y)?.closest             ('.tile');
@@ -3928,6 +4128,7 @@ function workAt(stroke      ,x       ,y       ,now       ) {
   const index = Number(tile.dataset.index);
   if (stroke.visited.has(index)) return false;
   stroke.visited.add(index);
+  if(stroke.tool==='dig')return clearGardenPlot(index);
   if (stroke.tool === 'collect') {
     if(!isGathering())return false;
     if(farm.plots[index]?.mystery){openMutation(index);return true;}
@@ -3958,15 +4159,24 @@ fieldSurface.onpointermove = event => {
   if (weatherChanged && !changed) saveFarm(farm);
   if (changed) {
     applyRain(farm,now);
-    const messages = {collect:'Урожай на складе.',plant:'Семена посажены.',water:'Грядки политы.'};
+    const messages = {collect:'Урожай на складе.',plant:'Семена посажены.',water:'Грядки политы.',dig:''};
     commit(messages[sweep.tool]);
   }
 };
 function endSweep(event             ) {
-  if (sweep?.id === event.pointerId) sweep = null;
+  if(sweep?.id!==event.pointerId)return;
+  sweep=null;
+  middleDigging=false;
+  renderShovelStatus();
 }
 window.addEventListener('pointerup',endSweep);
 window.addEventListener('pointercancel',endSweep);
+fieldSurface.addEventListener('lostpointercapture',endSweep);
+window.addEventListener('blur',()=>{
+  sweep=null;
+  middleDigging=false;
+  renderShovelStatus();
+});
 fieldSurface.addEventListener('click',event => {
   if (!suppressTileClick || event.detail === 0) return;
   suppressTileClick = false;
@@ -4535,6 +4745,9 @@ const extractionDialog=get                   ('extractor-dialog');
 let extractionCrop=0;
 button('extractor-open').onclick=()=>{extractionDialog.showModal();renderExtraction();};
 const extractorIsland=button('extractor-island');
+const extractorIslandTip=document.createElement('span');
+extractorIslandTip.className='glass extractor-island-tip';
+extractorIslandTip.setAttribute('role','tooltip');
 extractorIsland.onclick=()=>{if(!extractionDialog.open)button('extractor-open').click();};
 const extractorIslandSlots=Array.from({length:3},(_,index)=>{
   const slot=document.createElement('span');
@@ -4546,6 +4759,7 @@ const extractorIslandSlots=Array.from({length:3},(_,index)=>{
   extractorIsland.append(slot);
   return {slot,ring,label};
 });
+extractorIsland.append(extractorIslandTip);
 extractionDialog.onclose=renderExtraction;
 const extractionPicker=get                   ('extractor-picker');
 let selectedExtractionSlot=0;
@@ -4662,7 +4876,7 @@ function renderExtraction(){
       const left=current.input-current.done;
       const remaining=Math.max(0,period-elapsed);
       chip.label.textContent=crops[current.crop].symbol+' ×'+number(left);
-      chip.slot.title='Слот №'+(slot+1)+' · '+(current.recycledHybrid??crops[current.crop].name)+' · осталось '+number(left)+' · текущая обработка '+clock(remaining);
+      chip.slot.dataset.detail='Слот №'+(slot+1)+' · '+(current.recycledHybrid??crops[current.crop].name)+' · осталось '+number(left)+' · текущая обработка '+clock(remaining);
       if(chip.ring.dataset.cycle!==cycle){
         chip.ring.getAnimations().forEach(animation=>animation.cancel());
         chip.ring.dataset.cycle=cycle;
@@ -4681,7 +4895,10 @@ function renderExtraction(){
     islandHeader.classList.toggle('has-extractor-island',!idle);
     placeTopIslands();
   }
-  extractorIsland.setAttribute('aria-label','Открыть экстрактор. '+extractorIslandSlots.filter(({slot})=>!slot.hidden).map(({slot})=>slot.title).join('. '));
+  const details=extractorIslandSlots.filter(({slot})=>!slot.hidden).map(({slot})=>slot.dataset.detail);
+  const tipText=details.join('\n');
+  if(extractorIslandTip.textContent!==tipText)extractorIslandTip.textContent=tipText;
+  extractorIsland.setAttribute('aria-label','Открыть экстрактор. '+details.join('. '));
   get('extractor-last').textContent=machine.last||'Результат появится после обработки первого плода.';
   crops.forEach((crop,i)=>{
     const card=button('extractor-crop-'+i);card.hidden=!farm.harvest[i];
@@ -4943,6 +5160,8 @@ function renderLines(){
     if(query&&!haystack.includes(query))return [];
     const card=document.createElement('button');card.className='glass hybrid-card';
     card.dataset.hybridIndex=String(i);
+    card.draggable=true;
+    card.ondragstart=event=>event.dataTransfer?.setData('application/x-farm-hybrid',String(i));
     card.setAttribute('aria-pressed',String(markedHybrids.has(i)));
     const title=document.createElement('strong');title.className='hybrid-card-title';
     title.textContent=line.name+' ×'+number(line.seeds);
@@ -5057,7 +5276,7 @@ function setDockState(state          ){
 }
 button('dock-close').onclick=event=>{
   event.stopPropagation();
-  setDockState(dockState==='open'?'peek':'hidden');
+  setDockState('hidden');
 };
 button('dock-handle').onclick=event=>{event.stopPropagation();setDockState('open');};
 dockWrap.addEventListener('click',event=>{
@@ -5199,6 +5418,7 @@ document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('clo
 window.addEventListener('blur',hideSeedTooltip);
 get('seeds').addEventListener('scroll',hideSeedTooltip);
 button('gather').onclick=()=>{
+  shoveling=false;
   gathering=!gathering;watering=false;seed=-1;selectedLine=undefined;render();
 };
 for(const id of ['basket-sort','basket-direction','hybrid-direction','hybrid-sort'])get(id).onchange=render;
@@ -5761,12 +5981,17 @@ const tick = () => {
   recordIslandSpending();
   const weatherChanged=applyRain(farm,nowTime());
   const greenhouseChanged=tickGreenhouse(nowTime());
-  const abilitiesChanged=updatePlantAbilities(farm,nowTime());
+  const potsChanged=tickGreenhousePots(farm,nowTime());
+  const sunHarvest=new Map               ();
+  const abilitiesChanged=updatePlantAbilities(farm,nowTime(),Math.random,farm,(crop,amount)=>{
+    sunHarvest.set(crop,(sunHarvest.get(crop)??0)+amount);
+  });
+  if(sunHarvest.size)showIslandEvent(...[...sunHarvest].map(([crop,amount])=>'☀️ '+crops[crop].name+' · урожай +'+number(amount)));
   const ripened=updateRipening(farm,nowTime());
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || helperChanged || speed !== 1 ||
+  if(greenhouseChanged || potsChanged || abilitiesChanged || ripened || weatherChanged || extracted || helperChanged || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
     if(saveFarm(farm)){
       lastPlayTimeSave=totalPlayTime();
@@ -6591,12 +6816,13 @@ async function showPackOpening(results         ){
  const tracks=results.map(crop=>createReel(crop,pool,false));reels.replaceChildren(...tracks.map(item=>item.reel));
  await Promise.all(tracks.map(({track})=>spinReel(track,duration)));
 }
-function showPackOutcome(outcome                                                  ){
+function showPackOutcome(outcome                                                                                                         ){
  const grid=get('pack-results'),grouped=new Map                                     ();
  for(const entry of outcome.entries){const group=grouped.get(entry.crop)??{count:0,first:false};group.count++;group.first||=entry.first;grouped.set(entry.crop,group);}
  if(grouped.size)showIslandEvent(...[...grouped].map(([crop,{count,first}])=>
    '🎁 '+crops[crop].name+' ×'+number(count)+(first?' · новый вид':'')),
-   ...(outcome.returned?['↩ Возврат · 🪙 +'+number(outcome.returned)]:[]));
+   ...(outcome.returned?['↩ Возврат · 🪙 +'+number(outcome.returned)]:[]),
+   ...Object.entries(outcome.bonusSeeds??{}).map(([crop,count])=>'🌱 Бонус пакета · '+crops[Number(crop)].name+' +'+number(count)));
  grid.replaceChildren(...[...grouped].map(([crop,data])=>{
    const item=resultCard(crop,data.count),label=document.createElement('small');
    label.textContent=data.first?'Новый вид · семя ×1':'Повторка';
@@ -7312,7 +7538,7 @@ function renderKnots(){
 const gardenHelperDialog=collectionOverlay('garden-helper-dialog','Помощник сада');
 const gardenHelperPanel=document.createElement('section');
 gardenHelperPanel.className='glass panel garden-helper-panel';
-gardenHelperPanel.innerHTML='<p>Сажает, поливает и собирает выбранную культуру в саду. В экстрактор отправляет урожай для запаса семян на поле. Остальное оставляет в корзине.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
+gardenHelperPanel.innerHTML='<p>Для выбранной культуры помощник может сажать, поливать, собирать и пополнять семена через экстрактор. В режиме «Любая доступная» он поливает и собирает все посадки в саду, если эти действия включены. Посев и автопереработка в этом режиме недоступны.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
 gardenHelperDialog.append(gardenHelperPanel);
 const helperHistory=document.createElement('section');
 helperHistory.className='glass panel helper-history';
@@ -7331,6 +7557,29 @@ function renderHelperHistory(){
 const helperGate=gardenHelperPanel.querySelector             ('.garden-helper-gate') ;
 const helperCrop=gardenHelperPanel.querySelector                   ('select') ;
 const helperToggle=gardenHelperPanel.querySelector                   ('button') ;
+function helperActionLabel(action                   ){return {collect:'Сбор',sow:'Посадка',water:'Полив'}[action];}
+const helperActionsRow=document.createElement('div');
+helperActionsRow.className='helper-actions-row';
+helperToggle.before(helperActionsRow);
+const helperActionControls=(['collect','sow','water']         ).map(action=>{
+  const control=document.createElement('button');
+  control.type='button';
+  control.className='quiet helper-switch';
+  control.textContent=helperActionLabel(action);
+  if(action==='sow')control.title='Посадка и пополнение семян через экстрактор';
+  control.onclick=()=>{
+    if(!gardenHelperUnlocked(farm))return;
+    const helper=farm.gardenHelper??=newGardenHelper();
+    if(action==='sow'&&helper.crop===null)return;
+    const actions=helper.actions??={collect:true,sow:true,water:true};
+    actions[action]=!actions[action];
+    commit();
+    renderGardenHelper();
+  };
+  helperActionsRow.append(control);
+  return {action,control};
+});
+helperToggle.classList.add('helper-switch');
 const helperUnlockText='Для открытия расширь поле до 2 × 2, собери 4 плода и переработай хотя бы один в экстракторе.';
 const helperOpen=document.createElement('button');
 helperOpen.type='button';
@@ -7342,8 +7591,12 @@ renderHelperIndicator();
 
 function renderHelperIndicator(){
   const helper=farm.gardenHelper;
-  const running=!!helper?.enabled&&helper.crop!==null&&gardenHelperUnlocked(farm)&&unlocked(farm,helper.crop);
-  get('helper-island-dot').hidden=!running;
+  const actions=gardenHelperActions.filter(action=>helper&&helperActionEnabled(helper,action));
+  const running=!!helper?.enabled&&gardenHelperUnlocked(farm)&&(helper.crop===null||unlocked(farm,helper.crop))&&actions.length>0;
+  const dot=get('helper-island-dot');
+  dot.hidden=!running;
+  const description='Помощник сада работает · '+actions.map(helperActionLabel).join(', ');
+  if(dot.title!==description){dot.title=description;dot.setAttribute('aria-label',description);}
   const control=get('garden-helper-open');
   const label='🌱 Помощник сада'+(running?' · Работает':'');
   if(control&&control.textContent!==label)control.textContent=label;
@@ -7354,25 +7607,29 @@ function renderGardenHelper(){
   const open=gardenHelperUnlocked(farm);
   helperGate.hidden=open;
   helperGate.textContent=helperUnlockText;
-  helperCrop.replaceChildren(new Option('Выбери культуру',''),...crops.flatMap((crop,index)=>
+  helperCrop.replaceChildren(new Option('Любая доступная',''),...crops.flatMap((crop,index)=>
     unlocked(farm,index)?[new Option(crop.symbol+' '+crop.name,String(index))]:[]));
   helperCrop.value=helper.crop===null?'':String(helper.crop);
   helperCrop.disabled=!open;
-  helperToggle.disabled=!open||helper.crop===null;
+  helperToggle.disabled=!open;
   helperToggle.textContent=helper.enabled?'Выключить':'Включить';
+  helperToggle.setAttribute('aria-pressed',String(helper.enabled));
+  for(const {action,control} of helperActionControls){
+    control.disabled=!open||action==='sow'&&helper.crop===null;
+    control.setAttribute('aria-pressed',String(helperActionEnabled(helper,action)));
+  }
 }
 helperOpen.onclick=()=>{renderGardenHelper();gardenHelperDialog.showModal();renderHelperHistory();};
 helperCrop.onchange=()=>{
   if(!gardenHelperUnlocked(farm))return;
   const helper=farm.gardenHelper??=newGardenHelper();
   helper.crop=helperCrop.value===''?null:Number(helperCrop.value);
-  if(helper.crop===null)helper.enabled=false;
   commit();
   renderGardenHelper();
 };
 helperToggle.onclick=()=>{
-  const helper=farm.gardenHelper;
-  if(!gardenHelperUnlocked(farm)||!helper||helper.crop===null)return;
+  if(!gardenHelperUnlocked(farm))return;
+  const helper=farm.gardenHelper??=newGardenHelper();
   helper.enabled=!helper.enabled;
   commit();
   renderGardenHelper();
@@ -7404,11 +7661,182 @@ function renderGardenHelperUpgrades(){
     const interval=(rank       )=>'1 грядка каждые '+number(gardenHelperIntervals[rank]/1000)+' с';
     const price=gardenHelperUpgrade(farm,action);
     renderUpgradeChange(effect,level,interval(level),price?interval(level+1):undefined);
-    const material=price&&materialsBySaveKey.get(price.id) ;
-    buy.textContent=price&&material?material.icon+' '+price.cost+(ranks<price.ranks?' · нужно '+price.ranks+' рангов узелков':''):'Максимум';
-    buy.disabled=!open||!price||ranks<price.ranks||(farm.resources.items[price.id]??0)<price.cost;
+    const icon=price?.id?materialsBySaveKey.get(price.id) .icon:'🔮';
+    buy.textContent=price?icon+' '+price.cost+(ranks<price.ranks?' · нужно '+price.ranks+' рангов узелков':''):'Максимум';
+    buy.disabled=!open||!price||ranks<price.ranks||gardenHelperUpgradeBalance(farm,price)<price.cost;
   }
 }
+
+const potsPanel=get('greenhouse-pots');
+const potDialog=collectionOverlay('greenhouse-pot-dialog','Горшок');
+const potBody=document.createElement('section');
+potBody.className='glass panel pot-body';
+potDialog.append(potBody);
+const potTooltip=document.createElement('div');
+potTooltip.className='glass pot-tooltip';
+potTooltip.setAttribute('role','tooltip');
+potTooltip.hidden=true;
+document.body.append(potTooltip);
+let selectedPot=0;
+let hoveredPot            =null;
+function plantPot(index       ,line       ){
+  if(!plantGreenhousePot(farm,index,line,nowTime()))return;
+  commit();
+  if(potDialog.open)renderPotDialog();
+}
+const potButtons=[...potsPanel.querySelectorAll('img')].map((image,index)=>{
+  const control=document.createElement('button');
+  control.type='button';
+  control.className='greenhouse-pot';
+  const badge=document.createElement('span');
+  badge.className='pot-plant-icon';
+  const timer=document.createElement('span');
+  timer.className='glass pot-timer';
+  timer.hidden=true;
+  image.replaceWith(control);
+  control.append(image,badge,timer);
+  control.onclick=()=>{
+    potTooltip.hidden=true;
+    selectedPot=index;
+    renderPotDialog();
+    potDialog.showModal();
+  };
+  control.onpointerenter=()=>{hoveredPot=index;renderPotTooltip();};
+  control.onpointerleave=()=>{hoveredPot=null;potTooltip.hidden=true;};
+  control.ondragover=event=>{
+    if(!farm.pots?.[index]&&event.dataTransfer?.types.includes('application/x-farm-hybrid'))event.preventDefault();
+  };
+  control.ondrop=event=>{
+    const value=event.dataTransfer?.getData('application/x-farm-hybrid');
+    if(value&&/^\d+$/.test(value)){event.preventDefault();plantPot(index,Number(value));}
+  };
+  return {control,badge,timer};
+});
+const potDropRow=document.createElement('div');
+potDropRow.className='pot-drop-row greenhouse-only';
+get('hybrid-grid').before(potDropRow);
+const potDropTargets=potButtons.map((_,index)=>{
+  const target=document.createElement('span');
+  target.className='glass';
+  target.textContent='Горшок '+(index+1);
+  target.ondragover=event=>{
+    if(!farm.pots?.[index]&&event.dataTransfer?.types.includes('application/x-farm-hybrid'))event.preventDefault();
+  };
+  target.ondrop=event=>{
+    const value=event.dataTransfer?.getData('application/x-farm-hybrid');
+    if(value&&/^\d+$/.test(value)){event.preventDefault();plantPot(index,Number(value));}
+  };
+  potDropRow.append(target);
+  return target;
+});
+function potSummary(pot              ,now       ){
+  const line=farm.lines[pot.line];
+  const bonus='🍀 К шансу материалов: +'+number(Math.round(potMaterialBonus(pot,now)*10000)/100)+'% · максимум +5% через час после созревания';
+  if(now<pot.ready)return [line.name,'Созреет через '+clock(pot.ready-now),bonus];
+  const elapsed=Math.max(0,now-pot.since);
+  const rows=[line.name,'Накопление · '+clock(elapsed),'Следующий цикл · '+clock(pot.next-now)];
+  const rate=(count       )=>elapsed?' | '+number(Math.round(count*36000000/elapsed)/10)+'/ч за этот период':'';
+  const crop=crops[line.crop];
+  if(pot.fruit)rows.push(crop.symbol+' '+crop.name+' ×'+number(pot.fruit)+rate(pot.fruit));
+  for(const [id,count] of Object.entries(pot.items)){
+    const material=materialsBySaveKey.get(id) ;
+    rows.push(material.icon+' '+material.name+' ×'+number(count)+rate(count));
+  }
+  if(rows.length===3)rows.push('Пока ничего не выпало.');
+  return [...rows,bonus];
+}
+function renderPotTooltip(){
+  if(hoveredPot===null||potDialog.open)return;
+  const pot=farm.pots?.[hoveredPot];
+  potTooltip.textContent=pot?potSummary(pot,nowTime()).join('\n'):'Нажми или перетащи сюда гибрид.';
+  potTooltip.hidden=false;
+  const anchor=potButtons[hoveredPot].control.getBoundingClientRect();
+  const bounds=potTooltip.getBoundingClientRect();
+  potTooltip.style.left=Math.max(8,Math.min(anchor.right+8,innerWidth-bounds.width-8))+'px';
+  potTooltip.style.top=Math.max(8,Math.min(anchor.top,innerHeight-bounds.height-8))+'px';
+}
+function renderPotDialog(){
+  const pot=farm.pots?.[selectedPot];
+  potBody.replaceChildren();
+  if(!pot){
+    const lines=farm.lines.flatMap((line,index)=>line.archived||!line.seeds?[]:[{line,index}]);
+    if(!lines.length)potBody.textContent='В инвентаре пока нет семян гибридов.';
+    for(const {line,index} of lines){
+      const option=document.createElement('button');
+      option.className='quiet wide';
+      option.textContent=crops[line.crop].symbol+' '+line.name+' · 🌱 '+number(line.seeds);
+      option.onclick=()=>plantPot(selectedPot,index);
+      potBody.append(option);
+    }
+    return;
+  }
+  const summary=document.createElement('p');
+  summary.className='pot-summary';
+  const line=farm.lines[pot.line];
+  const {genes,powers}=effectiveGenome(farm,{crop:line.crop,line:pot.line,planted:pot.ready,ready:pot.ready});
+  const identity=document.createElement('div');
+  identity.className='pot-identity';
+  const name=document.createElement('strong');
+  name.tabIndex=0;
+  name.textContent=line.name;
+  const traits=document.createElement('span');
+  const geneText='⚡ Gr '+genes.gr+' · 💰 Ga '+genes.ga+' · 🛡️ Re '+genes.re;
+  traits.textContent=geneText+line.traits.map(id=>{
+    const value=powers[id];
+    return ' · '+(abilityDefinitions[id]?.icon??'✦')+(value===undefined?'':' '+Math.round(value)+(id==='yield'?'':'%'));
+  }).join('');
+  const details=document.createElement('div');
+  details.className='glass pot-trait-tip';
+  details.setAttribute('role','tooltip');
+  details.id='pot-hybrid-traits';
+  name.setAttribute('aria-describedby',details.id);
+  details.textContent=[line.name,geneText,...line.traits.map(id=>powerLabel(line,id))].join('\n');
+  identity.append(name,traits,details);
+  const claim=document.createElement('button');
+  claim.className='quiet wide';
+  claim.textContent='Забрать добычу';
+  claim.onclick=()=>{
+    if(claimGreenhousePot(farm,selectedPot,nowTime()))commit();
+  };
+  const remove=document.createElement('button');
+  remove.className='quiet wide';
+  remove.textContent='Убрать гибрид в инвентарь';
+  remove.onclick=()=>{
+    if(removeGreenhousePot(farm,selectedPot,nowTime())){commit();renderPotDialog();}
+  };
+  potBody.append(identity,summary,claim,remove);
+  updatePotDialog(pot,nowTime());
+}
+function updatePotDialog(pot              ,now       ){
+  const summary=potBody.querySelector('.pot-summary');
+  if(!summary)return;
+  const text=potSummary(pot,now).slice(1).join('\n');
+  if(summary.textContent!==text)summary.textContent=text;
+  const [claim,remove]=potBody.querySelectorAll('button');
+  claim.disabled=now<pot.ready||(!pot.fruit&&!Object.keys(pot.items).length);
+  const line=farm.lines[pot.line];
+  remove.disabled=(line.archived||!line.seeds)&&hybridCount(farm)>=farm.hybridSlots;
+  remove.title=remove.disabled?'Освободи место в инвентаре гибридов.':'';
+}
+function renderGreenhousePots(){
+  const now=nowTime();
+  potButtons.forEach(({control,badge,timer},index)=>{
+    const pot=farm.pots?.[index];
+    const crop=pot?crops[farm.lines[pot.line].crop]:null;
+    control.setAttribute('aria-label','Горшок '+(index+1)+(crop?' · '+crop.name:' · Пусто'));
+    potDropTargets[index].textContent='Горшок '+(index+1)+(crop?' · занят':' · перетащи гибрид');
+    badge.textContent=crop?.symbol??'';
+    badge.classList.toggle('pot-ripe',!!pot&&now>=pot.ready);
+    timer.hidden=!pot;
+    if(pot)timer.textContent=now<pot.ready?'🌱 '+clock(pot.ready-now):'⏱ '+clock(now-pot.since);
+  });
+  if(!document.body.classList.contains('in-greenhouse')){hoveredPot=null;potTooltip.hidden=true;}
+  else renderPotTooltip();
+  const pot=farm.pots?.[selectedPot];
+  if(potDialog.open&&pot)updatePotDialog(pot,now);
+}
+var greenhousePotsReady=true;
+renderGreenhousePots();
 </script>
 </body>
 </html>

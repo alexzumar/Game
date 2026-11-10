@@ -359,6 +359,27 @@ body.in-greenhouse::after{background-image:url('assets/greenhouse/rain.png')}
 .in-greenhouse #greenhouse-pots{display:grid;grid-template-rows:auto repeat(3,minmax(0,1fr));justify-items:center;height:var(--greenhouse-pots-height,clamp(330px,66vh,660px));max-height:calc(100dvh - 135px);overflow:hidden}
 #greenhouse-pots h2{justify-self:start}
 #greenhouse-pots img{display:block;width:100%;height:100%;min-height:0;object-fit:contain;transform:scale(1.23)}
+.greenhouse-pot{position:relative;min-height:0;width:100%;padding:0;border:0;background:none;cursor:pointer}
+.greenhouse-pot>span{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;color:var(--ink);font-weight:700}
+.pot-plant-icon{top:22%;font-size:1rem;line-height:1}
+.pot-plant-icon.pot-ripe{top:10%;font-size:clamp(2.2rem,3.7vw,3.5rem)}
+.pot-timer{top:66%;padding:3px 8px;border-radius:999px;font-size:.75rem;box-shadow:0 3px 9px #0004}
+.greenhouse-pot img{pointer-events:none}
+.pot-tooltip{position:fixed;z-index:25;max-width:min(320px,calc(100vw - 16px));padding:10px;white-space:pre-line;pointer-events:none;color:var(--ink);background:var(--base)}
+.pot-body{display:grid;gap:8px;margin-bottom:16px}
+.pot-summary{white-space:pre-line;margin:0}
+.pot-identity{position:relative;display:grid;justify-items:start;gap:3px}
+.pot-identity>span{color:var(--soft);font-size:.82rem}
+.pot-trait-tip{position:absolute;top:100%;left:0;z-index:2;visibility:hidden;max-width:100%;padding:10px 14px;white-space:pre-line;background:var(--base);pointer-events:none}
+.pot-identity>strong:is(:hover,:focus-visible)~.pot-trait-tip{visibility:visible}
+.in-greenhouse #knot-renew-toggle{display:none}
+.in-greenhouse :is(#shovel,#shovel-help){display:none}
+#shovel[aria-pressed=true]{background:#f3b383;color:#4b2214;border-color:#aa5429;box-shadow:0 0 0 2px #da7c41}
+#shovel-warning{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#a52e1d;text-shadow:0 1px 2px #fff;font-size:clamp(1.2rem,3vw,2.5rem);font-weight:900;letter-spacing:.045em;white-space:nowrap;pointer-events:none}
+body:has(#shovel-warning:not([hidden])) :is(#activity-island,#extractor-island){visibility:hidden}
+@media(max-width:760px){#shovel-warning{top:66px}}
+.in-greenhouse .pot-drop-row{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.pot-drop-row>span{padding:6px 10px;font-size:.78rem}
 .in-greenhouse #greenhouse-expansion,.in-greenhouse #greenhouse-tools,.in-greenhouse #greenhouse-board{display:block}
 #greenhouse-tools{margin-top:8px}
 #greenhouse-tools [aria-pressed=true],#greenhouse-expansion [aria-pressed=true]{background:var(--accent);color:#21372b}
@@ -695,6 +716,12 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 .island-event-list li+li{border-top:1px solid var(--edge)}
 @property --extractor-progress{syntax:"<percentage>";inherits:false;initial-value:0%}
 #extractor-island{gap:7px;cursor:pointer}
+.extractor-island-tip{position:absolute;z-index:4;top:calc(100% + 5px);left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 24px);padding:8px 12px;white-space:pre-line;text-align:left;background:var(--base);pointer-events:none;visibility:hidden}
+.masthead:has(#extractor-island:is(:hover,:focus-visible)){z-index:20}
+#extractor-island:is(:hover,:focus-visible) .extractor-island-tip{visibility:visible}
+.helper-actions-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.helper-switch[aria-pressed=true]{background:color-mix(in srgb,var(--base) 68%,#75c99c);color:var(--ink)}
+.helper-switch[aria-pressed=false]{background:color-mix(in srgb,var(--base) 72%,#e69a98);color:var(--ink)}
 body:not(.in-greenhouse) #enhancement-open{display:none}
 .extractor-island-slot{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
 .extractor-island-slot b{display:grid;place-items:center;width:23px;height:23px;border-radius:50%;background:radial-gradient(circle,var(--base) 57%,transparent 59%),conic-gradient(var(--accent) var(--extractor-progress),var(--line) 0)}

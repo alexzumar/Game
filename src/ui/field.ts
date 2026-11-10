@@ -23,6 +23,7 @@ function renderField(now:number) {
         const plot = farm.plots[index];
         if(plot)get('quick-seeds').hidden=true;
         const now = nowTime();
+        if(shoveling){if(clearGardenPlot(index))commit();return;}
         if(!plot && farm.rot[index] && seed<0 && !isWatering()){openRot(index);return;}
         if(plot?.mystery){
           if(isGathering()||(!isWatering()&&(plot.ready??Infinity)>now))openMutation(index);
@@ -151,8 +152,15 @@ let basketPulse:Animation|undefined;
 function collectAnimated(index:number,now:number,tile:Element,area:PlotArea=farm) {
   const plot = area.plots[index];
   const beforeLoot={diamonds:farm.diamonds?.balance??0,orbs:farm.resources.orbs,items:{...farm.resources.items}};
+  const beforeCoins=farm.coins;
+  const beforeSeeds=plot?farm.seeds[plot.crop]:0;
   const amount = collect(farm,index,now,Math.random,area);
-  if(amount)recordIslandHarvest(amount,beforeLoot);
+  if(amount&&plot)recordIslandHarvest(amount,beforeLoot,{
+    coins:farm.coins-beforeCoins,
+    seeds:plot.line===undefined?farm.seeds[plot.crop]-beforeSeeds:0,
+    crop:plot.crop,
+    restarted:area.plots[index]?.crop===plot.crop&&area.plots[index]?.remaining!==undefined
+  });
   if(amount&&typeof packsUiReady!=='undefined'&&packsUiReady)animateCollectedLoot(tile,beforeLoot);
   if(!amount && plot?.line!==undefined && (plot.ready??Infinity)<=now && hybridCount(farm)>=farm.hybridSlots)notice='Инвентарь гибридов заполнен. Освободи место — растение остаётся на грядке.';
   if (!amount || !plot || matchMedia('(prefers-reduced-motion: reduce)').matches) return amount;
@@ -357,7 +365,8 @@ activityOval.addEventListener('pointerleave',()=>{
     finishIslandEvent();
   },350);
 });
-function recordIslandHarvest(amount:number,before:{diamonds:number;orbs:number;items:Record<string,number>}){
+function recordIslandHarvest(amount:number,before:{diamonds:number;orbs:number;items:Record<string,number>},
+  extras:{coins:number;seeds:number;crop:number;restarted:boolean}){
   const time=performance.now();
   const batch=islandHarvest??={start:time,last:time,plants:0,fruit:0,loot:{}};
   batch.last=time;
@@ -366,6 +375,9 @@ function recordIslandHarvest(amount:number,before:{diamonds:number;orbs:number;i
   const add=(label:string,count:number)=>{if(count>0)batch.loot[label]=(batch.loot[label]??0)+count;};
   add('🔮',(farm.resources.orbs-before.orbs));
   add('💎',(farm.diamonds?.balance??0)-before.diamonds);
+  add('🪙 Монеты со сбора',extras.coins);
+  add('🌱 Семена · '+crops[extras.crop].name,extras.seeds);
+  add('🔄 Новый цикл с половины роста',Number(extras.restarted));
   for(const material of materials)add(material.icon+' '+material.name,(farm.resources.items[material.id]??0)-(before.items[material.id]??0));
   clearTimeout(islandHarvestTimer);
   islandHarvestTimer=setTimeout(()=>{

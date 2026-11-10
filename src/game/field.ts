@@ -99,7 +99,8 @@ function collect(farm:Farm,index:number,now:number,random=Math.random,area:PlotA
   if(random()<(powers.pod??0)/100){if(plot.line===undefined)farm.seeds[plot.crop]+=2;else farm.lines[plot.line].seeds+=2;}
   farm.collected += finalAmount;
   area.plots[index] = null;
-  const renew=random()<Math.min(1,(powers.renew??0)/100+(ordinary?knotEffect(farm,3,3):0));
+  const knotRenew=ordinary&&(area!==farm||!farm.knotRenewDisabled)?knotEffect(farm,3,3):0;
+  const renew=random()<Math.min(1,(powers.renew??0)/100+knotRenew);
   const secondCut=random()<(powers.cut??0)/100;
   if(renew||secondCut||random()<Math.min(1,(powers.regrow??0)/100)) {
     if(plot.line!==undefined)farm.lines[plot.line].seeds--;

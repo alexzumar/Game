@@ -17,18 +17,37 @@ button('debug-coins').onclick = () => {
   commit('Отладка: 🪙 +'+amount);
 };
 const fieldSurface = get('field');
-type Sweep = {id:number;x:number;y:number;active:boolean;tool:'collect'|'water'|'plant';crop:number;visited:Set<number>};
+type Sweep = {id:number;x:number;y:number;active:boolean;tool:'collect'|'water'|'plant'|'dig';crop:number;visited:Set<number>};
 let sweep:Sweep|null = null;
 let suppressTileClick = false;
+function clearGardenPlot(index:number){
+  if(!farm.plots[index]&&!farm.rot[index])return false;
+  farm.plots[index]=null;
+  farm.rot[index]=null;
+  get('quick-seeds').hidden=true;
+  return true;
+}
+button('shovel').onclick=()=>{
+  shoveling=!shoveling;
+  if(shoveling){watering=false;gathering=false;seed=-1;selectedLine=undefined;}
+  render();
+};
+fieldSurface.addEventListener('auxclick',event=>{if(event.button===1)event.preventDefault();});
 fieldSurface.onpointerdown = event => {
-  if (!event.isPrimary || event.button !== 0) return;
+  if (!event.isPrimary || (event.button !== 0 && event.button !== 1)) return;
   suppressTileClick = false;
-  const tile = (event.target as Element).closest<HTMLElement>('.tile');
-  const start = tile ? farm.plots[Number(tile.dataset.index)] : null;
-  const ready = start?.ready != null && start.ready <= nowTime();
-  if(!isGathering()&&!isWatering()&&seed<0)return;
-  const tool = isGathering() ? 'collect' : isWatering() ? 'water' : 'plant';
+  const digging=event.button===1||shoveling;
+  if(!digging&&!isGathering()&&!isWatering()&&seed<0)return;
+  const tool = digging?'dig':isGathering() ? 'collect' : isWatering() ? 'water' : 'plant';
   sweep = {id:event.pointerId,x:event.clientX,y:event.clientY,active:false,tool,crop:seed,visited:new Set()};
+  if(event.button===1){
+    event.preventDefault();
+    middleDigging=true;
+    renderShovelStatus();
+    sweep.active=true;
+    fieldSurface.setPointerCapture(event.pointerId);
+    if(workAt(sweep,event.clientX,event.clientY,nowTime()))commit();
+  }
 };
 function workAt(stroke:Sweep,x:number,y:number,now:number) {
   const tile = document.elementFromPoint(x,y)?.closest<HTMLElement>('.tile');
@@ -36,6 +55,7 @@ function workAt(stroke:Sweep,x:number,y:number,now:number) {
   const index = Number(tile.dataset.index);
   if (stroke.visited.has(index)) return false;
   stroke.visited.add(index);
+  if(stroke.tool==='dig')return clearGardenPlot(index);
   if (stroke.tool === 'collect') {
     if(!isGathering())return false;
     if(farm.plots[index]?.mystery){openMutation(index);return true;}
@@ -66,15 +86,24 @@ fieldSurface.onpointermove = event => {
   if (weatherChanged && !changed) saveFarm(farm);
   if (changed) {
     applyRain(farm,now);
-    const messages = {collect:'Урожай на складе.',plant:'Семена посажены.',water:'Грядки политы.'};
+    const messages = {collect:'Урожай на складе.',plant:'Семена посажены.',water:'Грядки политы.',dig:''};
     commit(messages[sweep.tool]);
   }
 };
 function endSweep(event:PointerEvent) {
-  if (sweep?.id === event.pointerId) sweep = null;
+  if(sweep?.id!==event.pointerId)return;
+  sweep=null;
+  middleDigging=false;
+  renderShovelStatus();
 }
 window.addEventListener('pointerup',endSweep);
 window.addEventListener('pointercancel',endSweep);
+fieldSurface.addEventListener('lostpointercapture',endSweep);
+window.addEventListener('blur',()=>{
+  sweep=null;
+  middleDigging=false;
+  renderShovelStatus();
+});
 fieldSurface.addEventListener('click',event => {
   if (!suppressTileClick || event.detail === 0) return;
   suppressTileClick = false;

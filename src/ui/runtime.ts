@@ -106,12 +106,17 @@ const tick = () => {
   recordIslandSpending();
   const weatherChanged=applyRain(farm,nowTime());
   const greenhouseChanged=tickGreenhouse(nowTime());
-  const abilitiesChanged=updatePlantAbilities(farm,nowTime());
+  const potsChanged=tickGreenhousePots(farm,nowTime());
+  const sunHarvest=new Map<number,number>();
+  const abilitiesChanged=updatePlantAbilities(farm,nowTime(),Math.random,farm,(crop,amount)=>{
+    sunHarvest.set(crop,(sunHarvest.get(crop)??0)+amount);
+  });
+  if(sunHarvest.size)showIslandEvent(...[...sunHarvest].map(([crop,amount])=>'☀️ '+crops[crop].name+' · урожай +'+number(amount)));
   const ripened=updateRipening(farm,nowTime());
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || helperChanged || speed !== 1 ||
+  if(greenhouseChanged || potsChanged || abilitiesChanged || ripened || weatherChanged || extracted || helperChanged || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
     if(saveFarm(farm)){
       lastPlayTimeSave=totalPlayTime();

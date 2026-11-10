@@ -226,6 +226,12 @@ const smoke=`<script>setTimeout(async()=>{try{
  assert(localStorage.getItem(slotKey(4))===null,'Deleting another world failed');
  saveSlots.close();
  get('settings-dialog').close();
+ farm.plots[0]={crop:0,planted:nowTime(),ready:null};render();
+ button('shovel').click();document.querySelector('#field .tile').click();
+ assert(farm.plots[0]===null&&!document.querySelector('dialog[open]'),'Shovel did not clear the garden plot directly');
+ assert(!get('shovel-warning').hidden&&getComputedStyle(get('activity-island')).visibility==='hidden','Shovel warning did not replace the island');
+ button('shovel').click();
+ assert(get('shovel-warning').hidden,'Shovel warning remained after disabling the tool');
  ${captureScene}
  assert(alphaErrors.length===0,alphaErrors.join(';'));const pre=document.createElement('pre');pre.id='alpha-smoke-result';pre.textContent='PASS UI: real sets and tooltips, sorted harvest collection, exact and held purchases, inventory enhancement picker, best-parent comparison, upgrade spacing and scroll access';document.body.append(pre);
  }catch(e){const pre=document.createElement('pre');pre.id='alpha-smoke-result';pre.textContent='FAIL '+e.stack+' Errors: '+alphaErrors.join(';');document.body.append(pre);}},1000);</script>`;

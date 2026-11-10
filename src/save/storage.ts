@@ -52,6 +52,7 @@ function loadFarm():Farm {
     if(s.mutationUpgrades!==undefined&&(!s.mutationUpgrades||typeof s.mutationUpgrades!=='object'||Array.isArray(s.mutationUpgrades)||mutationUpgradeIds.some(id=>!int(s.mutationUpgrades?.[id]??0,0,mutationUpgradeMax))))throw new Error('Повреждена прокачка селекции');
     if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
     if(s.knotPremiumFruit!==undefined&&!int(s.knotPremiumFruit,0,19))throw new Error('Повреждён прогресс премии за урожай');
+    if(s.knotRenewDisabled!==undefined&&typeof s.knotRenewDisabled!=='boolean')throw new Error('Повреждена настройка повторного роста');
     if(s.gardenHelper!==undefined){
       const helper=s.gardenHelper;
       if(!helper||helper.crop!==null&&!int(helper.crop,0,crops.length-1))
@@ -63,6 +64,8 @@ function loadFarm():Farm {
       }
       s.gardenHelper.enabled??=s.gardenHelper.crop!==null;
       if(typeof s.gardenHelper.enabled!=='boolean')throw new Error('Повреждено состояние помощника сада');
+      if(helper.actions!==undefined&&(!helper.actions||gardenHelperActions.some(action=>typeof helper.actions[action]!=='boolean')))
+        throw new Error('Повреждены переключатели помощника сада');
       delete s.gardenHelper.waitForFull;
       if(!gardenHelperActions.every(action=>int(s.gardenHelper.levels?.[action],0,gardenHelperMax)&&int(s.gardenHelper.next?.[action],0)))
         throw new Error('Повреждены циклы помощника сада');
@@ -200,6 +203,12 @@ function loadFarm():Farm {
       throw new Error('Повреждена отметка рывка дождя');
     if(s.weather.surged!==undefined&&typeof s.weather.surged!=='boolean')throw new Error('Повреждено состояние рывка дождя');
     if(savedPlots.some((p:Plant|null)=>p?.line!==undefined && (!int(p.line,0,s.lines.length-1)||s.lines[p.line].crop!==p.crop))) throw new Error("Повреждено растение линии");
+    if(s.pots!==undefined&&(!Array.isArray(s.pots)||s.pots.length!==greenhousePotCount||s.pots.some(pot=>pot!==null&&(
+      !pot||!int(pot.line,0,s.lines.length-1)||!int(pot.ready,0)||!int(pot.since,pot.ready)||!int(pot.next,pot.ready)||
+      !int(pot.fruit,0)||typeof pot.carry!=='number'||!(pot.carry>=0&&pot.carry<1)||
+      !pot.items||typeof pot.items!=='object'||Array.isArray(pot.items)||
+      Object.entries(pot.items).some(([id,count])=>!materialsBySaveKey.has(id)||!int(count,0))
+    ))))throw new Error('Повреждены горшки теплицы');
     if(savedPlots.some((p:Plant|null)=>p?.mystery && (!Array.isArray(p.mystery.parents)||p.mystery.parents.length!==2||!p.mystery.parents.every(i=>int(i,0,crops.length-1))||!Array.isArray(p.mystery.traits)||p.mystery.traits.length>10||!p.mystery.traits.every(t=>traitNames[t]))))throw new Error("Повреждена мутация");
     if(savedPlots.some((plot:Plant|null)=>plot?.mystery?.genomes && (plot.mystery.genomes.length!==2 || !plot.mystery.genomes.every(validGenome))))throw new Error("Повреждена генетика родителей");
     for(const plot of savedPlots)if(plot?.mystery){
