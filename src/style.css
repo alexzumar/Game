@@ -643,6 +643,7 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 .upgrade-price:is(:hover,:focus-within)>.upgrade-tooltip:not([hidden]){visibility:visible}
 .upgrade-tooltip-card:popover-open{position:fixed;inset:auto;margin:0;box-sizing:border-box;visibility:visible;white-space:pre-line;padding:16px;overflow:auto;pointer-events:auto;border:1px solid var(--line);background:color-mix(in srgb,var(--accent) 18%,var(--base));box-shadow:0 8px 24px var(--shade)}
 .upgrade-tooltip-card:not(:popover-open){display:none}
+.upgrade-tooltip-card:popover-open{scrollbar-width:none}
 .upgrade-tooltip-card:popover-open::backdrop{backdrop-filter:grayscale(.24);pointer-events:none}
 .upgrade-tooltip-title{display:block;margin-bottom:10px;font-size:1.13rem;line-height:1.2}
 #knots-dialog{width:min(1320px,calc(100vw - 24px),max(600px,calc((100dvh - 190px) * 1.8)));max-height:calc(100dvh - 24px);overflow:auto;padding:18px}

@@ -46,6 +46,7 @@ type Farm = {
   mutationPoints?:number;
   knotRanks?:number[][];
   knotPremiumFruit?:number;
+  knotPremiumValue?:number;
   gardenHelper?:GardenHelper;
   knotRenewDisabled?:boolean;
   pots?:(GreenhousePot|null)[];

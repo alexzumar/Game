@@ -86,9 +86,15 @@ function collect(farm:Farm,index:number,now:number,random=Math.random,area:PlotA
     farm.coins+=Math.floor(harvestIncome*knotEffect(farm,0,2));
     const premium=knotEffect(farm,3,0);
     if(premium){
-      const progress=(farm.knotPremiumFruit??0)+Math.floor(finalAmount);
-      farm.coins+=Math.floor(Math.floor(progress/20)*20*harvestIncome/finalAmount*premium);
-      farm.knotPremiumFruit=progress%20;
+      const savedValue=farm.knotPremiumValue??0;
+      const progress=(farm.knotPremiumValue===undefined?0:farm.knotPremiumFruit??0)+Math.floor(finalAmount);
+      const remainder=progress%20;
+      if(progress>=20){
+        const remainderValue=remainder*harvestIncome/finalAmount;
+        farm.coins+=Math.floor((savedValue+harvestIncome-remainderValue)*premium);
+        farm.knotPremiumValue=remainderValue;
+      }else farm.knotPremiumValue=savedValue+harvestIncome;
+      farm.knotPremiumFruit=remainder;
     }
     const reserve=knotEffect(farm,2,0);
     if(reserve&&random()<reserve)farm.seeds[plot.crop]++;

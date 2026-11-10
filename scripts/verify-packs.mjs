@@ -5,6 +5,15 @@ const context=vm.createContext({assert,console,localStorage:storage});vm.runInCo
 vm.runInContext(`
 const starter=newFarm();assert.equal(starter.coins,0);assert.equal(starter.seeds[0],1);assert.equal(total(starter.seeds),1);assert.equal(expansionPrice(starter),1);assert.equal(expand(starter),false);starter.plots[0]={crop:0,planted:0,ready:0};starter.seeds[0]=0;assert.equal(collect(starter,0,1,()=>.5),1);assert.equal(starter.harvestValue[0],5);assert.equal(expand(starter),true);assert.equal(starter.size,2);assert.equal(expansionPrice(starter),15);assert.equal(starter.resources.orbs,0);assert.deepEqual(fieldOrbPrices,[1,15,50,150,400,1000,2500]);
 const knots=newFarm();
+const premiumFarm=newFarm();
+premiumFarm.knotRanks=[[0,0,0,0],[0,0,0,0],[0,0,0,0],[1,0,0,0]];
+premiumFarm.knotPremiumFruit=19;
+premiumFarm.knotPremiumValue=19*8;
+premiumFarm.plots[0]={crop:3,planted:0,ready:0};
+assert.equal(collect(premiumFarm,0,1,()=>.5),1);
+assert.equal(premiumFarm.coins,270);
+assert.equal(premiumFarm.knotPremiumFruit,0);
+assert.equal(premiumFarm.knotPremiumValue,0);
 for(const id of knotMaterials[0])knots.resources.items[id]=10000;
 assert.equal(buyKnotRank(knots,0,1),false);
 for(let tier=0;tier<4;tier++){

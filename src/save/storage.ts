@@ -52,6 +52,8 @@ function loadFarm():Farm {
     if(s.mutationUpgrades!==undefined&&(!s.mutationUpgrades||typeof s.mutationUpgrades!=='object'||Array.isArray(s.mutationUpgrades)||mutationUpgradeIds.some(id=>!int(s.mutationUpgrades?.[id]??0,0,mutationUpgradeMax))))throw new Error('Повреждена прокачка селекции');
     if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
     if(s.knotPremiumFruit!==undefined&&!int(s.knotPremiumFruit,0,19))throw new Error('Повреждён прогресс премии за урожай');
+    if(s.knotPremiumValue!==undefined&&(!Number.isFinite(s.knotPremiumValue)||s.knotPremiumValue<0))
+      throw new Error('Повреждена стоимость плодов для премии');
     if(s.knotRenewDisabled!==undefined&&typeof s.knotRenewDisabled!=='boolean')throw new Error('Повреждена настройка повторного роста');
     if(s.gardenHelper!==undefined){
       const helper=s.gardenHelper;

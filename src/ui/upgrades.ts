@@ -112,10 +112,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     heading.replaceChildren(badge,document.createTextNode(match?.[2]??label));
   }
 });
-function renderMaterialPriceTip(buy:HTMLButtonElement,ids:string[]){
+function renderMaterialPriceTip(buy:HTMLButtonElement,ids:string[],details='',title='Материалы для покупки'){
+  const hasTip=ids.length>0||!!details;
   let price=buy.parentElement!;
   if(!price.classList.contains('upgrade-price')){
-    if(!ids.length)return;
+    if(!hasTip)return;
     price=document.createElement('div');
     price.className='upgrade-price';
     buy.before(price);
@@ -127,26 +128,27 @@ function renderMaterialPriceTip(buy:HTMLButtonElement,ids:string[]){
     bindUpgradeTooltip(price,tip);
   }
   const tip=price.querySelector<HTMLElement>('.upgrade-tooltip')!;
-  tip.hidden=!ids.length;
-  if(!ids.length&&tip.matches(':popover-open'))tip.hidePopover();
-  price.tabIndex=ids.length&&buy.disabled?0:-1;
+  tip.hidden=!hasTip;
+  if(!hasTip&&tip.matches(':popover-open'))tip.hidePopover();
+  price.tabIndex=hasTip&&buy.disabled?0:-1;
   for(const target of [price,buy]){
-    if(ids.length)target.setAttribute('aria-describedby',tip.id);
+    if(hasTip)target.setAttribute('aria-describedby',tip.id);
     else target.removeAttribute('aria-describedby');
   }
-  const signature=ids.join(',');
+  const signature=JSON.stringify([ids,details,title]);
   if(price.dataset.materials===signature)return;
   price.dataset.materials=signature;
   const heading=document.createElement('strong');
   heading.className='upgrade-tooltip-title';
-  heading.textContent=ids.length===1?materialsBySaveKey.get(ids[0])!.name:'Материалы для покупки';
-  tip.replaceChildren(heading,ids.map(id=>{
+  heading.textContent=ids.length===1?materialsBySaveKey.get(ids[0])!.name:title;
+  const sourcesText=ids.map(id=>{
     const item=materialsBySaveKey.get(id)!;
     if(id==='set0')return item.description;
     const sources=crops.filter(crop=>id.startsWith('set')?'set'+crop.set===id:
       Object.keys(crop.powers).some(power=>propertyMaterialId(power)===id));
-    return item.icon+' '+item.name+' — '+(id==='duplication'?'обычный урожай любой культуры':sources.map(crop=>crop.name).join(', '))+'.';
-  }).join('\n'));
+    return item.icon+' '+item.name+' · выпадает при сборе: '+(id==='duplication'?'обычные культуры':sources.map(crop=>crop.name).join(', '))+'.';
+  }).join('\n');
+  tip.replaceChildren(heading,[sourcesText,details].filter(Boolean).join('\n\n'));
 }
 const upgradeWallet=get('upgrade-wallet');
 const upgradeMaterialTip=document.createElement('span');

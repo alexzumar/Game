@@ -243,13 +243,15 @@ function renderGreenhouse(now:number){
   get('greenhouse-no-trellis').hidden=!candidates.length||candidates.some(({index})=>area.trellises[index])||
     area.plots.some((plot,index)=>plot?.mystery&&area.trellises[index]);
   get('greenhouse-dry').hidden=!area.plots.some(plot=>plot&&!plot.mystery&&plot.ready===null);
+  const buy=button('greenhouse-buy');
+  const price=greenhouseBedPrice(area);
+  buy.disabled=area.beds.every(Boolean)||(farm.mutationPoints??0)<price;
+  if(buy.disabled&&greenhouseTool==='buy')greenhouseTool=null;
+  buy.textContent='Новая грядка · 🧬 '+number(price);
   button('greenhouse-trellis').setAttribute('aria-pressed',String(greenhouseAltHeld||greenhouseTool==='trellis'));
-  button('greenhouse-buy').setAttribute('aria-pressed',String(greenhouseTool==='buy'));
+  buy.setAttribute('aria-pressed',String(greenhouseTool==='buy'));
   const moving=greenhouseMoveHeld||greenhouseTool==='move';
   button('greenhouse-move').setAttribute('aria-pressed',String(moving));
-  const buy=button('greenhouse-buy');
-  buy.textContent='Новая грядка · 🧬 '+number(greenhouseBedPrice(area));
-  buy.disabled=area.beds.every(Boolean)||(farm.mutationPoints??0)<greenhouseBedPrice(area);
   area.beds.forEach((bed,index)=>{
     const tile=greenhouseGrid.children[index] as HTMLButtonElement;
     const plot=area.plots[index],trellis=area.trellises[index],rot=area.rot[index];

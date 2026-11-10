@@ -84,6 +84,11 @@ const smoke=`<script>setTimeout(async()=>{try{
  window.dispatchEvent(new KeyboardEvent('keyup',{code:'KeyM'}));
  assert(farm.greenhouse.trellises[4]&&!farm.greenhouse.beds[21],'Keyboard move did not move empty trellis bed');
  button('greenhouse-move').click();
+ farm.mutationPoints=greenhouseBedPrice(farm.greenhouse);render();
+ const buyBed=button('greenhouse-buy'),emptyBed=farm.greenhouse.beds.findIndex(bed=>!bed);
+ buyBed.click();greenhouseGrid.children[emptyBed].click();
+ assert(farm.greenhouse.beds[emptyBed]&&buyBed.disabled&&buyBed.getAttribute('aria-pressed')==='false'&&greenhouseTool===null,'Greenhouse stayed in buy mode after spending the last points');
+ button('greenhouse-move').click();
  const movingTrellis=greenhouseGrid.children[4],bedTarget=greenhouseGrid.children[5],bedTransfer=new DataTransfer();
  assert(movingTrellis.draggable&&movingTrellis.classList.contains('greenhouse-movable')&&bedTarget.classList.contains('greenhouse-move-target'),'Move mode lacks available source or destination');
  movingTrellis.dispatchEvent(new DragEvent('dragstart',{dataTransfer:bedTransfer,bubbles:true}));

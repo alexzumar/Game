@@ -125,7 +125,10 @@ function renderGardenHelperUpgrades(){
     const price=gardenHelperUpgrade(farm,action);
     renderUpgradeChange(effect,level,interval(level),price?interval(level+1):undefined);
     const icon=price?.id?materialsBySaveKey.get(price.id)!.icon:'🔮';
-    buy.textContent=price?icon+' '+price.cost+(ranks<price.ranks?' · нужно '+price.ranks+' рангов узелков':''):'Максимум';
+    buy.textContent=price?icon+' '+price.cost+(ranks<price.ranks?' · Узелки '+ranks+'/'+price.ranks:''):'Максимум';
     buy.disabled=!open||!price||ranks<price.ranks||gardenHelperUpgradeBalance(farm,price)<price.cost;
+    const requirement=price?.ranks?'Ранги суммируются по всем четырём монументам. Каждое купленное улучшение узелка даёт один ранг. Сейчас '+ranks+' из '+price.ranks+' нужных.':'';
+    renderMaterialPriceTip(buy,price?.id?[price.id]:[],
+      price?.id===null?'Орбы выпадают при сборе обычных культур.':requirement,'Орбы');
   }
 }
