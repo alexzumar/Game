@@ -634,13 +634,77 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 .upgrade-tooltip-card:not(:popover-open){display:none}
 .upgrade-tooltip-card:popover-open::backdrop{backdrop-filter:grayscale(.24);pointer-events:none}
 .upgrade-tooltip-title{display:block;margin-bottom:10px;font-size:1.13rem;line-height:1.2}
+#knots-dialog{width:min(1320px,calc(100vw - 24px),max(600px,calc((100dvh - 190px) * 1.8)));max-height:calc(100dvh - 24px);overflow:auto;padding:18px}
+#knots-dialog>.window-heading{top:0;margin:0 0 6px;width:100%;row-gap:6px}
+#knots-dialog>.window-heading>form{order:0;margin-left:auto;align-self:flex-start}
+.in-greenhouse #garden-helper-open{display:none}
+.garden-helper-panel{display:grid;gap:12px;margin-bottom:16px}
+.garden-helper-panel label{display:flex;align-items:center;gap:8px}
+.garden-helper-panel p{margin:0}
+#helper-upgrades{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;padding-bottom:16px}
+.knot-stocks,.knot-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding-inline:3.2%}
+.knot-stocks{flex-basis:100%;order:5;gap:8px}
+.knot-stock{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;align-items:start;gap:5px;padding:6px;color:var(--ink);font-size:1rem;font-weight:650;text-align:center;background:color-mix(in srgb,var(--base) 75%,var(--accent));border:1px solid var(--line);border-radius:12px}
+.knot-stock-name{font-size:.79rem}
+.knot-stock-amounts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:4px 9px;font-size:.87rem}
+.knot-stock-amounts>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.knot-exchange:popover-open{position:fixed;inset:auto;margin:0;box-sizing:border-box;display:grid;justify-items:center;gap:8px;padding:12px;overflow:auto;background:color-mix(in srgb,var(--base) 90%,var(--accent));color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px var(--shade)}
+.knot-exchange-target{width:90px;aspect-ratio:1;white-space:normal;overflow-wrap:anywhere}
+.knot-exchange-options:not([hidden]){display:grid;width:100%;gap:4px}
+.knot-exchange-cost{margin:0;font-size:.82rem;text-align:center}
+.knot-exchange-quantity{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;font-size:.82rem}
+.knot-exchange-quantity input{width:7ch}
+.knot-board{position:relative;aspect-ratio:1.8;background:url('assets/Зданийфонулушчения.png') center / 100% 100% no-repeat;filter:drop-shadow(0 14px 10px #0008);border-radius:3%}
+#knots-dialog{transition:background-color .25s ease}
+#knots-dialog::backdrop{transition:background-color .25s ease}
+#knots-dialog>.window-heading{transition:filter .25s ease}
+#knots-dialog:has(.knot-tooltip:popover-open){background-color:#0009}
+#knots-dialog:has(.knot-tooltip:popover-open)::backdrop{background-color:#0009}
+#knots-dialog:has(.knot-tooltip:popover-open)>.window-heading{filter:brightness(.62)}
+.knot-column{position:relative;display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:6%;padding:77% 17% 30%;min-height:0}
+@media(hover:hover){
+ #knots-dialog:has(.knot-column:hover){background-color:#0009}
+ #knots-dialog:has(.knot-column:hover)::backdrop{background-color:#0009}
+ #knots-dialog:has(.knot-column:hover)>.window-heading{filter:brightness(.62)}
+}
+@media(prefers-reduced-motion:reduce){
+ #knots-dialog,#knots-dialog::backdrop,#knots-dialog>.window-heading{transition:none}
+}
+.knot-node{display:flex;justify-content:space-between;align-items:center;gap:5px;min-width:0;padding:4px 10px;border-radius:18px;background:color-mix(in srgb,var(--base) 86%,transparent);color:var(--ink)}
+.knot-node[data-locked=true]{background:color-mix(in srgb,var(--base) 63%,transparent)}
+.knot-node[data-locked=true] .knot-icon{filter:grayscale(.85)}
+.knot-node[data-active=true]{background:color-mix(in srgb,var(--base) 62%,var(--accent));border-color:var(--line)}
+.knot-node[aria-disabled=true]{cursor:help}
+.knot-icon{font-size:clamp(1.25rem,4.4vw,3rem);line-height:1}
+.knot-name{display:block;font-size:clamp(.59rem,1.2vw,.9rem);line-height:1.1;margin-bottom:2px}
+.knot-tooltip.upgrade-tooltip-card:popover-open{display:flex;flex-direction:column;overflow:hidden;padding:clamp(8px,1.4vw,18px);white-space:normal}
+.knot-tooltip.upgrade-tooltip-card:popover-open::backdrop{backdrop-filter:none}
+.knot-tooltip>span{display:flex;flex:1;flex-direction:column;min-height:0}
+.knot-tooltip p,.knot-effect-list{color:var(--ink);margin:4px 0;font-size:clamp(.6rem,1.05vw,.88rem);line-height:1.2}
+.knot-tooltip p:first-child{padding-bottom:8px;border-bottom:1px solid var(--edge)}
+.knot-effect-list{display:grid;gap:.4em;align-content:start;padding:.5em;border-radius:8px;background:color-mix(in srgb,var(--accent) 28%,var(--base))}
+.knot-effect-list b{color:var(--upgrade-next-ink,#14583d)}
+.knot-tooltip .knot-tooltip-price{margin-top:auto;padding-top:.5em;border-top:1px solid var(--edge)}
+.knot-tooltip-price>span{white-space:nowrap}
+.knot-tooltip-price .knot-cost-missing{color:#b52b3e;font-weight:750}
+[data-theme=dark] .knot-tooltip-price .knot-cost-missing{color:#ff929d}
+.knot-dots{display:flex;justify-content:flex-end;gap:4px;margin-top:3px}
+.knot-dots i{width:8px;height:8px;border:1px solid var(--line);border-radius:50%;background:var(--glass)}
+.knot-dots .filled{background:#82c447;border-color:#d4eea3}
+@media(max-width:720px){
+ #knots-dialog{padding:12px}
+ #knots-dialog>.window-heading,.knot-board{min-width:570px}
+ .knot-node{padding-inline:6px;font-size:.78rem}
+ .knot-dots{gap:2px}
+ .knot-dots i{width:6px;height:6px}
+}
 @media(prefers-reduced-motion:no-preference){
  .upgrade-tooltip-card:popover-open{animation:upgrade-tooltip-enter .18s ease-out both}
 }
 @keyframes upgrade-tooltip-enter{from{opacity:0}to{opacity:1}}
-:is(#mutation-upgrades,#trait-list,#convenience-list,#extractor-upgrades,#pack-upgrade-list,#diamond-upgrades)> .panel,
+:is(#helper-upgrades,#mutation-upgrades,#trait-list,#convenience-list,#extractor-upgrades,#pack-upgrade-list,#diamond-upgrades)> .panel,
 #upgrade-hybrids>.panel,#upgrade-tools>.panel,#pack-luck-upgrade{display:flex;flex-direction:column;min-width:0}
-:is(#mutation-upgrades,#trait-list,#convenience-list,#extractor-upgrades,#pack-upgrade-list,#diamond-upgrades)> .panel>button,
+:is(#helper-upgrades,#mutation-upgrades,#trait-list,#convenience-list,#extractor-upgrades,#pack-upgrade-list,#diamond-upgrades)> .panel>button,
 #upgrade-hybrids>.panel>button,#upgrade-tools>.panel>button,#pack-luck-upgrade>button{width:100%;min-height:36px;margin-top:auto}
 #trait-list{align-items:stretch}
 #trait-list .panel>strong{display:flex;align-items:center;gap:8px;margin-bottom:10px}
@@ -857,7 +921,7 @@ button{user-select:none}
   <nav class="shop-tabs" aria-label="Категории улучшений">
     
     <button class="quiet" id="upgrade-tab-packs" aria-pressed="true">Пакеты семян</button>
-    <button class="quiet" id="upgrade-tab-seeds" aria-pressed="false">Семена</button><button class="quiet" id="upgrade-tab-tools" aria-pressed="false">Инструменты</button><button class="quiet" id="upgrade-tab-discovery" aria-pressed="false">Рулетка видов</button><button class="quiet" id="upgrade-tab-extractor" aria-pressed="false">Экстрактор</button><button class="quiet" id="upgrade-tab-hybrids" aria-pressed="false">Гибриды</button>
+    <button class="quiet" id="upgrade-tab-seeds" aria-pressed="false">Семена</button><button class="quiet" id="upgrade-tab-tools" aria-pressed="false">Инструменты</button><button class="quiet" id="upgrade-tab-discovery" aria-pressed="false">Рулетка видов</button><button class="quiet" id="upgrade-tab-extractor" aria-pressed="false">Экстрактор</button><button class="quiet" id="upgrade-tab-hybrids" aria-pressed="false">Гибриды</button><button class="quiet" id="upgrade-tab-helper" aria-pressed="false">Помощник</button>
   </nav>
   
   <section id="upgrade-packs"><section class="glass panel" id="pack-luck-upgrade"><h2>🍀 Удача пакета</h2><p id="luck-preview"></p><button class="quiet" id="buy-luck"></button></section><div id="pack-upgrade-list"></div></section>
@@ -866,6 +930,7 @@ button{user-select:none}
 
   </section>
   <section id="upgrade-tools" hidden><div id="convenience-list"></div></section>
+  <section id="upgrade-helper" hidden><p id="helper-upgrade-gate"></p><div id="helper-upgrades"></div></section>
   <section id="upgrade-discovery" hidden><div id="discovery-upgrades"></div></section><section id="upgrade-extractor" hidden><div id="extractor-upgrades"></div></section><section id="upgrade-hybrids" hidden><div id="mutation-upgrades"></div><section class="glass panel"><h2>Вместимость инвентаря</h2><p id="hybrid-expand-effect"></p><button class="quiet" id="hybrid-expand"></button></section></section><section id="trait-panel" class="glass panel trait-panel" hidden>
     <button class="quiet close" id="trait-close" aria-label="Закрыть">×</button>
     <h2 id="trait-title"></h2><p id="crop-rarity-time"></p><p id="trait-lock"></p><p id="crop-ability"></p><div id="trait-list"></div>
@@ -1114,6 +1179,9 @@ function newGreenhouse(now       )           {
 
 
 
+
+
+
 const total = (counts         ) => counts.reduce((sum,count) => sum + count,0);
 const newFarm = ()      => {
   const now = Date.now();
@@ -1243,7 +1311,7 @@ function plant(farm     , index       , crop       , now       ,line        ,are
 function wateringDuration(farm     ,plot      ,level=plot.line===undefined?farm.levels[plot.crop].moisture:0){
   const growth=plot.duration??plantGrowthTime(farm,plot);
   const moisturePower=effectiveGenome(farm,plot).powers.moisture??0;
-  return Math.max(1,Math.round(growth*.25*(1+level*.05)*(1+moisturePower/100)));
+  return Math.max(1000,Math.round(growth*.5*(1+level*.05)*(1+moisturePower/100)));
 }
 function water(farm     ,plot      ,now       ,until=now+wateringDuration(farm,plot)) {
   advanceDryGrowth(farm,plot,now);
@@ -1299,7 +1367,10 @@ function collect(farm     ,index       ,now       ,random=Math.random,area      
   const powers=effectiveGenome(farm,plot).powers;
   const amount = (plot.line===undefined?harvestAmount(farm.levels[plot.crop].yield+farm.collection.filter(value=>value>0).length-1,random,(powers.head??0)/100):genome(farm,plot).genes.ga+harvestAmount(genome(farm,plot).genes.ga-1,random,(powers.head??0)/100)-1);
   const baseAmount=amount+lineTrait(farm,plot,"yield");
-  const finalAmount=baseAmount*(random()<(powers.bounty??0)/100?2:1)+diamondBonusCount(diamondLevel(farm,"fruit")/100,random);
+  const ordinary=plot.line===undefined;
+  const doubleChance=ordinary?knotEffect(farm,0,1):0;
+  const finalAmount=(baseAmount*(random()<(powers.bounty??0)/100?2:1)+diamondBonusCount(diamondLevel(farm,"fruit")/100,random))*
+    (doubleChance&&random()<doubleChance?2:1);
   if(plot.line!==undefined){
     const line=farm.lines[plot.line];
     if((line.archived||line.seeds===0)&&hybridCount(farm)>=farm.hybridSlots)return 0;
@@ -1310,13 +1381,24 @@ function collect(farm     ,index       ,now       ,random=Math.random,area      
   farm.harvest[plot.crop]+=finalAmount;
   const harvestIncome=finalAmount*cropPrices[plot.crop]*(plot.ripening?.value??1)*(1+(powers.sweet??0)/100)*(1+collectionLevel(farm.harvested[plot.crop])/100);
   farm.harvestValue[plot.crop]+=harvestIncome;
+  if(ordinary){
+    farm.coins+=Math.floor(harvestIncome*knotEffect(farm,0,2));
+    const premium=knotEffect(farm,3,0);
+    if(premium){
+      const progress=(farm.knotPremiumFruit??0)+Math.floor(finalAmount);
+      farm.coins+=Math.floor(Math.floor(progress/20)*20*harvestIncome/finalAmount*premium);
+      farm.knotPremiumFruit=progress%20;
+    }
+    const reserve=knotEffect(farm,2,0);
+    if(reserve&&random()<reserve)farm.seeds[plot.crop]++;
+  }
   awardDiamonds(farm,plot.crop,harvestIncome,random);
   if(plot.line===undefined&&diamondLevel(farm,'seedReturn')&&random()<diamondCurve(diamondLevel(farm,'seedReturn')))farm.seeds[plot.crop]++;
   if(plot.line!==undefined){const genes=genome(farm,plot).genes;farm.harvestQuality[plot.crop]+=finalAmount*((genes.ga-1)/29+(genes.gr-1)/58+(genes.re-1)/58);}
   if(random()<(powers.pod??0)/100){if(plot.line===undefined)farm.seeds[plot.crop]+=2;else farm.lines[plot.line].seeds+=2;}
   farm.collected += finalAmount;
   area.plots[index] = null;
-  const renew=random()<(powers.renew??0)/100;
+  const renew=random()<Math.min(1,(powers.renew??0)/100+(ordinary?knotEffect(farm,3,3):0));
   const secondCut=random()<(powers.cut??0)/100;
   if(renew||secondCut||random()<Math.min(1,(powers.regrow??0)/100)) {
     if(plot.line!==undefined)farm.lines[plot.line].seeds--;
@@ -1462,10 +1544,11 @@ function startExtraction(farm     ,crop       ,count       ,now       ,random=Ma
     !crops[crop] || !unlocked(farm,crop) || count>farm.harvest[crop])return false;
   const bonus=extractionRange(machine.yield);
   const quality=farm.harvestQuality[crop]/farm.harvest[crop];
-  const outputs=Array.from({length:count},()=>{
+  const catalyst=knotEffect(farm,2,2);
+  const outputs=Array.from({length:count},(_,index)=>{
     if(random()<.01)return 0;
     const max=bonus.max+(random()<bonus.extra?1:0);
-    return 1+Math.min(max-1,Math.floor(random()*max));
+    return 1+Math.min(max-1,Math.floor(random()*max))+(index>0&&catalyst&&random()<catalyst?1:0);
   });
   if(!outputs.some(Boolean)&&farm.seeds[crop]===0&&![...farm.plots,...(farm.greenhouse?.plots??[])].some(plot=>plot?.crop===crop)&&farm.harvest[crop]===count){const max=bonus.max+(random()<bonus.extra?1:0);outputs[outputs.length-1]=1+Math.min(max-1,Math.floor(random()*max));}
   const output=total(outputs);
@@ -1778,13 +1861,18 @@ const basketSaleValue=(farm     )=>farm.harvestValue.reduce((sum,value)=>sum+Mat
 function sellBasket(farm     ,receipt         ) {
   if (receipt.length !== farm.harvest.length || !receipt.every((count,i) => count === farm.harvest[i])) return 0;
   const amount = total(receipt);
-  farm.coins += basketSaleValue(farm);farm.harvestValue.fill(0);farm.harvestQuality.fill(0);
+  farm.coins += basketSaleValue(farm)+receipt.reduce((sum,count,crop)=>sum+knotSaleBonus(farm,crop,count),0);farm.harvestValue.fill(0);farm.harvestQuality.fill(0);
   farm.harvest.fill(0);
   return amount;
 }
 
 function produceValue(farm     ,crop       ,count       ){
   return farm.harvestValue[crop]*count/farm.harvest[crop];
+}
+function knotSaleBonus(farm     ,crop       ,count       ,random=Math.random){
+  const chance=knotEffect(farm,2,1);
+  if(!chance||!count)return 0;
+  return Math.floor(produceValue(farm,crop,1)*.5*sampleBinomial(Math.floor(count),chance,random));
 }
 function produceSalePrice(farm     ,crop       ,count       ){
   const value=produceValue(farm,crop,count);
@@ -1846,6 +1934,23 @@ function updatePlantAbilities(farm     ,now       ,random=Math.random,area      
     const rainStart=area===farm?farm.weather.last??0:0,rainEnd=area===farm?farm.weather.end??0:0;
     const rainy=Math.max(0,Math.min(end,rainEnd)-Math.max(from,rainStart));
     const sunny=Math.max(0,end-from-rainy);
+    if(plot.line===undefined&&end>=plot.ready-(plot.duration??plantGrowthTime(farm,plot))/2){
+      const rush=knotEffect(farm,3,2),sun=knotEffect(farm,2,3);
+      if(rush&&!plot.knotRushChecked){
+        plot.knotRushChecked=true;
+        if(random()<rush)plot.ready=Math.floor(end);
+        changed=true;
+      }
+      if(sun&&sunny>0&&area===farm&&!plot.knotSunPaid){
+        plot.knotSunPaid=true;
+        const expected=(1+farm.levels[plot.crop].yield/100)*sun;
+        const amount=Math.floor(expected)+Number(random()<expected%1);
+        farm.harvest[plot.crop]+=amount;
+        farm.harvestValue[plot.crop]+=amount*cropPrices[plot.crop];
+        changed=true;
+      }
+    }
+    if(plot.ready<=now)continue;
     if(powers.sunshine && sunny>0){plot.ready=Math.max(now,plot.ready-sunny*powers.sunshine/100);changed=true;}
     if(powers.leap){
       plot.boostCheck??=from+30000;
@@ -2012,16 +2117,29 @@ const harvestDuplicationChance=(crop       )=>Math.min(1,cropTimes[crop]/120*.00
 function awardHarvestLoot(farm     ,crop       ,count       ,random=Math.random){
  const tier=cropTiers[crop],chance=harvestMaterialChance(crop);
  const setCount=sampleBinomial(count,chance,random);
- const propertyCount=sampleBinomial(count-setCount,chance/(1-chance),random);
+ const propertyCount=sampleBinomial(count-setCount,Math.min(1,chance*(1+knotEffect(farm,1,1))/(1-chance)),random);
  const orbs=rollHarvestOrbs(count-setCount-propertyCount,tier,farm.resources.orbLuck,random);
  const bonus=Math.min(orbs,farm.wheels?.orbBoost??0);
  if(farm.wheels)farm.wheels.orbBoost-=bonus;
- farm.resources.orbs+=orbs+bonus;
+ const doubleOrbs=knotEffect(farm,1,0);
+ farm.resources.orbs+=orbs+bonus+(orbs&&doubleOrbs&&random()<doubleOrbs?orbs:0);
  const group=cropSets.findIndex(set=>set.crops.includes(crop));
  addMaterial(farm,'set'+group,duplicateCount(farm,setCount,random));
  const properties=Object.keys(basePowers[crop]);
- if(properties.length===1)addMaterial(farm,'property:'+properties[0],duplicateCount(farm,propertyCount,random));
- else{const first=sampleBinomial(propertyCount,.5,random);addMaterial(farm,'property:'+properties[0],duplicateCount(farm,first,random));addMaterial(farm,'property:'+properties[1],duplicateCount(farm,propertyCount-first,random));}
+ const first=properties.length===1?propertyCount:sampleBinomial(propertyCount,.5,random);
+ const propertyDrops=[first,propertyCount-first];
+ properties.forEach((property,index)=>addMaterial(farm,propertyMaterialId(property),duplicateCount(farm,propertyDrops[index],random)));
+ const roots=knotEffect(farm,0,3),bundle=knotEffect(farm,1,3);
+ if(roots){
+   const extra=sampleBinomial(count,roots,random);
+   const firstExtra=properties.length===1?extra:sampleBinomial(extra,.5,random);
+   properties.forEach((property,index)=>addMaterial(farm,propertyMaterialId(property),index===0?firstExtra:extra-firstExtra));
+ }
+ if(bundle){
+   const size=knotBundleSize(knotRank(farm,1,3));
+   addMaterial(farm,'set'+group,sampleBinomial(setCount,bundle,random)*size);
+   properties.forEach((property,index)=>addMaterial(farm,propertyMaterialId(property),sampleBinomial(propertyDrops[index],bundle,random)*size));
+ }
  addMaterial(farm,'duplication',sampleBinomial(count,harvestDuplicationChance(crop),random));
 }
 const duplicationPrice=(level       )=>Math.ceil((level+1)**1.25);
@@ -2080,6 +2198,156 @@ function upgradeIrrigation(farm     ){
 
 const propertyMaterialId=(id       )=>'property:'+(id==='yield'?'bounty':id==='cut'?'sprout':id);
 
+const knotMaterials=cropSets.map(set=>set.crops.map(crop=>propertyMaterialId(Object.keys(crops[crop].powers)[0])));
+const knotRank=(farm     ,set       ,tier       )=>farm.knotRanks?.[set]?.[tier]??0;
+const knotBundleSize=(rank       )=>2+Math.floor((rank-1)/3);
+const knotBase=[[15,.18,.12,.025],[.22,.25,.2,.16],[.22,.16,.18,.25],[.2,.25,.2,.12]];
+function knotEffect(farm     ,set       ,tier       ,previewTier=-1){
+  if(knotRank(farm,set,tier)+Number(previewTier===tier)===0)return 0;
+  const ranks=knotMaterials[set].reduce((sum,_,index)=>sum+(index>=tier?knotRank(farm,set,index):0),0);
+  const progress=ranks+Number(previewTier>=tier)-1;
+  const base=knotBase[set][tier];
+  if(set===0&&tier===0)return base*(1+.12*progress);
+  if(set===1&&tier===2)return 1-.8/(1+.12*progress);
+  if(set===0&&tier===2||set===3&&tier===0)return base*(1+.12*progress);
+  const cap=set===0&&tier===3?.16:set===1&&tier===1?2:set===2&&tier===2?1:.85;
+  return cap-(cap-base)/(1+.12*progress);
+}
+function knotMaterialTime(crop       ){
+  return cropTimes[crop]*Object.keys(crops[crop].powers).length/harvestMaterialChance(crop);
+}
+function knotExchangeRates(farm     ,set       ,target       ){
+  const discount=knotEffect(farm,1,2);
+  const targetCrop=cropSets[set]?.crops[target];
+  if(!discount||targetCrop===undefined||!unlocked(farm,targetCrop))return null;
+  return knotMaterials[set].flatMap((id,index)=>{
+    if(index===target)return [];
+    const crop=cropSets[set].crops[index];
+    const relative=knotMaterialTime(targetCrop)/knotMaterialTime(crop);
+    return [{id,rate:relative*(2-discount)/3}];
+  });
+}
+function knotExchangePrice(farm     ,set       ,target       ,quantity=1){
+  if(!Number.isSafeInteger(quantity)||quantity<1)return null;
+  return knotExchangeRates(farm,set,target)?.map(({id,rate})=>({id,count:Math.ceil(rate*quantity)}))??null;
+}
+function knotExchangeLimit(farm     ,set       ,target       ){
+  const rates=knotExchangeRates(farm,set,target);
+  if(!rates)return 0;
+  let low=0,high=Number.MAX_SAFE_INTEGER-(farm.resources.items[knotMaterials[set][target]]??0);
+  while(low<high){
+    const quantity=low+Math.ceil((high-low)/2);
+    if(rates.every(({id,rate})=>Math.ceil(rate*quantity)<=(farm.resources.items[id]??0)))low=quantity;
+    else high=quantity-1;
+  }
+  return low;
+}
+function exchangeKnotMaterial(farm     ,set       ,target       ,quantity=1){
+  const price=knotExchangePrice(farm,set,target,quantity);
+  if(!price||quantity>Number.MAX_SAFE_INTEGER-(farm.resources.items[knotMaterials[set][target]]??0)||
+    price.some(({id,count})=>(farm.resources.items[id]??0)<count))return false;
+  for(const {id,count} of price)farm.resources.items[id]-=count;
+  addMaterial(farm,knotMaterials[set][target],quantity,false);
+  return true;
+}
+
+function knotPrice(farm     ,set       ,tier       ){
+  const rank=knotRank(farm,set,tier);
+  if((tier<3&&rank>=5)||(tier>0&&knotRank(farm,set,tier-1)<5))return null;
+  const setCrops=cropSets[set].crops;
+  return knotMaterials[set].slice(0,tier+1).map((id,index)=>{
+    const progress=(tier-index)*5+rank;
+    const relative=knotMaterialTime(setCrops[index])/knotMaterialTime(setCrops[0]);
+    const count=1+Math.floor(progress**1.38/(3*Math.sqrt(relative)));
+    return {id,count:Math.min(Number.MAX_SAFE_INTEGER,count)};
+  });
+}
+
+function buyKnotRank(farm     ,set       ,tier       ){
+  const price=knotPrice(farm,set,tier);
+  if(!price||price.some(({id,count})=>(farm.resources.items[id]??0)<count))return false;
+  const ranks=farm.knotRanks??=cropSets.map(()=>[0,0,0,0]);
+  if(ranks[set][tier]>=Number.MAX_SAFE_INTEGER)return false;
+  for(const {id,count} of price)farm.resources.items[id]-=count;
+  ranks[set][tier]++;
+  return true;
+}
+
+const gardenHelperActions=['sow','water','collect']         ;
+
+
+const gardenHelperCycles=(value       )=>({sow:value,water:value,collect:value});
+const newGardenHelper=()             =>({cycleRevision:2,crop:null,enabled:false,levels:gardenHelperCycles(0),next:gardenHelperCycles(0)});
+const gardenHelperIntervals=[10000,8500,7000,5800,4800,4000,3200,2500,2000,1600,1200,950,700,530,400,300,200,165,140,120,100];
+const previousGardenHelperLevels=[0,2,5,8,10,12,14,16,20];
+const gardenHelperMax=gardenHelperIntervals.length-1;
+const gardenHelperUnlocked=(farm     )=>farm.size>=2&&farm.collected>=4&&farm.extraction.processed>=1;
+const gardenHelperRankTotal=(farm     )=>(farm.knotRanks??[]).flat().reduce((sum,rank)=>sum+rank,0);
+function gardenHelperUpgrade(farm     ,action                   ){
+  const level=farm.gardenHelper?.levels[action]??0;
+  return level<gardenHelperMax?{
+    ranks:Math.min(40,2+3*level),
+    cost:Math.ceil(1+(level+1)**1.4),
+    id:knotMaterials[gardenHelperActions.indexOf(action)][0]
+  }:null;
+}
+function buyGardenHelperUpgrade(farm     ,action                   ){
+  const price=gardenHelperUpgrade(farm,action);
+  if(!gardenHelperUnlocked(farm)||!price||gardenHelperRankTotal(farm)<price.ranks||
+    (farm.resources.items[price.id]??0)<price.cost)return false;
+  farm.resources.items[price.id]-=price.cost;
+  const helper=farm.gardenHelper??=newGardenHelper();
+  helper.levels[action]++;
+  helper.next[action]=0;
+  return true;
+}
+function runGardenHelper(farm     ,now       ){
+  const helper=farm.gardenHelper;
+  if(!helper?.enabled||helper.crop===null||!gardenHelperUnlocked(farm)||!unlocked(farm,helper.crop))return false;
+  const crop=helper.crop;
+  const ownPlot=(plot           )=>plot?.crop===crop&&plot.line===undefined&&!plot.mystery;
+  let changed=false;
+  if(now>=helper.next.collect){
+    let index=-1,oldest=Infinity;
+    for(const [i,plot] of farm.plots.entries()){
+      if(!plot||!ownPlot(plot)||plot.ready===null||plot.ready>now||(plot.wetUntil??Infinity)<plot.ready||plot.ready>=oldest)continue;
+      index=i;
+      oldest=plot.ready;
+    }
+    if(index>=0&&collect(farm,index,now)){
+      helper.next.collect=now+gardenHelperIntervals[helper.levels.collect];
+      changed=true;
+    }
+  }
+  if(now>=helper.next.sow){
+    const index=farm.plots.indexOf(null);
+    if(index>=0&&plant(farm,index,crop,now)){
+      helper.next.sow=now+gardenHelperIntervals[helper.levels.sow];
+      changed=true;
+    }
+  }
+  if(now>=helper.next.water){
+    let dry                ;
+    for(const plot of farm.plots){
+      if(!plot||!ownPlot(plot))continue;
+      const needsWater=plot.ready===null||(plot.wetUntil!==undefined&&plot.wetUntil<=now&&plot.wetUntil<plot.ready);
+      if(needsWater&&(!dry||(plot.watered??plot.planted)<(dry.watered??dry.planted)))dry=plot;
+    }
+    if(dry&&water(farm,dry,now)){
+      helper.next.water=now+gardenHelperIntervals[helper.levels.water];
+      changed=true;
+    }
+  }
+  const jobs=extractionJobs(farm.extraction).slice(0,farm.extraction.slots??1);
+  const slot=jobs.findIndex(job=>!job);
+  const managed=farm.plots.filter(plot=>plot===null||ownPlot(plot)).length;
+  const needed=Math.min(extractionCapacity,managed-farm.seeds[crop],farm.harvest[crop]);
+  if(slot>=0&&needed>0&&!jobs.some(job=>job?.crop===crop&&job.recycledHybrid===undefined)){
+    changed=startExtraction(farm,crop,needed,now,Math.random,slot)||changed;
+  }
+  return changed;
+}
+
 
 
 
@@ -2099,7 +2367,8 @@ const packTierOdds=[
 const legendaryLuckLimits=[5,6,8];
 function openingOdds(farm     ,pack       ,luck=farm.luck){
  if(!seedPacks[pack])return crops.map(()=>0);
- const base=basePackOdds(),tier=pack,t=Math.max(0,luck)/(Math.max(0,luck)+100);
+ const effectiveLuck=Math.max(0,luck+knotEffect(farm,0,0));
+ const base=basePackOdds(),tier=pack,t=effectiveLuck/(effectiveLuck+100);
  const starts=packTierOdds[pack];
  const start=starts[tier],limit=[100-12e-7,80,50,legendaryLuckLimits[farm.packProgress.luckGate]][tier];
  const members=base.filter((_,i)=>cropTiers[i]===tier);
@@ -2126,12 +2395,13 @@ function beginPackOpening(farm     ,index       ,count       ,random=Math.random
  const entries=Array.from({length:count},()=>{const crop=roll(odds,random),first=!known[crop];known[crop]=true;return {crop,first};});
  farm.packProgress.pending={pack:index,paid:cost.coins,entries};farm.opened++;farm.lastPack=entries.map(item=>item.crop);return [...farm.lastPack];
 }
-function finishPackOpening(farm     ){
+function finishPackOpening(farm     ,random=Math.random){
  const pending=farm.packProgress.pending;if(!pending)return null;
  let units=farm.packProgress.refundUnits,newKinds=0;
  for(const entry of pending.entries){
   if(entry.first){farm.collection[entry.crop]=Math.max(1,farm.collection[entry.crop]);farm.seeds[entry.crop]++;newKinds++;}
-  else{const rate=cropTiers[entry.crop]===pending.pack?packRefundRate(farm):5;units+=pending.paid*rate*(60/pending.entries.length);}
+  else{const rate=cropTiers[entry.crop]===pending.pack?packRefundRate(farm):5;units+=pending.paid*rate*(60/pending.entries.length);
+   const chance=knotEffect(farm,3,1);if(chance&&random()<chance)farm.seeds[entry.crop]+=2;}
  }
  const returned=Math.floor(units/6000);farm.packProgress.refundUnits=units%6000;
  farm.coins+=returned;farm.packProgress.pending=null;
@@ -2348,6 +2618,34 @@ function loadFarm()      {
     if(!Array.isArray(s.harvestValue)||s.harvestValue.length!==crops.length||!s.harvestValue.every((v        )=>typeof v==="number"&&Number.isFinite(v)&&v>=0))throw new Error("Повреждена стоимость урожая");
     if(s.mutationUpgrades!==undefined&&(!s.mutationUpgrades||typeof s.mutationUpgrades!=='object'||Array.isArray(s.mutationUpgrades)||mutationUpgradeIds.some(id=>!int(s.mutationUpgrades?.[id]??0,0,mutationUpgradeMax))))throw new Error('Повреждена прокачка селекции');
     if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
+    if(s.knotPremiumFruit!==undefined&&!int(s.knotPremiumFruit,0,19))throw new Error('Повреждён прогресс премии за урожай');
+    if(s.gardenHelper!==undefined){
+      const helper=s.gardenHelper;
+      if(!helper||helper.crop!==null&&!int(helper.crop,0,crops.length-1))
+        throw new Error('Повреждены настройки помощника сада');
+      const maxOldLevel=previousGardenHelperLevels.length-1;
+      if(!helper.levels&&int(helper.level,0,maxOldLevel)){
+        s.gardenHelper={crop:helper.crop,enabled:helper.crop!==null,
+          levels:gardenHelperCycles(helper.level),next:gardenHelperCycles(0)};
+      }
+      s.gardenHelper.enabled??=s.gardenHelper.crop!==null;
+      if(typeof s.gardenHelper.enabled!=='boolean')throw new Error('Повреждено состояние помощника сада');
+      delete s.gardenHelper.waitForFull;
+      if(!gardenHelperActions.every(action=>int(s.gardenHelper.levels?.[action],0,gardenHelperMax)&&int(s.gardenHelper.next?.[action],0)))
+        throw new Error('Повреждены циклы помощника сада');
+      if(s.gardenHelper.cycleRevision!==2){
+        for(const action of gardenHelperActions){
+          const level=previousGardenHelperLevels[s.gardenHelper.levels[action]];
+          if(level===undefined)throw new Error('Повреждены старые уровни помощника сада');
+          s.gardenHelper.levels[action]=level;
+        }
+        s.gardenHelper.cycleRevision=2;
+      }
+    }
+    if(s.knotRanks!==undefined&&(!Array.isArray(s.knotRanks)||s.knotRanks.length!==cropSets.length||
+      s.knotRanks.some(branch=>!Array.isArray(branch)||branch.length!==4||
+        branch.some((rank,tier)=>!int(rank,0,tier===3?Number.MAX_SAFE_INTEGER:5)||(tier>0&&rank>0&&branch[tier-1]!==5)))))
+      throw new Error('Повреждены уровни узелков');
     s.mutationCheck ??= Date.now()+(s.offset??0)+30000;
     if(!int(s.mutationCheck,0))throw new Error("Повреждён таймер селекции");
     s.lines ??= [];
@@ -2701,6 +2999,7 @@ function render() {
   renderSeeds();
   renderTraits();
   if(typeof upgradeMaterialsReady!=='undefined'&&upgradeMaterialsReady)renderUpgradeMaterials();
+  if(gardenHelperCardsReady&&upgradesDialog.open&&!get('upgrade-helper').hidden)renderGardenHelperUpgrades();
   renderConveniences();
   renderCollection();
   renderDiscoveryUpgrades();
@@ -3131,7 +3430,7 @@ function resetAll() {
 function sell(index       ,count       ) {
   if (!Number.isSafeInteger(count) || count < 1 || !(count <= farm.harvest[index])) return;
   if (farm.harvest[index] === 1 && saleDialog.open && skipSingle.checked) skipConfirmation = true;
-  const earned=produceSalePrice(farm,index,count);
+  const earned=produceSalePrice(farm,index,count)+knotSaleBonus(farm,index,count);
   removeProduce(farm,index,count);
   farm.coins += earned;
   selling = -1;
@@ -3189,8 +3488,9 @@ button('sell-basket').onclick = () => {
 };
 button('receipt-confirm').onclick = () => {
   if (!receiptDialog.open) return;
-  const earned=basketSaleValue(farm);
+  const before=farm.coins;
   const amount = sellBasket(farm,receipt);
+  const earned=farm.coins-before;
   receiptDialog.close();
   commit(amount ? 'Продан весь урожай: '+number(amount)+' · 🪙 +'+number(earned) :
     'Корзина изменилась. Открой чек ещё раз.');
@@ -3509,7 +3809,7 @@ function addUpgradeDetails(anchor            ,description       ){
   bindUpgradeTooltip(summary,content);
 }
 
-function bindUpgradeTooltip(trigger            ,tip            ){
+function bindUpgradeTooltip(trigger            ,tip            ,placement             ){
   tip.setAttribute('popover','manual');
   tip.classList.add('upgrade-tooltip-card','glass','panel');
   let closeTimer                              ;
@@ -3520,11 +3820,12 @@ function bindUpgradeTooltip(trigger            ,tip            ){
     const dialog=trigger.closest('dialog');
     if(!dialog?.open||tip.hidden||tip.matches(':popover-open'))return;
     const card=trigger.closest('.panel')??trigger.parentElement??trigger;
-    const bounds=card.getBoundingClientRect(),gap=10;
+    const target=placement?.();
+    const bounds=target??card.getBoundingClientRect(),gap=10;
     const width=Math.min(bounds.width,innerWidth-2*gap);
     const height=Math.min(bounds.height,innerHeight-2*gap);
-    let left=bounds.right+gap,top=bounds.top;
-    if(left+width>innerWidth-gap){
+    let left=target?bounds.left:bounds.right+gap,top=bounds.top;
+    if(!target&&left+width>innerWidth-gap){
       left=bounds.left-width-gap;
       if(left<gap){
         left=bounds.left;
@@ -3546,7 +3847,17 @@ function bindUpgradeTooltip(trigger            ,tip            ){
     tip.showPopover();
   };
   trigger.addEventListener('pointerenter',show);
-  trigger.addEventListener('pointerleave',hideSoon);
+  trigger.addEventListener('pointerleave',event=>{
+    if(!tip.classList.contains('knot-tooltip')){hideSoon();return;}
+    if(!tip.matches(':popover-open'))return;
+    if(tip.contains(event.relatedTarget             )){hideSoon();return;}
+    const source=trigger.getBoundingClientRect();
+    const target=tip.getBoundingClientRect();
+    const towardsTip=target.left>=source.right?event.clientX>=source.right-2:
+      target.right<=source.left&&event.clientX<=source.left+2;
+    if(towardsTip&&event.clientY>source.top&&event.clientY<source.bottom&&event.clientY>=target.top&&event.clientY<=target.bottom)hideSoon();
+    else hide();
+  });
   tip.addEventListener('pointerenter',()=>clearTimeout(closeTimer));
   tip.addEventListener('pointerleave',hideSoon);
   trigger.addEventListener('focusin',show);
@@ -3646,7 +3957,7 @@ button('upgrades-open').onclick = () => {
   hideUpgradeMaterials();
   upgradesDialog.showModal();
 };
-const upgradeTabs = ['packs','seeds','tools','discovery','extractor','hybrids'];
+const upgradeTabs = ['packs','seeds','tools','discovery','extractor','hybrids','helper'];
 for (const tab of upgradeTabs) button('upgrade-tab-'+tab).onclick = () => {
   get('trait-panel').hidden = true;
   for (const category of upgradeTabs) {
@@ -5079,6 +5390,7 @@ let playActiveUntil=0;
 const totalPlayTime=()=>(farm.activePlayMs??0)+(farm.backgroundPlayMs??0);
 let lastPlayTimeSave=totalPlayTime();
 let reloadingFarm=false;
+let helperChanged=false;
 
 function updatePlayTime(nextCounter                     ){
   const now=Math.floor(performance.now());
@@ -5102,7 +5414,10 @@ function recordPlayInput(event      ){
 
 function savePlayTime(){
   const elapsed=totalPlayTime();
-  if(elapsed!==lastPlayTimeSave&&saveFarm(farm))lastPlayTimeSave=elapsed;
+  if((helperChanged||elapsed!==lastPlayTimeSave)&&saveFarm(farm)){
+    lastPlayTimeSave=elapsed;
+    helperChanged=false;
+  }
 }
 
 function syncPlayTime(){
@@ -5146,9 +5461,12 @@ const tick = () => {
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || speed !== 1 ||
+  if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || helperChanged || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
-    if(saveFarm(farm))lastPlayTimeSave=totalPlayTime();
+    if(saveFarm(farm)){
+      lastPlayTimeSave=totalPlayTime();
+      helperChanged=false;
+    }
   }
   const selection=document.getSelection();
   if(selection&&!selection.isCollapsed&&selection.anchorNode?.parentElement?.closest('dialog[open]'))renderField(nowTime());
@@ -5157,6 +5475,9 @@ const tick = () => {
 };
 tick();
 setInterval(tick,1000);
+setInterval(()=>{
+  if(!reloadingFarm&&runGardenHelper(farm,nowTime()))helperChanged=true;
+},50);
 
 
 
@@ -6317,6 +6638,371 @@ get                 ('fortune-form').onsubmit=async event=>{
     renderFortune();
   }
 };
+
+const knotDialog=document.createElement('dialog');
+knotDialog.id='knots-dialog';
+knotDialog.className='glass';
+knotDialog.setAttribute('aria-labelledby','knots-title');
+knotDialog.innerHTML='<div class="window-heading"><h2 id="knots-title">🌿 Узелки</h2><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><div class="knot-stocks"></div></div><div class="knot-board"></div>';
+document.body.append(knotDialog);
+knotDialog.addEventListener('click',event=>{
+  if(event.target!==knotDialog)return;
+  const bounds=knotDialog.getBoundingClientRect();
+  if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)knotDialog.close();
+});
+function knotCost(price                           ){
+  return price.map(({id,count})=>materialsBySaveKey.get(id) .icon+' '+number(count)).join(' + ');
+}
+function createKnotExchange(set       ,trigger                  ){
+  const panel=document.createElement('section');
+  panel.id='knot-exchange-'+set;
+  panel.className='glass knot-exchange';
+  panel.setAttribute('popover','auto');
+  panel.setAttribute('aria-label','Обмен · '+cropSets[set].name);
+  panel.innerHTML='<button type="button" class="quiet knot-exchange-target" aria-expanded="false"></button><div class="knot-exchange-options" hidden></div><p class="knot-exchange-cost"></p><div class="knot-exchange-quantity"><label>Количество <input type="number" min="1" step="1" value="1"></label><button type="button" class="quiet">Максимум</button></div><button type="button" class="quiet wide knot-exchange-confirm">Обменять</button>';
+  trigger.setAttribute('aria-controls',panel.id);
+  trigger.setAttribute('aria-expanded','false');
+  const targetButton=panel.querySelector                   ('.knot-exchange-target') ;
+  const options=panel.querySelector             ('.knot-exchange-options') ;
+  const cost=panel.querySelector             ('.knot-exchange-cost') ;
+  const quantity=panel.querySelector                  ('input') ;
+  const max=panel.querySelector                   ('.knot-exchange-quantity button') ;
+  const confirm=panel.querySelector                   ('.knot-exchange-confirm') ;
+  let target=-1;
+  let closeTimer                              ;
+  const isOpen=()=>panel.matches(':popover-open');
+  const close=()=>{if(isOpen())panel.hidePopover();};
+  const render=()=>{
+    const limit=knotExchangeLimit(farm,set,target);
+    const count=quantity.valueAsNumber;
+    const validCount=Number.isSafeInteger(count)&&count>=1;
+    const price=knotExchangePrice(farm,set,target);
+    const material=materialsBySaveKey.get(knotMaterials[set][target]);
+    quantity.max=String(limit);
+    quantity.disabled=!price;
+    max.disabled=limit===0;
+    confirm.disabled=!validCount||count>limit;
+    targetButton.textContent=material?material.icon+' × '+(validCount?number(count):'—'):'Выбрать материал';
+    targetButton.setAttribute('aria-label',material?material.name+' · '+targetButton.textContent+' · сменить материал':'Выбрать материал');
+    const batch=validCount?knotExchangePrice(farm,set,target,count):null;
+    cost.textContent=batch?'Нужно '+knotCost(batch):
+      price?'Введи количество.':'Выбери материал открытой культуры.';
+  };
+  const place=()=>{
+    const anchor=trigger.getBoundingClientRect();
+    const width=Math.min(280,innerWidth-20);
+    panel.style.width=width+'px';
+    panel.style.left=Math.max(10,Math.min(anchor.left+(anchor.width-width)/2,innerWidth-width-10))+'px';
+    const top=anchor.bottom+8;
+    panel.style.top=top+'px';
+    panel.style.maxHeight=Math.max(0,innerHeight-top-10)+'px';
+  };
+  const open=()=>{
+    clearTimeout(closeTimer);
+    if(!knotDialog.open||trigger.disabled||isOpen())return;
+    options.hidden=true;
+    targetButton.setAttribute('aria-expanded','false');
+    render();
+    place();
+    panel.showPopover();
+  };
+  const closeSoon=()=>{closeTimer=setTimeout(()=>{
+    if(!panel.matches(':focus-within'))close();
+  },180);};
+  trigger.addEventListener('pointerenter',event=>{if(event.pointerType!=='touch')open();});
+  trigger.addEventListener('pointerleave',closeSoon);
+  trigger.onclick=()=>{open();targetButton.focus({preventScroll:true});};
+  panel.addEventListener('pointerenter',()=>clearTimeout(closeTimer));
+  panel.addEventListener('pointerleave',closeSoon);
+  panel.addEventListener('focusout',event=>{
+    if(!panel.contains(event.relatedTarget             )&&event.relatedTarget!==trigger)closeSoon();
+  });
+  panel.addEventListener('toggle',()=>trigger.setAttribute('aria-expanded',String(isOpen())));
+  knotDialog.addEventListener('scroll',()=>{if(isOpen())place();});
+  window.addEventListener('resize',()=>{if(isOpen())place();});
+  knotDialog.addEventListener('close',close);
+  targetButton.onclick=()=>{
+    options.hidden=!options.hidden;
+    targetButton.setAttribute('aria-expanded',String(!options.hidden));
+    if(options.hidden)return;
+    options.replaceChildren();
+    knotMaterials[set].forEach((id,tier)=>{
+      if(!knotExchangePrice(farm,set,tier))return;
+      const material=materialsBySaveKey.get(id) ;
+      const option=document.createElement('button');
+      option.type='button';
+      option.className='quiet';
+      option.textContent=material.icon+' '+material.name;
+      option.onclick=()=>{
+        target=tier;
+        quantity.value='1';
+        options.hidden=true;
+        targetButton.setAttribute('aria-expanded','false');
+        targetButton.focus({preventScroll:true});
+        render();
+      };
+      options.append(option);
+    });
+    if(!options.childElementCount)options.textContent='В этом наборе пока нет открытых культур.';
+  };
+  quantity.oninput=render;
+  max.onclick=()=>{quantity.value=quantity.max;render();};
+  confirm.onclick=()=>{
+    const count=quantity.valueAsNumber;
+    if(!exchangeKnotMaterial(farm,set,target,count)){render();return;}
+    commit();
+    renderKnots();
+    quantity.value='1';
+    render();
+  };
+  return panel;
+}
+const knotOpen=document.createElement('button');
+knotOpen.id='knots-open';
+knotOpen.className='quiet wide';
+knotOpen.textContent='🌿 Узелки';
+knotOpen.onclick=()=>{renderKnots();knotDialog.showModal();};
+button('upgrades-open').before(knotOpen);
+
+const knotEffects=[
+  ['Удача пакетов · повышает шанс получить культуру редкости пакета.',
+   'Дружный сбор · даёт шанс получить вторую порцию урожая.',
+   'Выручка с грядки · приносит монеты сразу при сборе.',
+   'Глубокие корни · при сборе обычного урожая есть отдельный шанс найти материал этой культуры, даже если обычная добыча ничего не дала.'],
+  ['Щедрая находка · даёт шанс удвоить выпавшие орбы.',
+   'Чистая добыча · повышает шанс найти материал культуры.',
+   'Обмен находок · сдаёшь материалы трёх культур одного набора и получаешь материал четвёртой. Целевую культуру сначала нужно открыть.',
+   'Крупная находка · при выпадении материала он может прийти пачкой. Прокачка повышает шанс пачки и её размер.'],
+  ['Семя в запас · даёт шанс вернуть семя при сборе.',
+   'Удачная продажа · даёт шанс продать плод с наценкой.',
+   'Катализатор партии · усиливает выход семян в длинных партиях.',
+   'Солнечная отдача · даёт порцию плодов до основного сбора в ясную погоду.'],
+  ['Общий сбор · урожай приближает денежную премию.',
+   'Стручок в пакете · повтор открытой культуры может дать её семена.',
+   'Досрочный урожай · посадка может созреть раньше срока.',
+   'Второй оборот · после сбора обычная культура может сразу начать новый цикл с половины шкалы роста, без расхода семени.']
+];
+const knotNames=[
+  ['Удача','Дружность','Выручка','Корни'],
+  ['Щедрость','Добыча','Обмен','Изобилие'],
+  ['Запас','Наценка','Катализ','Солнце'],
+  ['Премия','Стручок','Рывок','Оборот']
+];
+
+// The four sculptures in the artwork run from celery on the left to carrot on the right.
+const knotColumns=[3,1,2,0].map(set=>{
+  const stock=document.createElement('div');
+  stock.className='knot-stock';
+  stock.setAttribute('aria-label',cropSets[set].name);
+  const amounts=document.createElement('div');
+  amounts.className='knot-stock-amounts';
+  const heading=document.createElement('strong');
+  heading.className='knot-stock-name';
+  heading.textContent=cropSets[set].name;
+  const exchange=document.createElement('button');
+  exchange.type='button';
+  exchange.className='quiet';
+  exchange.textContent='Обменять материалы';
+  stock.append(heading,amounts,exchange,createKnotExchange(set,exchange));
+  knotDialog.querySelector('.knot-stocks') .append(stock);
+  const column=document.createElement('section');
+  column.className='knot-column';
+  column.setAttribute('aria-label',cropSets[set].name);
+  knotDialog.querySelector('.knot-board') .append(column);
+  const nodes=[3,2,1,0].map(tier=>{
+    const crop=crops[cropSets[set].crops[tier]];
+    const node=document.createElement('button');
+    node.type='button';
+    node.className='glass panel knot-node';
+    const icon=document.createElement('span');
+    icon.className='knot-icon';icon.textContent=crop.symbol;
+    icon.setAttribute('aria-hidden','true');
+    const progress=document.createElement('span');
+    const name=document.createElement('span');
+    name.className='knot-name';
+    name.textContent=knotNames[set][tier];
+    const label=document.createElement('strong');
+    const dots=document.createElement('span');
+    dots.className='knot-dots';dots.setAttribute('aria-hidden','true');
+    if(tier<3)for(let i=0;i<5;i++)dots.append(document.createElement('i'));
+    progress.append(name,label,dots);node.append(icon,progress);
+    const tip=document.createElement('span');
+    tip.id='knot-help-'+set+'-'+tier;
+    tip.className='upgrade-tooltip knot-tooltip';tip.setAttribute('role','tooltip');
+    const title=document.createElement('strong');
+    title.className='upgrade-tooltip-title';title.textContent=crop.symbol+' '+crop.name;
+    const body=document.createElement('span');
+    tip.append(title,body);
+    node.setAttribute('aria-describedby',tip.id);
+    column.append(node,tip);
+    bindUpgradeTooltip(node,tip,()=>{
+      const next=column.nextElementSibling;
+      const neighbor=next&&next.getBoundingClientRect().right<=innerWidth-10?next:column.previousElementSibling??next;
+      const bounds=(neighbor??column).getBoundingClientRect();
+      const board=column.parentElement .getBoundingClientRect();
+      return new DOMRect(bounds.left,board.top+board.height*.07,bounds.width,board.height*.88);
+    });
+    node.onclick=()=>{
+      if(!buyKnotRank(farm,set,tier))return;
+      commit(crop.name+' · уровень '+knotRank(farm,set,tier));
+      renderKnots();
+    };
+    return {tier,crop,node,label,dots,body};
+  });
+  return {set,amounts,exchange,nodes};
+});
+
+const knotEffectUnits=[
+  ['от шкалы удачи пакетов (100 ур.)','шанс удвоить урожай','от цены урожая монетами','шанс дополнительно найти материал'],
+  ['шанс удвоить орбы','к шансу добыть материал','скидка на наценку обмена','шанс получить пачку материалов'],
+  ['шанс вернуть семя','шанс продать на 50% дороже','шанс получить лишнее семя после первого плода','доля обычного урожая в ясную погоду'],
+  ['от цены каждых 20 плодов монетами','шанс получить два семени за повтор','шанс созреть на середине роста','шанс начать новый цикл с половины роста']
+];
+const knotPercent=new Intl.NumberFormat('ru',{style:'percent',maximumFractionDigits:2});
+function renderKnots(){
+  for(const {set,amounts,exchange,nodes} of knotColumns){
+    exchange.disabled=!knotEffect(farm,1,2);
+    exchange.title=exchange.disabled?'Открой «Обмен» в ветке чеснока и капусты.':'';
+    amounts.replaceChildren(...knotMaterials[set].map(id=>{
+      const material=materialsBySaveKey.get(id) ;
+      const item=document.createElement('span');
+      item.title=material.name;
+      item.textContent=material.icon+' '+number(farm.resources.items[id]??0);
+      return item;
+    }));
+    for(const {tier,crop,node,label,dots,body} of nodes){
+      const rank=knotRank(farm,set,tier),price=knotPrice(farm,set,tier);
+      const locked=tier>0&&knotRank(farm,set,tier-1)<5;
+      const affordable=!!price&&price.every(({id,count})=>(farm.resources.items[id]??0)>=count);
+      label.textContent=(locked?'🔒 ':'')+'Ур. '+(rank||1);
+      node.dataset.locked=String(locked);
+      node.dataset.active=String(!locked);
+      node.setAttribute('aria-disabled',String(!affordable));
+      node.setAttribute('aria-label',crop.name+' · '+(rank?'уровень '+rank:'ещё не улучшено'));
+      [...dots.children].forEach((dot,index)=>dot.classList.toggle('filled',index<rank));
+      const description=document.createElement('p');
+      description.textContent=knotEffects[set][tier];
+      const levels=document.createElement('p');
+      renderUpgradeChange(levels,rank,rank?'ранг сохранён':'бонус ещё не открыт',
+        price?'следующий ранг':undefined);
+      const effects=document.createElement('span');
+      effects.className='knot-effect-list';
+      for(let index=0;index<=tier;index++){
+        const current=knotEffect(farm,set,index);
+        if(!current&&index!==tier)continue;
+        const next=price?knotEffect(farm,set,index,tier):current;
+        const line=document.createElement('span');
+        const name=document.createElement('strong');
+        name.textContent=crops[cropSets[set].crops[index]].name+' · ';
+        const change=document.createElement('b');
+        const scale=set===0&&index===0?100:1;
+        change.textContent=next!==current?' → '+knotPercent.format(next/scale):'';
+        line.append(name,knotPercent.format(current/scale),change,' '+knotEffectUnits[set][index]);
+        if(set===1&&index===3&&(current||next)){
+          const rank=knotRank(farm,set,index);
+          const size=rank?knotBundleSize(rank):0;
+          const nextSize=price&&tier===index?knotBundleSize(rank+1):size;
+          line.append(' · пачка '+size+(nextSize!==size?' → '+nextSize:''));
+        }
+        effects.append(line);
+      }
+      const requirement=document.createElement('p');
+      requirement.className='knot-tooltip-price';
+      if(price){
+        requirement.append('Вложить ');
+        price.forEach(({id,count},index)=>{
+          if(index)requirement.append(' + ');
+          const item=document.createElement('span');
+          item.classList.toggle('knot-cost-missing',(farm.resources.items[id]??0)<count);
+          item.textContent=materialsBySaveKey.get(id) .icon+' '+number(count);
+          requirement.append(item);
+        });
+        requirement.append(' для прокачки.');
+        if(!affordable)requirement.append(' Материалов пока не хватает.');
+      }else{
+        requirement.textContent=locked?'Сначала улучши «'+knotNames[set][tier-1]+'» до 5-го уровня.':'Достигнут 5-й уровень.';
+      }
+      body.replaceChildren(description,levels,effects,requirement);
+    }
+  }
+}
+
+const gardenHelperDialog=collectionOverlay('garden-helper-dialog','Помощник сада');
+const gardenHelperPanel=document.createElement('section');
+gardenHelperPanel.className='glass panel garden-helper-panel';
+gardenHelperPanel.innerHTML='<p>Сажает, поливает и собирает выбранную культуру в саду. В экстрактор отправляет урожай для запаса семян на поле. Остальное оставляет в корзине.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
+gardenHelperDialog.append(gardenHelperPanel);
+const helperGate=gardenHelperPanel.querySelector             ('.garden-helper-gate') ;
+const helperCrop=gardenHelperPanel.querySelector                   ('select') ;
+const helperToggle=gardenHelperPanel.querySelector                   ('button') ;
+const helperUnlockText='Для открытия расширь поле до 2 × 2, собери 4 плода и переработай хотя бы один в экстракторе.';
+const helperOpen=document.createElement('button');
+helperOpen.type='button';
+helperOpen.id='garden-helper-open';
+helperOpen.className='quiet wide';
+helperOpen.textContent='🌱 Помощник сада';
+button('knots-open').before(helperOpen);
+
+function renderGardenHelper(){
+  const helper=farm.gardenHelper??newGardenHelper();
+  const open=gardenHelperUnlocked(farm);
+  helperGate.hidden=open;
+  helperGate.textContent=helperUnlockText;
+  helperCrop.replaceChildren(new Option('Выбери культуру',''),...crops.flatMap((crop,index)=>
+    unlocked(farm,index)?[new Option(crop.symbol+' '+crop.name,String(index))]:[]));
+  helperCrop.value=helper.crop===null?'':String(helper.crop);
+  helperCrop.disabled=!open;
+  helperToggle.disabled=!open||helper.crop===null;
+  helperToggle.textContent=helper.enabled?'Выключить':'Включить';
+}
+helperOpen.onclick=()=>{renderGardenHelper();gardenHelperDialog.showModal();};
+helperCrop.onchange=()=>{
+  if(!gardenHelperUnlocked(farm))return;
+  const helper=farm.gardenHelper??=newGardenHelper();
+  helper.crop=helperCrop.value===''?null:Number(helperCrop.value);
+  if(helper.crop===null)helper.enabled=false;
+  commit();
+  renderGardenHelper();
+};
+helperToggle.onclick=()=>{
+  const helper=farm.gardenHelper;
+  if(!gardenHelperUnlocked(farm)||!helper||helper.crop===null)return;
+  helper.enabled=!helper.enabled;
+  commit();
+  renderGardenHelper();
+};
+const helperCards=gardenHelperActions.map((action,index)=>{
+  const card=document.createElement('article');
+  card.className='glass panel';
+  const title=document.createElement('h3');
+  title.textContent=['🌱 Посадка','💧 Полив','🧺 Сбор'][index];
+  const effect=document.createElement('p');
+  const buy=document.createElement('button');
+  buy.type='button';
+  buy.className='quiet';
+  buy.onclick=()=>{if(buyGardenHelperUpgrade(farm,action))commit();};
+  card.append(title,effect,buy);
+  get('helper-upgrades').append(card);
+  return {action,effect,buy};
+});
+var gardenHelperCardsReady=true;
+button('upgrade-tab-helper').addEventListener('click',renderGardenHelperUpgrades);
+button('upgrades-open').addEventListener('click',renderGardenHelperUpgrades);
+function renderGardenHelperUpgrades(){
+  const open=gardenHelperUnlocked(farm),ranks=gardenHelperRankTotal(farm);
+  const gate=get('helper-upgrade-gate');
+  gate.textContent=helperUnlockText;
+  gate.hidden=open;
+  for(const {action,effect,buy} of helperCards){
+    const level=farm.gardenHelper?.levels[action]??0;
+    const interval=(rank       )=>'1 грядка каждые '+number(gardenHelperIntervals[rank]/1000)+' с';
+    const price=gardenHelperUpgrade(farm,action);
+    renderUpgradeChange(effect,level,interval(level),price?interval(level+1):undefined);
+    const material=price&&materialsBySaveKey.get(price.id) ;
+    buy.textContent=price&&material?material.icon+' '+price.cost+(ranks<price.ranks?' · нужно '+price.ranks+' рангов узелков':''):'Максимум';
+    buy.disabled=!open||!price||ranks<price.ranks||(farm.resources.items[price.id]??0)<price.cost;
+  }
+}
 </script>
 </body>
 </html>

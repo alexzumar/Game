@@ -51,6 +51,34 @@ function loadFarm():Farm {
     if(!Array.isArray(s.harvestValue)||s.harvestValue.length!==crops.length||!s.harvestValue.every((v:unknown)=>typeof v==="number"&&Number.isFinite(v)&&v>=0))throw new Error("Повреждена стоимость урожая");
     if(s.mutationUpgrades!==undefined&&(!s.mutationUpgrades||typeof s.mutationUpgrades!=='object'||Array.isArray(s.mutationUpgrades)||mutationUpgradeIds.some(id=>!int(s.mutationUpgrades?.[id]??0,0,mutationUpgradeMax))))throw new Error('Повреждена прокачка селекции');
     if(s.mutationPoints!==undefined&&!int(s.mutationPoints,0))throw new Error('Повреждены очки мутаций');
+    if(s.knotPremiumFruit!==undefined&&!int(s.knotPremiumFruit,0,19))throw new Error('Повреждён прогресс премии за урожай');
+    if(s.gardenHelper!==undefined){
+      const helper=s.gardenHelper;
+      if(!helper||helper.crop!==null&&!int(helper.crop,0,crops.length-1))
+        throw new Error('Повреждены настройки помощника сада');
+      const maxOldLevel=previousGardenHelperLevels.length-1;
+      if(!helper.levels&&int(helper.level,0,maxOldLevel)){
+        s.gardenHelper={crop:helper.crop,enabled:helper.crop!==null,
+          levels:gardenHelperCycles(helper.level),next:gardenHelperCycles(0)};
+      }
+      s.gardenHelper.enabled??=s.gardenHelper.crop!==null;
+      if(typeof s.gardenHelper.enabled!=='boolean')throw new Error('Повреждено состояние помощника сада');
+      delete s.gardenHelper.waitForFull;
+      if(!gardenHelperActions.every(action=>int(s.gardenHelper.levels?.[action],0,gardenHelperMax)&&int(s.gardenHelper.next?.[action],0)))
+        throw new Error('Повреждены циклы помощника сада');
+      if(s.gardenHelper.cycleRevision!==2){
+        for(const action of gardenHelperActions){
+          const level=previousGardenHelperLevels[s.gardenHelper.levels[action]];
+          if(level===undefined)throw new Error('Повреждены старые уровни помощника сада');
+          s.gardenHelper.levels[action]=level;
+        }
+        s.gardenHelper.cycleRevision=2;
+      }
+    }
+    if(s.knotRanks!==undefined&&(!Array.isArray(s.knotRanks)||s.knotRanks.length!==cropSets.length||
+      s.knotRanks.some(branch=>!Array.isArray(branch)||branch.length!==4||
+        branch.some((rank,tier)=>!int(rank,0,tier===3?Number.MAX_SAFE_INTEGER:5)||(tier>0&&rank>0&&branch[tier-1]!==5)))))
+      throw new Error('Повреждены уровни узелков');
     s.mutationCheck ??= Date.now()+(s.offset??0)+30000;
     if(!int(s.mutationCheck,0))throw new Error("Повреждён таймер селекции");
     s.lines ??= [];

@@ -17,7 +17,8 @@ const packTierOdds=[
 const legendaryLuckLimits=[5,6,8];
 function openingOdds(farm:Farm,pack:number,luck=farm.luck){
  if(!seedPacks[pack])return crops.map(()=>0);
- const base=basePackOdds(),tier=pack,t=Math.max(0,luck)/(Math.max(0,luck)+100);
+ const effectiveLuck=Math.max(0,luck+knotEffect(farm,0,0));
+ const base=basePackOdds(),tier=pack,t=effectiveLuck/(effectiveLuck+100);
  const starts=packTierOdds[pack];
  const start=starts[tier],limit=[100-12e-7,80,50,legendaryLuckLimits[farm.packProgress.luckGate]][tier];
  const members=base.filter((_,i)=>cropTiers[i]===tier);
@@ -44,12 +45,13 @@ function beginPackOpening(farm:Farm,index:number,count:number,random=Math.random
  const entries=Array.from({length:count},()=>{const crop=roll(odds,random),first=!known[crop];known[crop]=true;return {crop,first};});
  farm.packProgress.pending={pack:index,paid:cost.coins,entries};farm.opened++;farm.lastPack=entries.map(item=>item.crop);return [...farm.lastPack];
 }
-function finishPackOpening(farm:Farm){
+function finishPackOpening(farm:Farm,random=Math.random){
  const pending=farm.packProgress.pending;if(!pending)return null;
  let units=farm.packProgress.refundUnits,newKinds=0;
  for(const entry of pending.entries){
   if(entry.first){farm.collection[entry.crop]=Math.max(1,farm.collection[entry.crop]);farm.seeds[entry.crop]++;newKinds++;}
-  else{const rate=cropTiers[entry.crop]===pending.pack?packRefundRate(farm):5;units+=pending.paid*rate*(60/pending.entries.length);}
+  else{const rate=cropTiers[entry.crop]===pending.pack?packRefundRate(farm):5;units+=pending.paid*rate*(60/pending.entries.length);
+   const chance=knotEffect(farm,3,1);if(chance&&random()<chance)farm.seeds[entry.crop]+=2;}
  }
  const returned=Math.floor(units/6000);farm.packProgress.refundUnits=units%6000;
  farm.coins+=returned;farm.packProgress.pending=null;

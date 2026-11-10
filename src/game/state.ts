@@ -4,7 +4,7 @@ type ParentRecord = {name:string;crop:number;genome:Genome};
 type RotRecord = {line?:number;crop:number;at:number;checks:number;risk:number;value:number;name:string;genome:Genome};
 type Line = {enhancements?:Record<string,number>;parents?:ParentRecord[];genes?:Genes;powers?:Record<string,number>;archived?:boolean;name:string;crop:number;traits:string[];seeds:number};
 type Mystery = {parentNames?:string[];preview?:Line;genomes?:Genome[];parents:number[];traits:string[]};
-type Plant = {wateringCount?:number;abilityThrough?:number;dryThrough?:number;boostCheck?:number;ripening?:{next:number;checks:number;value:number};rainThrough?:number;mystery?:Mystery;line?:number;crop:number; planted:number; ready:number|null; watered?:number; wetUntil?:number; remaining?:number; duration?:number};
+type Plant = {knotRushChecked?:boolean;knotSunPaid?:boolean;wateringCount?:number;abilityThrough?:number;dryThrough?:number;boostCheck?:number;ripening?:{next:number;checks:number;value:number};rainThrough?:number;mystery?:Mystery;line?:number;crop:number; planted:number; ready:number|null; watered?:number; wetUntil?:number; remaining?:number; duration?:number};
 const traits = [
   {id:'growth', label:'⚡ Скорость роста'},
   {id:'yield', label:'🧺 Урожайность'},
@@ -44,6 +44,9 @@ type Farm = {
   statistics?:FarmStatistics;
   diamonds?:DiamondState;
   mutationPoints?:number;
+  knotRanks?:number[][];
+  knotPremiumFruit?:number;
+  gardenHelper?:GardenHelper;
   mutationUpgrades?: Partial<Record<MutationUpgrade,number>>;
   saveCheats?:boolean;
   resources:Resources;epoch:number;size:number;plots:(Plant|null)[];seeds:number[];harvest:number[];

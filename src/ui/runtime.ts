@@ -6,6 +6,7 @@ let playActiveUntil=0;
 const totalPlayTime=()=>(farm.activePlayMs??0)+(farm.backgroundPlayMs??0);
 let lastPlayTimeSave=totalPlayTime();
 let reloadingFarm=false;
+let helperChanged=false;
 
 function updatePlayTime(nextCounter:PlayTimeCounter|null){
   const now=Math.floor(performance.now());
@@ -29,7 +30,10 @@ function recordPlayInput(event:Event){
 
 function savePlayTime(){
   const elapsed=totalPlayTime();
-  if(elapsed!==lastPlayTimeSave&&saveFarm(farm))lastPlayTimeSave=elapsed;
+  if((helperChanged||elapsed!==lastPlayTimeSave)&&saveFarm(farm)){
+    lastPlayTimeSave=elapsed;
+    helperChanged=false;
+  }
 }
 
 function syncPlayTime(){
@@ -73,9 +77,12 @@ const tick = () => {
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || speed !== 1 ||
+  if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || helperChanged || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
-    if(saveFarm(farm))lastPlayTimeSave=totalPlayTime();
+    if(saveFarm(farm)){
+      lastPlayTimeSave=totalPlayTime();
+      helperChanged=false;
+    }
   }
   const selection=document.getSelection();
   if(selection&&!selection.isCollapsed&&selection.anchorNode?.parentElement?.closest('dialog[open]'))renderField(nowTime());
@@ -84,6 +91,9 @@ const tick = () => {
 };
 tick();
 setInterval(tick,1000);
+setInterval(()=>{
+  if(!reloadingFarm&&runGardenHelper(farm,nowTime()))helperChanged=true;
+},50);
 
 
 

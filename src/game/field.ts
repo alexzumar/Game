@@ -12,7 +12,7 @@ function plant(farm:Farm, index:number, crop:number, now:number,line?:number,are
 function wateringDuration(farm:Farm,plot:Plant,level=plot.line===undefined?farm.levels[plot.crop].moisture:0){
   const growth=plot.duration??plantGrowthTime(farm,plot);
   const moisturePower=effectiveGenome(farm,plot).powers.moisture??0;
-  return Math.max(1,Math.round(growth*.25*(1+level*.05)*(1+moisturePower/100)));
+  return Math.max(1000,Math.round(growth*.5*(1+level*.05)*(1+moisturePower/100)));
 }
 function water(farm:Farm,plot:Plant,now:number,until=now+wateringDuration(farm,plot)) {
   advanceDryGrowth(farm,plot,now);
@@ -68,7 +68,10 @@ function collect(farm:Farm,index:number,now:number,random=Math.random,area:PlotA
   const powers=effectiveGenome(farm,plot).powers;
   const amount = (plot.line===undefined?harvestAmount(farm.levels[plot.crop].yield+farm.collection.filter(value=>value>0).length-1,random,(powers.head??0)/100):genome(farm,plot).genes.ga+harvestAmount(genome(farm,plot).genes.ga-1,random,(powers.head??0)/100)-1);
   const baseAmount=amount+lineTrait(farm,plot,"yield");
-  const finalAmount=baseAmount*(random()<(powers.bounty??0)/100?2:1)+diamondBonusCount(diamondLevel(farm,"fruit")/100,random);
+  const ordinary=plot.line===undefined;
+  const doubleChance=ordinary?knotEffect(farm,0,1):0;
+  const finalAmount=(baseAmount*(random()<(powers.bounty??0)/100?2:1)+diamondBonusCount(diamondLevel(farm,"fruit")/100,random))*
+    (doubleChance&&random()<doubleChance?2:1);
   if(plot.line!==undefined){
     const line=farm.lines[plot.line];
     if((line.archived||line.seeds===0)&&hybridCount(farm)>=farm.hybridSlots)return 0;
@@ -79,13 +82,24 @@ function collect(farm:Farm,index:number,now:number,random=Math.random,area:PlotA
   farm.harvest[plot.crop]+=finalAmount;
   const harvestIncome=finalAmount*cropPrices[plot.crop]*(plot.ripening?.value??1)*(1+(powers.sweet??0)/100)*(1+collectionLevel(farm.harvested[plot.crop])/100);
   farm.harvestValue[plot.crop]+=harvestIncome;
+  if(ordinary){
+    farm.coins+=Math.floor(harvestIncome*knotEffect(farm,0,2));
+    const premium=knotEffect(farm,3,0);
+    if(premium){
+      const progress=(farm.knotPremiumFruit??0)+Math.floor(finalAmount);
+      farm.coins+=Math.floor(Math.floor(progress/20)*20*harvestIncome/finalAmount*premium);
+      farm.knotPremiumFruit=progress%20;
+    }
+    const reserve=knotEffect(farm,2,0);
+    if(reserve&&random()<reserve)farm.seeds[plot.crop]++;
+  }
   awardDiamonds(farm,plot.crop,harvestIncome,random);
   if(plot.line===undefined&&diamondLevel(farm,'seedReturn')&&random()<diamondCurve(diamondLevel(farm,'seedReturn')))farm.seeds[plot.crop]++;
   if(plot.line!==undefined){const genes=genome(farm,plot).genes;farm.harvestQuality[plot.crop]+=finalAmount*((genes.ga-1)/29+(genes.gr-1)/58+(genes.re-1)/58);}
   if(random()<(powers.pod??0)/100){if(plot.line===undefined)farm.seeds[plot.crop]+=2;else farm.lines[plot.line].seeds+=2;}
   farm.collected += finalAmount;
   area.plots[index] = null;
-  const renew=random()<(powers.renew??0)/100;
+  const renew=random()<Math.min(1,(powers.renew??0)/100+(ordinary?knotEffect(farm,3,3):0));
   const secondCut=random()<(powers.cut??0)/100;
   if(renew||secondCut||random()<Math.min(1,(powers.regrow??0)/100)) {
     if(plot.line!==undefined)farm.lines[plot.line].seeds--;

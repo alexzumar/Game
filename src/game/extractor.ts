@@ -24,10 +24,11 @@ function startExtraction(farm:Farm,crop:number,count:number,now:number,random=Ma
     !crops[crop] || !unlocked(farm,crop) || count>farm.harvest[crop])return false;
   const bonus=extractionRange(machine.yield);
   const quality=farm.harvestQuality[crop]/farm.harvest[crop];
-  const outputs=Array.from({length:count},()=>{
+  const catalyst=knotEffect(farm,2,2);
+  const outputs=Array.from({length:count},(_,index)=>{
     if(random()<.01)return 0;
     const max=bonus.max+(random()<bonus.extra?1:0);
-    return 1+Math.min(max-1,Math.floor(random()*max));
+    return 1+Math.min(max-1,Math.floor(random()*max))+(index>0&&catalyst&&random()<catalyst?1:0);
   });
   if(!outputs.some(Boolean)&&farm.seeds[crop]===0&&![...farm.plots,...(farm.greenhouse?.plots??[])].some(plot=>plot?.crop===crop)&&farm.harvest[crop]===count){const max=bonus.max+(random()<bonus.extra?1:0);outputs[outputs.length-1]=1+Math.min(max-1,Math.floor(random()*max));}
   const output=total(outputs);

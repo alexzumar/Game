@@ -628,13 +628,77 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 .upgrade-tooltip-card:not(:popover-open){display:none}
 .upgrade-tooltip-card:popover-open::backdrop{backdrop-filter:grayscale(.24);pointer-events:none}
 .upgrade-tooltip-title{display:block;margin-bottom:10px;font-size:1.13rem;line-height:1.2}
+#knots-dialog{width:min(1320px,calc(100vw - 24px),max(600px,calc((100dvh - 190px) * 1.8)));max-height:calc(100dvh - 24px);overflow:auto;padding:18px}
+#knots-dialog>.window-heading{top:0;margin:0 0 6px;width:100%;row-gap:6px}
+#knots-dialog>.window-heading>form{order:0;margin-left:auto;align-self:flex-start}
+.in-greenhouse #garden-helper-open{display:none}
+.garden-helper-panel{display:grid;gap:12px;margin-bottom:16px}
+.garden-helper-panel label{display:flex;align-items:center;gap:8px}
+.garden-helper-panel p{margin:0}
+#helper-upgrades{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;padding-bottom:16px}
+.knot-stocks,.knot-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding-inline:3.2%}
+.knot-stocks{flex-basis:100%;order:5;gap:8px}
+.knot-stock{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;align-items:start;gap:5px;padding:6px;color:var(--ink);font-size:1rem;font-weight:650;text-align:center;background:color-mix(in srgb,var(--base) 75%,var(--accent));border:1px solid var(--line);border-radius:12px}
+.knot-stock-name{font-size:.79rem}
+.knot-stock-amounts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:4px 9px;font-size:.87rem}
+.knot-stock-amounts>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.knot-exchange:popover-open{position:fixed;inset:auto;margin:0;box-sizing:border-box;display:grid;justify-items:center;gap:8px;padding:12px;overflow:auto;background:color-mix(in srgb,var(--base) 90%,var(--accent));color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px var(--shade)}
+.knot-exchange-target{width:90px;aspect-ratio:1;white-space:normal;overflow-wrap:anywhere}
+.knot-exchange-options:not([hidden]){display:grid;width:100%;gap:4px}
+.knot-exchange-cost{margin:0;font-size:.82rem;text-align:center}
+.knot-exchange-quantity{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;font-size:.82rem}
+.knot-exchange-quantity input{width:7ch}
+.knot-board{position:relative;aspect-ratio:1.8;background:url('assets/Зданийфонулушчения.png') center / 100% 100% no-repeat;filter:drop-shadow(0 14px 10px #0008);border-radius:3%}
+#knots-dialog{transition:background-color .25s ease}
+#knots-dialog::backdrop{transition:background-color .25s ease}
+#knots-dialog>.window-heading{transition:filter .25s ease}
+#knots-dialog:has(.knot-tooltip:popover-open){background-color:#0009}
+#knots-dialog:has(.knot-tooltip:popover-open)::backdrop{background-color:#0009}
+#knots-dialog:has(.knot-tooltip:popover-open)>.window-heading{filter:brightness(.62)}
+.knot-column{position:relative;display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:6%;padding:77% 17% 30%;min-height:0}
+@media(hover:hover){
+ #knots-dialog:has(.knot-column:hover){background-color:#0009}
+ #knots-dialog:has(.knot-column:hover)::backdrop{background-color:#0009}
+ #knots-dialog:has(.knot-column:hover)>.window-heading{filter:brightness(.62)}
+}
+@media(prefers-reduced-motion:reduce){
+ #knots-dialog,#knots-dialog::backdrop,#knots-dialog>.window-heading{transition:none}
+}
+.knot-node{display:flex;justify-content:space-between;align-items:center;gap:5px;min-width:0;padding:4px 10px;border-radius:18px;background:color-mix(in srgb,var(--base) 86%,transparent);color:var(--ink)}
+.knot-node[data-locked=true]{background:color-mix(in srgb,var(--base) 63%,transparent)}
+.knot-node[data-locked=true] .knot-icon{filter:grayscale(.85)}
+.knot-node[data-active=true]{background:color-mix(in srgb,var(--base) 62%,var(--accent));border-color:var(--line)}
+.knot-node[aria-disabled=true]{cursor:help}
+.knot-icon{font-size:clamp(1.25rem,4.4vw,3rem);line-height:1}
+.knot-name{display:block;font-size:clamp(.59rem,1.2vw,.9rem);line-height:1.1;margin-bottom:2px}
+.knot-tooltip.upgrade-tooltip-card:popover-open{display:flex;flex-direction:column;overflow:hidden;padding:clamp(8px,1.4vw,18px);white-space:normal}
+.knot-tooltip.upgrade-tooltip-card:popover-open::backdrop{backdrop-filter:none}
+.knot-tooltip>span{display:flex;flex:1;flex-direction:column;min-height:0}
+.knot-tooltip p,.knot-effect-list{color:var(--ink);margin:4px 0;font-size:clamp(.6rem,1.05vw,.88rem);line-height:1.2}
+.knot-tooltip p:first-child{padding-bottom:8px;border-bottom:1px solid var(--edge)}
+.knot-effect-list{display:grid;gap:.4em;align-content:start;padding:.5em;border-radius:8px;background:color-mix(in srgb,var(--accent) 28%,var(--base))}
+.knot-effect-list b{color:var(--upgrade-next-ink,#14583d)}
+.knot-tooltip .knot-tooltip-price{margin-top:auto;padding-top:.5em;border-top:1px solid var(--edge)}
+.knot-tooltip-price>span{white-space:nowrap}
+.knot-tooltip-price .knot-cost-missing{color:#b52b3e;font-weight:750}
+[data-theme=dark] .knot-tooltip-price .knot-cost-missing{color:#ff929d}
+.knot-dots{display:flex;justify-content:flex-end;gap:4px;margin-top:3px}
+.knot-dots i{width:8px;height:8px;border:1px solid var(--line);border-radius:50%;background:var(--glass)}
+.knot-dots .filled{background:#82c447;border-color:#d4eea3}
+@media(max-width:720px){
+ #knots-dialog{padding:12px}
+ #knots-dialog>.window-heading,.knot-board{min-width:570px}
+ .knot-node{padding-inline:6px;font-size:.78rem}
+ .knot-dots{gap:2px}
+ .knot-dots i{width:6px;height:6px}
+}
 @media(prefers-reduced-motion:no-preference){
  .upgrade-tooltip-card:popover-open{animation:upgrade-tooltip-enter .18s ease-out both}
 }
 @keyframes upgrade-tooltip-enter{from{opacity:0}to{opacity:1}}
-:is(#mutation-upgrades,#trait-list,#convenience-list,#extractor-upgrades,#pack-upgrade-list,#diamond-upgrades)> .panel,
+:is(#helper-upgrades,#mutation-upgrades,#trait-list,#convenience-list,#extractor-upgrades,#pack-upgrade-list,#diamond-upgrades)> .panel,
 #upgrade-hybrids>.panel,#upgrade-tools>.panel,#pack-luck-upgrade{display:flex;flex-direction:column;min-width:0}
-:is(#mutation-upgrades,#trait-list,#convenience-list,#extractor-upgrades,#pack-upgrade-list,#diamond-upgrades)> .panel>button,
+:is(#helper-upgrades,#mutation-upgrades,#trait-list,#convenience-list,#extractor-upgrades,#pack-upgrade-list,#diamond-upgrades)> .panel>button,
 #upgrade-hybrids>.panel>button,#upgrade-tools>.panel>button,#pack-luck-upgrade>button{width:100%;min-height:36px;margin-top:auto}
 #trait-list{align-items:stretch}
 #trait-list .panel>strong{display:flex;align-items:center;gap:8px;margin-bottom:10px}

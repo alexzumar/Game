@@ -4,6 +4,50 @@ const storage={value:null,getItem(){return this.value},setItem(_,value){this.val
 const context=vm.createContext({assert,console,localStorage:storage});vm.runInContext(stripTypeScriptTypes(readModelSource()),context);
 vm.runInContext(`
 const starter=newFarm();assert.equal(starter.coins,0);assert.equal(starter.seeds[0],1);assert.equal(total(starter.seeds),1);assert.equal(expansionPrice(starter),1);assert.equal(expand(starter),false);starter.plots[0]={crop:0,planted:0,ready:0};starter.seeds[0]=0;assert.equal(collect(starter,0,1,()=>.5),1);assert.equal(starter.harvestValue[0],5);assert.equal(expand(starter),true);assert.equal(starter.size,2);assert.equal(expansionPrice(starter),15);assert.equal(starter.resources.orbs,0);assert.deepEqual(fieldOrbPrices,[1,15,50,150,400,1000,2500]);
+const knots=newFarm();
+for(const id of knotMaterials[0])knots.resources.items[id]=10000;
+assert.equal(buyKnotRank(knots,0,1),false);
+for(let tier=0;tier<4;tier++){
+  for(let rank=0;rank<(tier===3?6:5);rank++)assert.equal(buyKnotRank(knots,0,tier),true);
+  if(tier<3)assert.equal(buyKnotRank(knots,0,tier),false);
+}
+saveFarm(knots);assert.deepEqual(loadFarm().knotRanks[0],[5,5,5,6]);
+assert.ok(knotEffect(knots,0,0,3)>knotEffect(knots,0,0));
+assert.ok(knotEffect(knots,0,3,3)>knotEffect(knots,0,3));
+assert.ok(openingOdds(knots,1).filter((_,i)=>cropTiers[i]===1).reduce((a,b)=>a+b,0)>25);
+knots.knotRanks[1]=[5,5,1,0];knots.collection.fill(1);
+const batch=knotExchangePrice(knots,0,0,100);
+assert.ok(batch.every(({count})=>count<100));
+for(const {id,count} of batch)knots.resources.items[id]=count;
+assert.equal(knotExchangeLimit(knots,0,0),100);
+assert.equal(exchangeKnotMaterial(knots,0,0,101),false);
+assert.equal(exchangeKnotMaterial(knots,0,0,100),true);
+assert.ok(batch.every(({id})=>knots.resources.items[id]===0));
+console.log('Knot exchange for 100 radish / carrot:',batch.map(({count})=>count),knotExchangePrice(knots,0,3,100).map(({count})=>count));
+const helperFarm=newFarm(),helperTime=helperFarm.epoch;
+helperFarm.gardenHelper={...newGardenHelper(),crop:0,enabled:true};
+assert.equal(runGardenHelper(helperFarm,helperTime),false);
+resize(helperFarm,2);helperFarm.collected=4;helperFarm.extraction.processed=1;
+helperFarm.gardenHelper.levels=gardenHelperCycles(gardenHelperMax);
+helperFarm.seeds[0]=3;helperFarm.harvest[0]=10;helperFarm.harvestValue[0]=50;
+assert.equal(runGardenHelper(helperFarm,helperTime),true);
+assert.equal(helperFarm.plots.filter(Boolean).length,1);
+assert.equal(helperFarm.extraction.job.input,2);
+assert.equal(helperFarm.harvest[0],8);
+assert.ok(helperFarm.plots[0].ready!==null);
+assert.equal(runGardenHelper(helperFarm,helperTime+99),false);
+assert.equal(runGardenHelper(helperFarm,helperTime+100),true);
+assert.equal(helperFarm.plots.filter(Boolean).length,2);
+helperFarm.gardenHelper.enabled=false;
+assert.equal(runGardenHelper(helperFarm,helperTime+200),false);
+helperFarm.gardenHelper.levels=gardenHelperCycles(0);
+helperFarm.knotRanks=[[2,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];helperFarm.resources.items[knotMaterials[0][0]]=2;
+assert.equal(buyGardenHelperUpgrade(helperFarm,'sow'),true);
+assert.deepEqual(helperFarm.gardenHelper.levels,{sow:1,water:0,collect:0});
+saveFarm(helperFarm);assert.deepEqual(loadFarm().gardenHelper,helperFarm.gardenHelper);
+const oldHelperFarm={...helperFarm,gardenHelper:{...helperFarm.gardenHelper,cycleRevision:undefined,levels:{sow:3,water:7,collect:8}}};
+saveFarm(oldHelperFarm);assert.deepEqual(loadFarm().gardenHelper.levels,{sow:8,water:16,collect:20});
+assert.equal(gardenHelperIntervals.length,21);
 assert.deepEqual([1,2,3,4,5].map(n=>packOpeningPrice(0,n)),[20,30,45,60,75]);assert.equal(seedPrice(15),2000000);assert.equal(seedPacks.length,4);
 for(const [readyA,readyB,roll,expected] of [
   [null,null,.047,true],[null,null,.049,false],
@@ -43,14 +87,19 @@ assert.equal(plant(rainFarm,0,0,rainStart),true);
 const rainPlot=rainFarm.plots[0];rainPlot.duration=120000;
 assert.equal(rainPlot.ready,null);
 assert.equal(water(rainFarm,rainPlot,rainStart),true);
-assert.equal(rainPlot.wetUntil-rainStart,30000);
+assert.equal(rainPlot.wetUntil-rainStart,60000);
 rainWindow(rainFarm,rainStart,rainStart+60000,rainStart+30000);
 rainWindow(rainFarm,rainStart,rainStart+60000,rainStart+60000);
-assert.equal(rainPlot.wetUntil-rainStart,60000);
-rainWindow(rainFarm,rainStart,rainStart+60000,rainStart+60000);
-assert.equal(rainPlot.wetUntil-rainStart,60000);
-assert.equal(water(rainFarm,rainPlot,rainStart+60000),true);
 assert.equal(rainPlot.wetUntil-rainStart,90000);
+rainWindow(rainFarm,rainStart,rainStart+60000,rainStart+60000);
+assert.equal(rainPlot.wetUntil-rainStart,90000);
+assert.equal(water(rainFarm,rainPlot,rainStart+60000),true);
+assert.equal(rainPlot.wetUntil-rainStart,120000);
+const quickFarm=newFarm(),quickTime=quickFarm.epoch;
+quickFarm.plots[0]={crop:0,planted:quickTime,ready:null,duration:1000};
+assert.equal(water(quickFarm,quickFarm.plots[0],quickTime),true);
+assert.equal(quickFarm.plots[0].wetUntil,quickFarm.plots[0].ready);
+assert.ok(collect(quickFarm,0,quickTime+1000,()=>.5)>0);
 const surgeFarm=newFarm(),surgeStart=surgeFarm.epoch;
 surgeFarm.weather={...surgeFarm.weather,last:surgeStart,end:surgeStart+60000,next:surgeStart+180000,surgeAt:surgeStart+20000};
 surgeFarm.plots[0]={crop:0,planted:surgeStart,ready:surgeStart+121000,wetUntil:surgeStart+120000};
@@ -114,7 +163,7 @@ const hist=[0,0,0,0,0];let seed=4123;const rng=()=>((seed=(Math.imul(seed,166452
 for(let batch=0;batch<20;batch++){const e=newFarm();e.extraction.yield=1;e.harvest[0]=1000;e.harvestValue[0]=5000;startExtraction(e,0,1000,e.epoch,rng);for(const count of e.extraction.job.outputs)hist[count]++;}
 assert.ok(Math.abs(hist[4]/20000-.061875)<.01);assert.ok(Math.abs(hist[0]/20000-.01)<.005);console.log('Extractor first-upgrade distribution (20 000 fruits):',JSON.stringify(hist));
 const gates=newFarm();gates.collection[15]=1;gates.resources.orbs=250;gates.resources.items.set1=3;assert.equal(unlockPackGate(gates,'luck'),true);assert.ok(group(gates,3,1e9)<6.000001);gates.resources.orbs=1000000;gates.resources.items.set3=500;assert.equal(unlockPackGate(gates,'luck'),false);gates.collection[cropTiers.findIndex(tier=>tier===3)]=1;assert.equal(unlockPackGate(gates,'luck'),true);assert.ok(group(gates,3,1e9)>7.99999);
-gates.collection.fill(1);resize(gates,8);gates.coins=100000000;gates.resources.orbs=1000000;gates.resources.items.set1=100;gates.resources.items.set2=100;gates.resources.items.set3=100;for(let i=0;i<4;i++)assert.equal(buyPackUpgrade(gates,'slots'),true);assert.equal(packSlotLimit(gates),5);assert.equal(buyPackUpgrade(gates,'slots'),false);gates.packProgress.speed=60;assert.equal(packOpeningTime(gates),500);gates.packProgress.speed=34;assert.equal(packOpeningTime(gates),500);gates.packProgress.speed=35;assert.equal(packOpeningTime(gates),500);assert.equal(wateringDuration(gates,{crop:0,planted:0,ready:null,duration:100000},1),26250);
+gates.collection.fill(1);resize(gates,8);gates.coins=100000000;gates.resources.orbs=1000000;gates.resources.items.set1=100;gates.resources.items.set2=100;gates.resources.items.set3=100;for(let i=0;i<4;i++)assert.equal(buyPackUpgrade(gates,'slots'),true);assert.equal(packSlotLimit(gates),5);assert.equal(buyPackUpgrade(gates,'slots'),false);gates.packProgress.speed=60;assert.equal(packOpeningTime(gates),500);gates.packProgress.speed=34;assert.equal(packOpeningTime(gates),500);gates.packProgress.speed=35;assert.equal(packOpeningTime(gates),500);assert.equal(wateringDuration(gates,{crop:0,planted:0,ready:null,duration:100000},1),52500);
 gates.packProgress.refund=3;gates.packProgress.refundGate=false;assert.equal(buyPackUpgrade(gates,'refund'),false);assert.equal(unlockPackGate(gates,'refund'),true);assert.equal(buyPackUpgrade(gates,'refund'),true);assert.equal(packRefundRate(gates),25);
 const rescue=newFarm();rescue.seeds[0]=0;assert.equal(needsStarterRescue(rescue),true);assert.equal(rescueStarterSeed(rescue),true);assert.equal(rescueStarterSeed(rescue),false);
 console.log('PASS: starter/expansion/prices, probability normalization and caps, 1–5 price, one-time gifts, coin-only duplicates, matched refund and integer carry, crash recovery, migration, extractor safety/distribution, material gates, speed floor and rescue');

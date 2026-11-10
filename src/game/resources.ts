@@ -48,16 +48,29 @@ const harvestDuplicationChance=(crop:number)=>Math.min(1,cropTimes[crop]/120*.00
 function awardHarvestLoot(farm:Farm,crop:number,count:number,random=Math.random){
  const tier=cropTiers[crop],chance=harvestMaterialChance(crop);
  const setCount=sampleBinomial(count,chance,random);
- const propertyCount=sampleBinomial(count-setCount,chance/(1-chance),random);
+ const propertyCount=sampleBinomial(count-setCount,Math.min(1,chance*(1+knotEffect(farm,1,1))/(1-chance)),random);
  const orbs=rollHarvestOrbs(count-setCount-propertyCount,tier,farm.resources.orbLuck,random);
  const bonus=Math.min(orbs,farm.wheels?.orbBoost??0);
  if(farm.wheels)farm.wheels.orbBoost-=bonus;
- farm.resources.orbs+=orbs+bonus;
+ const doubleOrbs=knotEffect(farm,1,0);
+ farm.resources.orbs+=orbs+bonus+(orbs&&doubleOrbs&&random()<doubleOrbs?orbs:0);
  const group=cropSets.findIndex(set=>set.crops.includes(crop));
  addMaterial(farm,'set'+group,duplicateCount(farm,setCount,random));
  const properties=Object.keys(basePowers[crop]);
- if(properties.length===1)addMaterial(farm,'property:'+properties[0],duplicateCount(farm,propertyCount,random));
- else{const first=sampleBinomial(propertyCount,.5,random);addMaterial(farm,'property:'+properties[0],duplicateCount(farm,first,random));addMaterial(farm,'property:'+properties[1],duplicateCount(farm,propertyCount-first,random));}
+ const first=properties.length===1?propertyCount:sampleBinomial(propertyCount,.5,random);
+ const propertyDrops=[first,propertyCount-first];
+ properties.forEach((property,index)=>addMaterial(farm,propertyMaterialId(property),duplicateCount(farm,propertyDrops[index],random)));
+ const roots=knotEffect(farm,0,3),bundle=knotEffect(farm,1,3);
+ if(roots){
+   const extra=sampleBinomial(count,roots,random);
+   const firstExtra=properties.length===1?extra:sampleBinomial(extra,.5,random);
+   properties.forEach((property,index)=>addMaterial(farm,propertyMaterialId(property),index===0?firstExtra:extra-firstExtra));
+ }
+ if(bundle){
+   const size=knotBundleSize(knotRank(farm,1,3));
+   addMaterial(farm,'set'+group,sampleBinomial(setCount,bundle,random)*size);
+   properties.forEach((property,index)=>addMaterial(farm,propertyMaterialId(property),sampleBinomial(propertyDrops[index],bundle,random)*size));
+ }
  addMaterial(farm,'duplication',sampleBinomial(count,harvestDuplicationChance(crop),random));
 }
 const duplicationPrice=(level:number)=>Math.ceil((level+1)**1.25);

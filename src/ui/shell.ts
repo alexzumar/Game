@@ -96,6 +96,7 @@ function render() {
   renderSeeds();
   renderTraits();
   if(typeof upgradeMaterialsReady!=='undefined'&&upgradeMaterialsReady)renderUpgradeMaterials();
+  if(gardenHelperCardsReady&&upgradesDialog.open&&!get('upgrade-helper').hidden)renderGardenHelperUpgrades();
   renderConveniences();
   renderCollection();
   renderDiscoveryUpgrades();

@@ -27,7 +27,7 @@ function resetAll() {
 function sell(index:number,count:number) {
   if (!Number.isSafeInteger(count) || count < 1 || !(count <= farm.harvest[index])) return;
   if (farm.harvest[index] === 1 && saleDialog.open && skipSingle.checked) skipConfirmation = true;
-  const earned=produceSalePrice(farm,index,count);
+  const earned=produceSalePrice(farm,index,count)+knotSaleBonus(farm,index,count);
   removeProduce(farm,index,count);
   farm.coins += earned;
   selling = -1;
@@ -85,8 +85,9 @@ button('sell-basket').onclick = () => {
 };
 button('receipt-confirm').onclick = () => {
   if (!receiptDialog.open) return;
-  const earned=basketSaleValue(farm);
+  const before=farm.coins;
   const amount = sellBasket(farm,receipt);
+  const earned=farm.coins-before;
   receiptDialog.close();
   commit(amount ? 'Продан весь урожай: '+number(amount)+' · 🪙 +'+number(earned) :
     'Корзина изменилась. Открой чек ещё раз.');

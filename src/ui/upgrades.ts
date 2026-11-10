@@ -40,7 +40,7 @@ function addUpgradeDetails(anchor:HTMLElement,description:string){
   bindUpgradeTooltip(summary,content);
 }
 
-function bindUpgradeTooltip(trigger:HTMLElement,tip:HTMLElement){
+function bindUpgradeTooltip(trigger:HTMLElement,tip:HTMLElement,placement?:()=>DOMRect){
   tip.setAttribute('popover','manual');
   tip.classList.add('upgrade-tooltip-card','glass','panel');
   let closeTimer:ReturnType<typeof setTimeout>;
@@ -51,11 +51,12 @@ function bindUpgradeTooltip(trigger:HTMLElement,tip:HTMLElement){
     const dialog=trigger.closest('dialog');
     if(!dialog?.open||tip.hidden||tip.matches(':popover-open'))return;
     const card=trigger.closest('.panel')??trigger.parentElement??trigger;
-    const bounds=card.getBoundingClientRect(),gap=10;
+    const target=placement?.();
+    const bounds=target??card.getBoundingClientRect(),gap=10;
     const width=Math.min(bounds.width,innerWidth-2*gap);
     const height=Math.min(bounds.height,innerHeight-2*gap);
-    let left=bounds.right+gap,top=bounds.top;
-    if(left+width>innerWidth-gap){
+    let left=target?bounds.left:bounds.right+gap,top=bounds.top;
+    if(!target&&left+width>innerWidth-gap){
       left=bounds.left-width-gap;
       if(left<gap){
         left=bounds.left;
@@ -77,7 +78,17 @@ function bindUpgradeTooltip(trigger:HTMLElement,tip:HTMLElement){
     tip.showPopover();
   };
   trigger.addEventListener('pointerenter',show);
-  trigger.addEventListener('pointerleave',hideSoon);
+  trigger.addEventListener('pointerleave',event=>{
+    if(!tip.classList.contains('knot-tooltip')){hideSoon();return;}
+    if(!tip.matches(':popover-open'))return;
+    if(tip.contains(event.relatedTarget as Node|null)){hideSoon();return;}
+    const source=trigger.getBoundingClientRect();
+    const target=tip.getBoundingClientRect();
+    const towardsTip=target.left>=source.right?event.clientX>=source.right-2:
+      target.right<=source.left&&event.clientX<=source.left+2;
+    if(towardsTip&&event.clientY>source.top&&event.clientY<source.bottom&&event.clientY>=target.top&&event.clientY<=target.bottom)hideSoon();
+    else hide();
+  });
   tip.addEventListener('pointerenter',()=>clearTimeout(closeTimer));
   tip.addEventListener('pointerleave',hideSoon);
   trigger.addEventListener('focusin',show);
@@ -177,7 +188,7 @@ button('upgrades-open').onclick = () => {
   hideUpgradeMaterials();
   upgradesDialog.showModal();
 };
-const upgradeTabs = ['packs','seeds','tools','discovery','extractor','hybrids'];
+const upgradeTabs = ['packs','seeds','tools','discovery','extractor','hybrids','helper'];
 for (const tab of upgradeTabs) button('upgrade-tab-'+tab).onclick = () => {
   get('trait-panel').hidden = true;
   for (const category of upgradeTabs) {

@@ -46,6 +46,23 @@ function updatePlantAbilities(farm:Farm,now:number,random=Math.random,area:PlotA
     const rainStart=area===farm?farm.weather.last??0:0,rainEnd=area===farm?farm.weather.end??0:0;
     const rainy=Math.max(0,Math.min(end,rainEnd)-Math.max(from,rainStart));
     const sunny=Math.max(0,end-from-rainy);
+    if(plot.line===undefined&&end>=plot.ready-(plot.duration??plantGrowthTime(farm,plot))/2){
+      const rush=knotEffect(farm,3,2),sun=knotEffect(farm,2,3);
+      if(rush&&!plot.knotRushChecked){
+        plot.knotRushChecked=true;
+        if(random()<rush)plot.ready=Math.floor(end);
+        changed=true;
+      }
+      if(sun&&sunny>0&&area===farm&&!plot.knotSunPaid){
+        plot.knotSunPaid=true;
+        const expected=(1+farm.levels[plot.crop].yield/100)*sun;
+        const amount=Math.floor(expected)+Number(random()<expected%1);
+        farm.harvest[plot.crop]+=amount;
+        farm.harvestValue[plot.crop]+=amount*cropPrices[plot.crop];
+        changed=true;
+      }
+    }
+    if(plot.ready<=now)continue;
     if(powers.sunshine && sunny>0){plot.ready=Math.max(now,plot.ready-sunny*powers.sunshine/100);changed=true;}
     if(powers.leap){
       plot.boostCheck??=from+30000;
