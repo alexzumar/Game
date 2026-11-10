@@ -1,21 +1,45 @@
-const saveSlots = get<HTMLDetailsElement>('save-slots');
-const saveSlotStatus = get('save-slot-status');
+const saveSlots=collectionOverlay('save-slots','Сохранения');
+const saveSlotStatus=document.createElement('p');
+saveSlotStatus.setAttribute('role','status');
+const saveSlotList=document.createElement('div');
+saveSlotList.id='save-slot-list';
+const saveCreate=document.createElement('form');
+saveCreate.className='glass panel save-create';
+saveCreate.innerHTML='<h3>Новый мир</h3><label>Название <input name="world" maxlength="60" required></label><label><input name="cheats" type="checkbox"> Включить читы</label><button class="quiet wide">Создать мир</button>';
+saveSlots.append(saveCreate,saveSlotStatus,saveSlotList);
+
+function storedSaveSlots(){
+  const slots:number[]=[];
+  for(let index=0;index<localStorage.length;index++){
+    const name=localStorage.key(index);
+    if(name===slotKey(1)){slots.push(1);continue;}
+    const match=name?.match(/^glass-farm\.v1\.slot-([1-9]\d*)$/);
+    const slot=Number(match?.[1]);
+    if(Number.isSafeInteger(slot)&&slot>1)slots.push(slot);
+  }
+  return slots.sort((a,b)=>a-b);
+}
 
 function renderSaveSlots(){
-  const list=get('save-slot-list');
-  list.replaceChildren();
+  saveSlotList.replaceChildren();
   try{
-    for(let slot=1;slot<=3;slot++){
+    const slots=storedSaveSlots();
+    if(!slots.includes(activeSlot))slots.push(activeSlot);
+    for(const [index,slot] of slots.entries()){
+      const isActive=slot===activeSlot;
       const raw=localStorage.getItem(slotKey(slot));
-      const state=raw?(slot===activeSlot?farm:JSON.parse(raw) as Farm):null;
+      let state:Farm|null=isActive?farm:null;
+      if(!isActive&&raw){
+        try{state=JSON.parse(raw) as Farm;}catch{/* The damaged world can still be deleted. */}
+      }
       const control=document.createElement('button');
+      control.type='button';
       control.className='quiet';
-      control.textContent='Слот '+slot+(state?' · 🪙 '+number(state.coins??0)+(state.saveCheats?' · Читы':''):' · Пусто');
-      const isActive=slot===activeSlot&&state!==null;
-      if(isActive)control.textContent+=' · Активен';
-      control.onclick=()=>{if(!isActive)switchSaveSlot(slot);};
-      if(state)bindSaveDeletion(control,slot);
-      list.append(control);
+      const name=typeof state?.saveName==='string'&&state.saveName.trim()?state.saveName:'Мир '+(index+1);
+      control.textContent=name+(state?' · 🪙 '+number(state.coins??0)+(state.saveCheats?' · Читы':''):' · Не читается')+(isActive?' · Активен':'');
+      control.onclick=()=>{if(!isActive&&state)switchSaveSlot(slot);};
+      bindSaveDeletion(control,slot);
+      saveSlotList.append(control);
     }
   }catch(error){
     saveSlotStatus.textContent='Не удалось прочитать сохранения.';
@@ -23,27 +47,46 @@ function renderSaveSlots(){
   }
 }
 
-function switchSaveSlot(slot:number){
+function switchSaveSlot(slot:number,newWorld?:Farm){
+  let created=false;
   try{
-    const target=slotKey(slot);
-    if(localStorage.getItem(target)===null){
-      const cheats=get<HTMLInputElement>('save-slot-cheats').checked;
-      if(!saveFarm({...newFarm(),saveCheats:cheats},target))throw new Error('Не удалось создать ферму');
-    }
     syncPlayTime();
-    if(slot!==activeSlot&&!saveFarm({...farm,pausedAt:Date.now()}))throw new Error('Не удалось сохранить текущую ферму');
+    if(!saveFarm({...farm,pausedAt:Date.now()}))throw new Error('Не удалось сохранить текущий мир');
+    if(newWorld){
+      if(!saveFarm(newWorld,slotKey(slot)))throw new Error('Не удалось создать мир');
+      created=true;
+    }
     localStorage.setItem(activeSlotKey,String(slot));
     reloadFarm();
   }catch(error){
-    saveSlotStatus.textContent='Не удалось переключить слот.';
+    if(created)localStorage.removeItem(slotKey(slot));
+    saveSlotStatus.textContent='Не удалось открыть мир.';
     console.error('Ферма: ошибка переключения сохранения',error);
   }
 }
-
-saveSlots.addEventListener('toggle',()=>{if(saveSlots.open)renderSaveSlots();});
+button('save-slots-open').onclick=()=>{
+  saveSlotStatus.textContent='';
+  renderSaveSlots();
+  saveSlots.showModal();
+};
+saveCreate.onsubmit=event=>{
+  event.preventDefault();
+  const data=new FormData(saveCreate);
+  const name=String(data.get('world')??'').trim();
+  if(!name){saveSlotStatus.textContent='Введи название мира.';return;}
+  try{
+    const slots=new Set([...storedSaveSlots(),activeSlot]);
+    let slot=1;
+    while(slots.has(slot))slot++;
+    switchSaveSlot(slot,{...newFarm(),saveName:name,saveCheats:data.has('cheats')});
+  }catch(error){
+    saveSlotStatus.textContent='Не удалось создать мир.';
+    console.error('Ферма: ошибка создания мира',error);
+  }
+};
 
 function bindSaveDeletion(control:HTMLButtonElement,slot:number){
-  control.title='Зажми для удаления';
+  control.title='Удерживай 5 секунд для удаления';
   let timer:ReturnType<typeof setTimeout>|undefined;
   const cancel=()=>{
     clearTimeout(timer);
@@ -58,7 +101,7 @@ function bindSaveDeletion(control:HTMLButtonElement,slot:number){
     timer=setTimeout(()=>{
       if(document.hasFocus()&&saveSlots.open)deleteSaveSlot(slot);
       cancel();
-    },10000);
+    },5000);
   };
   control.onpointerup=cancel;
   control.onpointercancel=cancel;
@@ -67,33 +110,16 @@ function bindSaveDeletion(control:HTMLButtonElement,slot:number){
 
 function deleteSaveSlot(slot:number){
   try{
-    if(slot!==activeSlot){
-      syncPlayTime();
-      if(!saveFarm(farm))throw new Error('Не удалось сохранить текущую ферму');
+    if(slot===activeSlot){
+      const next=storedSaveSlots().find(id=>id!==slot)??1;
+      localStorage.setItem(activeSlotKey,String(next));
+      try{localStorage.removeItem(slotKey(slot));}
+      catch(error){localStorage.setItem(activeSlotKey,String(activeSlot));throw error;}
+      reloadFarm();
+      return;
     }
-    const previous=[1,2,3].map(id=>localStorage.getItem(slotKey(id)));
-    const activeBefore=localStorage.getItem(activeSlotKey);
-    const remaining=previous.filter((raw,index)=>raw!==null&&index!==slot-1);
-    const keptActive=slot===activeSlot?null:previous[activeSlot-1];
-    const nextActive=keptActive===null?1:previous.slice(0,activeSlot).filter((raw,index)=>raw!==null&&index!==slot-1).length;
-    try{
-      for(let index=0;index<3;index++){
-        const raw=remaining[index],target=slotKey(index+1);
-        if(raw===undefined)localStorage.removeItem(target);
-        else localStorage.setItem(target,raw);
-      }
-      localStorage.setItem(activeSlotKey,String(nextActive));
-    }catch(error){
-      previous.forEach((raw,index)=>{
-        const target=slotKey(index+1);
-        if(raw===null)localStorage.removeItem(target);
-        else localStorage.setItem(target,raw);
-      });
-      if(activeBefore===null)localStorage.removeItem(activeSlotKey);
-      else localStorage.setItem(activeSlotKey,activeBefore);
-      throw error;
-    }
-    reloadFarm();
+    localStorage.removeItem(slotKey(slot));
+    renderSaveSlots();
   }catch(error){
     saveSlotStatus.textContent='Не удалось удалить сохранение.';
     console.error('Ферма: ошибка удаления сохранения',error);

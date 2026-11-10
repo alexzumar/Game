@@ -3,7 +3,7 @@ const slotKey = (slot:number) => slot===1?'glass-farm.v1':'glass-farm.v1.slot-'+
 function readActiveSlot(){
   try{
     const slot=Number(localStorage.getItem(activeSlotKey));
-    return Number.isInteger(slot)&&slot>=1&&slot<=3?slot:1;
+    return Number.isSafeInteger(slot)&&slot>=1?slot:1;
   }catch(error){
     console.error('Ферма: не удалось прочитать активный слот',error);
     return 1;

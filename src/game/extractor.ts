@@ -1,4 +1,6 @@
 type ExtractionUpgrade = 'speed'|'yield';
+type ExtractionResult={crop:number;processed:number;seeds:number;concentrate:number}|{hybrid:string;points:number};
+const extractionResultListeners=new WeakMap<Farm,(result:ExtractionResult)=>void>();
 const extractionCapacity = 1000;
 const extractionSpeedMax = 50;
 function extractionCost(level:number,upgrade:ExtractionUpgrade){
@@ -98,6 +100,7 @@ function finishExtractionSlot(farm:Farm,now:number,slot:number){
     farm.mutationPoints=(farm.mutationPoints??0)+job.output;
     machine.last=job.recycledHybrid+' → 🧬 +'+job.output;
     setExtractionJob(machine,slot,null);
+    extractionResultListeners.get(farm)?.({hybrid:job.recycledHybrid,points:job.output});
     return true;
   }
   let completed=job.done;
@@ -113,6 +116,7 @@ function finishExtractionSlot(farm:Farm,now:number,slot:number){
   machine.history=[{crop:job.crop,input:processed,seeds},...(machine.history??[])].slice(0,12);
   job.done=completed;
   if(completed===job.input)setExtractionJob(machine,slot,null);
+  extractionResultListeners.get(farm)?.({crop:job.crop,processed,seeds,concentrate});
   return true;
 }
 function stopExtraction(farm:Farm,now:number,slot=0) {

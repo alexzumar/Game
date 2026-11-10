@@ -27,6 +27,16 @@ helperOpen.id='garden-helper-open';
 helperOpen.className='quiet wide';
 helperOpen.textContent='🌱 Помощник сада';
 button('knots-open').before(helperOpen);
+renderHelperIndicator();
+
+function renderHelperIndicator(){
+  const helper=farm.gardenHelper;
+  const running=!!helper?.enabled&&helper.crop!==null&&gardenHelperUnlocked(farm)&&unlocked(farm,helper.crop);
+  get('helper-island-dot').hidden=!running;
+  const control=get('garden-helper-open');
+  const label='🌱 Помощник сада'+(running?' · Работает':'');
+  if(control&&control.textContent!==label)control.textContent=label;
+}
 
 function renderGardenHelper(){
   const helper=farm.gardenHelper??newGardenHelper();

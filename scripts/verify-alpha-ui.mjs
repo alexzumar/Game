@@ -218,6 +218,14 @@ const smoke=`<script>setTimeout(async()=>{try{
  button('upgrades-open').click();button('upgrade-tab-helper').click();
  assert(!get('upgrade-helper').hidden&&get('helper-upgrades').children.length===3,'Helper upgrade tab is missing its three cycles');
  upgradesDialog.close();
+ button('settings-open').click();
+ localStorage.setItem(slotKey(4),JSON.stringify({...newFarm(),saveName:'Проверочный мир',saveCheats:true}));
+ button('save-slots-open').click();
+ assert(saveSlots.open&&saveSlotList.textContent.includes('Проверочный мир')&&saveSlotList.textContent.includes('Читы'),'Named world beyond the old slot limit is missing');
+ deleteSaveSlot(4);
+ assert(localStorage.getItem(slotKey(4))===null,'Deleting another world failed');
+ saveSlots.close();
+ get('settings-dialog').close();
  ${captureScene}
  assert(alphaErrors.length===0,alphaErrors.join(';'));const pre=document.createElement('pre');pre.id='alpha-smoke-result';pre.textContent='PASS UI: real sets and tooltips, sorted harvest collection, exact and held purchases, inventory enhancement picker, best-parent comparison, upgrade spacing and scroll access';document.body.append(pre);
  }catch(e){const pre=document.createElement('pre');pre.id='alpha-smoke-result';pre.textContent='FAIL '+e.stack+' Errors: '+alphaErrors.join(';');document.body.append(pre);}},1000);</script>`;

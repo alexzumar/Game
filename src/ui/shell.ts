@@ -66,6 +66,7 @@ function render() {
   document.documentElement.dataset.accent = String(farm.accent);
   document.body.classList.toggle('raining',rain);
   renderIslandWeather(rain,now);
+  renderHelperIndicator();
   get('theme').textContent = farm.theme === 'light' ? '☾ Тёмная' : '☀ Светлая';
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;

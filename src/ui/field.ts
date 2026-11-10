@@ -190,6 +190,7 @@ let islandDisplayTimer:ReturnType<typeof setTimeout>;
 let islandQueueTimer:ReturnType<typeof setTimeout>|undefined;
 const islandPendingPages:string[]=[];
 const islandReadyPages:string[]=[];
+let islandCurrentPages:string[]=[];
 let islandPendingSpend=0;
 let islandCoinsSpent=farm.statistics?.coinsSpent??0;
 function recordIslandSpending(){
@@ -201,7 +202,8 @@ function recordIslandSpending(){
   islandCoinsSpent=spent;
 }
 function scheduleIslandEvents(){
-  if(islandQueueTimer!==undefined)return;
+  refreshIslandList();
+  clearTimeout(islandQueueTimer);
   islandQueueTimer=setTimeout(()=>{
     islandQueueTimer=undefined;
     islandReadyPages.push(...islandPendingPages.splice(0));
@@ -237,11 +239,27 @@ function renderIslandWeather(rain:boolean,now:number){
 const activityOval=get('activity-island');
 const extractorOval=get('extractor-island');
 const islandHeader=activityOval.parentElement!;
+const islandDialogs:HTMLDialogElement[]=[];
+const islandList=document.createElement('ol');
+islandList.className='island-event-list';
+islandList.hidden=true;
+activityOval.append(islandList);
+function refreshIslandList(){
+  if(islandList.hidden)return;
+  const pages=[...islandCurrentPages,...islandReadyPages,...islandPendingPages];
+  if(islandPendingSpend)pages.push('🪙 Потрачено −'+number(islandPendingSpend));
+  islandList.replaceChildren(...pages.map(page=>{
+    const row=document.createElement('li');
+    row.textContent=page;
+    return row;
+  }));
+}
 function placeTopIslands(){
   const bounds=islandHeader.getBoundingClientRect();
   const narrow=matchMedia('(max-width:760px)').matches;
   const stacked=matchMedia('(max-width:1100px)').matches;
-  const activityTop=narrow?53:(bounds.height-activityOval.offsetHeight-(stacked&&!extractorOval.hidden?28:0))/2;
+  const height=islandList.hidden?activityOval.offsetHeight:36;
+  const activityTop=narrow?53:(bounds.height-height-(stacked&&!extractorOval.hidden?28:0))/2;
   activityOval.style.top=(activityTop+(activityOval.matches(':popover-open')?bounds.top:0))+'px';
   extractorOval.style.top=(stacked?bounds.height-extractorOval.offsetHeight-5:
     (bounds.height-extractorOval.offsetHeight)/2)+'px';
@@ -250,12 +268,22 @@ function placeTopIslands(){
 function raiseActivityEvent(){
   if(!activityOval.classList.contains('island-summary'))return;
   if(activityOval.matches(':popover-open'))activityOval.hidePopover();
+  const host=islandDialogs.at(-1)??islandHeader;
+  if(activityOval.parentElement!==host)host.append(activityOval);
   activityOval.setAttribute('popover','manual');
   activityOval.showPopover();
   placeTopIslands();
 }
 new MutationObserver(records=>{
-  if(records.some(({target})=>target instanceof HTMLDialogElement&&target.open))raiseActivityEvent();
+  let changed=false;
+  for(const {target} of records){
+    if(!(target instanceof HTMLDialogElement))continue;
+    changed=true;
+    const index=islandDialogs.indexOf(target);
+    if(index>=0)islandDialogs.splice(index,1);
+    if(target.open)islandDialogs.push(target);
+  }
+  if(changed)raiseActivityEvent();
 }).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 window.addEventListener('resize',placeTopIslands);
 const islandResize=new ResizeObserver(placeTopIslands);
@@ -266,10 +294,12 @@ function showIslandEvent(...pages:string[]){
   scheduleIslandEvents();
 }
 function playIslandEvents(){
+  refreshIslandList();
   const island=get('island-event'),weather=get('weather');
   const oval=get('activity-island');
-  if(!island.hidden||!islandReadyPages.length)return;
+  if(islandCurrentPages.length||!islandReadyPages.length)return;
   const pages=islandReadyPages.splice(0);
+  islandCurrentPages=pages;
   clearTimeout(islandDisplayTimer);
   resizeIsland(()=>{
     oval.style.width='';
@@ -286,21 +316,47 @@ function playIslandEvents(){
   });
   let index=0;
   const show=()=>{
-    if(index===pages.length){resizeIsland(()=>{
-      oval.style.width='';
-      oval.classList.remove('island-summary');
-      if(oval.matches(':popover-open'))oval.hidePopover();
-      oval.removeAttribute('popover');
-      island.hidden=true;
-      weather.hidden=false;
-      placeTopIslands();
-    });playIslandEvents();return;}
+    if(index===pages.length){finishIslandEvent();playIslandEvents();return;}
     island.textContent=pages[index++];
     island.title=island.textContent;
     islandDisplayTimer=setTimeout(show,2600);
   };
   show();
 }
+function finishIslandEvent(){
+  resizeIsland(()=>{
+    activityOval.style.width='';
+    activityOval.classList.remove('island-summary','island-expanded');
+    if(activityOval.matches(':popover-open'))activityOval.hidePopover();
+    activityOval.removeAttribute('popover');
+    if(activityOval.parentElement!==islandHeader)islandHeader.append(activityOval);
+    islandCurrentPages=[];
+    islandList.hidden=true;
+    get('island-event').hidden=true;
+    get('weather').hidden=false;
+    placeTopIslands();
+  });
+}
+let islandHoverClose:ReturnType<typeof setTimeout>;
+activityOval.addEventListener('pointerenter',event=>{
+  clearTimeout(islandHoverClose);
+  if(event.pointerType==='touch'||!islandCurrentPages.length||!islandList.hidden)return;
+  clearTimeout(islandDisplayTimer);
+  activityOval.classList.add('island-expanded');
+  get('island-event').hidden=true;
+  islandList.hidden=false;
+  refreshIslandList();
+  placeTopIslands();
+});
+activityOval.addEventListener('pointerleave',()=>{
+  if(islandList.hidden)return;
+  islandHoverClose=setTimeout(()=>{
+    islandReadyPages.length=0;
+    islandPendingPages.length=0;
+    islandPendingSpend=0;
+    finishIslandEvent();
+  },350);
+});
 function recordIslandHarvest(amount:number,before:{diamonds:number;orbs:number;items:Record<string,number>}){
   const time=performance.now();
   const batch=islandHarvest??={start:time,last:time,plants:0,fruit:0,loot:{}};

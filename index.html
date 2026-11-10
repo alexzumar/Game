@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
-<meta name="farm-build" content="0294ce10e2699f3d">
+<meta name="farm-build" content="4c7a145ade06f317">
 <style>*{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{--mint:#a6d8ba;--lilac:#c9b6e7;--peach:#f2c1a5;--blue:#a9caed;--pink:#e8b0c9;--accent:var(--mint);--base:#e9eee6;--ink:#22362e;--soft:#53655b;--glass:#ffffff76;--line:#ffffffb8;--edge:#243f3026;--soil:#d9c9ae;--soil-dark:#a68a69;--shade:#283d2521;color-scheme:light;font:15px system-ui,sans-serif}
@@ -583,19 +583,18 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 @keyframes selected-soil-sheen{0%,100%{background-position:100% 50%;opacity:.35}50%{background-position:0% 50%;opacity:.8}}
 @media(prefers-reduced-motion:reduce){.tile[aria-pressed=true]:not(.mystery-plot)::before{animation:none;background-position:50% 50%;opacity:.5}}
 
-.save-slots{position:fixed;right:0;top:50%;translate:0 -50%;z-index:14;padding:10px;border-radius:18px 0 0 18px;max-width:min(230px,85vw)}
-.save-slots summary{cursor:pointer;font-size:.8rem}
 #save-slot-list{display:grid;gap:6px;margin:10px 0}
+#save-slots .save-create{display:grid;gap:10px}
+#save-slots .save-create label{display:flex;align-items:center;gap:8px}
+#save-slots .save-create input[name=world]{min-width:0;flex:1}
 #save-slot-list button{text-align:left;white-space:normal}
-.save-slots label{font-size:.8rem}
-.save-slots p:empty{display:none}
 #resource-grid .plant-glow,#resource-crop-grid .plant-glow,.set-crop-grid .plant-glow{transition:none}
 
 .resource-card{user-select:text}
 
-#save-slot-list button{position:relative;isolation:isolate;overflow:hidden;touch-action:none;user-select:none}
+#save-slot-list button{position:relative;isolation:isolate;overflow:hidden;touch-action:pan-y;user-select:none}
 #save-slot-list button::before{content:'';position:absolute;inset:0;z-index:-1;background:#d74851aa;transform:scaleX(0);transform-origin:left}
-#save-slot-list .deleting-save::before{animation:save-delete-fill 10s linear forwards}
+#save-slot-list .deleting-save::before{animation:save-delete-fill 5s linear forwards}
 @keyframes save-delete-fill{to{transform:scaleX(1)}}
 #extractor-slots{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;margin:12px auto;width:100%}
 .extractor-slot{position:relative;flex:1 1 145px;max-width:min(100%,230px);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:15px;text-align:center}
@@ -688,17 +687,26 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 #activity-island>span{width:auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #activity-island,#extractor-island{box-sizing:border-box;display:flex;width:max-content;min-height:33px;align-items:center;padding:4px 8px;border-radius:999px;color:var(--ink);font-size:.74rem}
 #activity-island>.weather{font-size:inherit;color:inherit}
+#helper-island-dot{flex:none;width:7px;height:7px;margin-inline-end:6px;border-radius:50%;background:#3bab60}
+@media(prefers-reduced-motion:no-preference){
+ #helper-island-dot{animation:helper-island-pulse 3.5s ease-in-out infinite}
+ @keyframes helper-island-pulse{0%,70%,100%{opacity:1}85%{opacity:.42}}
+}
 #activity-island.island-summary{min-height:36px;text-align:center}
 #activity-island,#extractor-island{position:absolute}
-#activity-island:popover-open{position:fixed;right:auto;bottom:auto;margin:0}
-#activity-island.island-summary{pointer-events:none}
+#activity-island:popover-open{position:fixed;right:auto;bottom:auto;margin:0;overflow:visible}
+#activity-island.island-expanded{border-radius:18px;min-width:min(240px,calc(100vw - 24px));text-align:left;padding:8px 12px}
+#activity-island.island-expanded::after{content:'';position:absolute;inset:-10px;z-index:-1}
+.island-event-list{width:100%;max-height:min(42vh,320px);overflow:hidden auto;scrollbar-width:none;margin:0;padding:0;list-style:none;overscroll-behavior:contain}
+.island-event-list li{padding:5px 2px;overflow-wrap:anywhere}
+.island-event-list li+li{border-top:1px solid var(--edge)}
 @property --extractor-progress{syntax:"<percentage>";inherits:false;initial-value:0%}
 #extractor-island{gap:7px;cursor:pointer}
 body:not(.in-greenhouse) #enhancement-open{display:none}
 .extractor-island-slot{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
 .extractor-island-slot b{display:grid;place-items:center;width:23px;height:23px;border-radius:50%;background:radial-gradient(circle,var(--base) 57%,transparent 59%),conic-gradient(var(--accent) var(--extractor-progress),var(--line) 0)}
 @media(min-width:1101px){
- .masthead.has-extractor-island #activity-island{max-width:calc(50% - 290px)}
+ body:has(.masthead.has-extractor-island) #activity-island{max-width:calc(50% - 290px)}
 }
 @media(max-width:1100px){
  .masthead.has-extractor-island{padding-bottom:40px}
@@ -833,14 +841,14 @@ button{user-select:none}
 <div class="rain" aria-hidden="true"></div>
 <header class="masthead glass">
   <div class="brand"><span class="brand-icon" aria-hidden="true">✦</span><div><strong>Всходы</strong><small>СЕМЕННАЯ ФЕРМА</small></div></div>
-  <div id="activity-island" class="glass"><span class="weather" id="weather" data-upgrade-target="weather"></span><span id="island-event" role="status" hidden></span></div>
+  <div id="activity-island" class="glass"><i id="helper-island-dot" role="img" aria-label="Помощник сада работает" title="Помощник сада работает" hidden></i><span class="weather" id="weather" data-upgrade-target="weather"></span><span id="island-event" role="status" hidden></span></div>
   <button type="button" id="extractor-island" class="glass" aria-label="Открыть экстрактор" hidden></button>
   <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🪴 Теплица</a>
   <a href="#garden" id="garden-link" class="quiet greenhouse-link greenhouse-only">← В сад</a>
   <button id="settings-open" class="quiet" aria-label="Настройки" title="Настройки">⚙️</button>
 </header>
 <dialog id="settings-dialog" class="glass"><div class="window-heading"><h2>Настройки</h2><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form></div>  <div class="appearance"><div id="accents" aria-label="Цвет акцента"></div><button id="skin" class="quiet" title="Переключить стиль"></button><button id="theme" class="quiet"></button><label class="glass-control" title="От непрозрачных панелей до более выраженного стекла">Стекло <input type="range" id="glass-unified" min="0" max="100" aria-label="Эффект стекла"></label></div>
-<p>Альфа 0.3</p>
+<p>Альфа 0.3</p><button type="button" id="save-slots-open" class="quiet wide">Сохранения</button>
 <div id="build-update" hidden><p id="build-update-status" role="status"></p><button type="button" id="build-update-apply" class="quiet wide">Обновить игру</button></div>
 </dialog>
 <main class="workspace">
@@ -884,7 +892,6 @@ button{user-select:none}
   </section>
   <p id="pack-animation-note" role="status"></p><button type="button" class="primary" id="pack-done">Вернуться в магазин</button>
 </dialog>
-<details class="glass save-slots" id="save-slots"><summary>Сохранения</summary><div id="save-slot-list"></div><label><input id="save-slot-cheats" type="checkbox"> Читы для нового сейва</label><p id="save-slot-status" role="status"></p></details>
 <details class="glass debug" hidden><summary>Отладка</summary><label>Время <select id="speed"><option value="1">×1</option><option value="10">×10</option><option value="60">×60</option><option value="300">×300</option></select></label><button class="quiet" id="skip-rain">До дождя</button><label>Поле <select id="debug-size" aria-label="Размер поля"></select></label><button class="quiet" id="clear-plots">Очистить грядки</button><label>Монеты <input type="number" id="debug-amount" min="1" max="1000000000000" value="100"></label><button class="quiet" id="debug-coins">Добавить</button><button class="quiet" id="debug-unlock-crops">Открыть все культуры</button><button class="quiet" id="reset-game">Сбросить весь прогресс</button>
   <div class="debug-glass">
     <label>Прозрачность <input type="range" id="glass-transparency" min="0" max="100"><output id="glass-transparency-value"></output></label>
@@ -1187,6 +1194,7 @@ function newGreenhouse(now       )           {
     trellises:Array(greenhouseCells).fill(false),plots:Array(greenhouseCells).fill(null),
     rot:Array(greenhouseCells).fill(null),mutationCheck:now+30000};
 }
+
 
 
 
@@ -1550,6 +1558,8 @@ function applyRain(farm     ,now       ) {
 }
 
 
+
+const extractionResultListeners=new WeakMap                                      ();
 const extractionCapacity = 1000;
 const extractionSpeedMax = 50;
 function extractionCost(level       ,upgrade                  ){
@@ -1649,6 +1659,7 @@ function finishExtractionSlot(farm     ,now       ,slot       ){
     farm.mutationPoints=(farm.mutationPoints??0)+job.output;
     machine.last=job.recycledHybrid+' → 🧬 +'+job.output;
     setExtractionJob(machine,slot,null);
+    extractionResultListeners.get(farm)?.({hybrid:job.recycledHybrid,points:job.output});
     return true;
   }
   let completed=job.done;
@@ -1664,6 +1675,7 @@ function finishExtractionSlot(farm     ,now       ,slot       ){
   machine.history=[{crop:job.crop,input:processed,seeds},...(machine.history??[])].slice(0,12);
   job.done=completed;
   if(completed===job.input)setExtractionJob(machine,slot,null);
+  extractionResultListeners.get(farm)?.({crop:job.crop,processed,seeds,concentrate});
   return true;
 }
 function stopExtraction(farm     ,now       ,slot=0) {
@@ -2603,7 +2615,7 @@ const slotKey = (slot       ) => slot===1?'glass-farm.v1':'glass-farm.v1.slot-'+
 function readActiveSlot(){
   try{
     const slot=Number(localStorage.getItem(activeSlotKey));
-    return Number.isInteger(slot)&&slot>=1&&slot<=3?slot:1;
+    return Number.isSafeInteger(slot)&&slot>=1?slot:1;
   }catch(error){
     console.error('Ферма: не удалось прочитать активный слот',error);
     return 1;
@@ -3002,6 +3014,7 @@ function render() {
   document.documentElement.dataset.accent = String(farm.accent);
   document.body.classList.toggle('raining',rain);
   renderIslandWeather(rain,now);
+  renderHelperIndicator();
   get('theme').textContent = farm.theme === 'light' ? '☾ Тёмная' : '☀ Светлая';
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
@@ -3264,6 +3277,7 @@ let islandDisplayTimer                              ;
 let islandQueueTimer                                        ;
 const islandPendingPages         =[];
 const islandReadyPages         =[];
+let islandCurrentPages         =[];
 let islandPendingSpend=0;
 let islandCoinsSpent=farm.statistics?.coinsSpent??0;
 function recordIslandSpending(){
@@ -3275,7 +3289,8 @@ function recordIslandSpending(){
   islandCoinsSpent=spent;
 }
 function scheduleIslandEvents(){
-  if(islandQueueTimer!==undefined)return;
+  refreshIslandList();
+  clearTimeout(islandQueueTimer);
   islandQueueTimer=setTimeout(()=>{
     islandQueueTimer=undefined;
     islandReadyPages.push(...islandPendingPages.splice(0));
@@ -3311,11 +3326,27 @@ function renderIslandWeather(rain        ,now       ){
 const activityOval=get('activity-island');
 const extractorOval=get('extractor-island');
 const islandHeader=activityOval.parentElement ;
+const islandDialogs                    =[];
+const islandList=document.createElement('ol');
+islandList.className='island-event-list';
+islandList.hidden=true;
+activityOval.append(islandList);
+function refreshIslandList(){
+  if(islandList.hidden)return;
+  const pages=[...islandCurrentPages,...islandReadyPages,...islandPendingPages];
+  if(islandPendingSpend)pages.push('🪙 Потрачено −'+number(islandPendingSpend));
+  islandList.replaceChildren(...pages.map(page=>{
+    const row=document.createElement('li');
+    row.textContent=page;
+    return row;
+  }));
+}
 function placeTopIslands(){
   const bounds=islandHeader.getBoundingClientRect();
   const narrow=matchMedia('(max-width:760px)').matches;
   const stacked=matchMedia('(max-width:1100px)').matches;
-  const activityTop=narrow?53:(bounds.height-activityOval.offsetHeight-(stacked&&!extractorOval.hidden?28:0))/2;
+  const height=islandList.hidden?activityOval.offsetHeight:36;
+  const activityTop=narrow?53:(bounds.height-height-(stacked&&!extractorOval.hidden?28:0))/2;
   activityOval.style.top=(activityTop+(activityOval.matches(':popover-open')?bounds.top:0))+'px';
   extractorOval.style.top=(stacked?bounds.height-extractorOval.offsetHeight-5:
     (bounds.height-extractorOval.offsetHeight)/2)+'px';
@@ -3324,12 +3355,22 @@ function placeTopIslands(){
 function raiseActivityEvent(){
   if(!activityOval.classList.contains('island-summary'))return;
   if(activityOval.matches(':popover-open'))activityOval.hidePopover();
+  const host=islandDialogs.at(-1)??islandHeader;
+  if(activityOval.parentElement!==host)host.append(activityOval);
   activityOval.setAttribute('popover','manual');
   activityOval.showPopover();
   placeTopIslands();
 }
 new MutationObserver(records=>{
-  if(records.some(({target})=>target instanceof HTMLDialogElement&&target.open))raiseActivityEvent();
+  let changed=false;
+  for(const {target} of records){
+    if(!(target instanceof HTMLDialogElement))continue;
+    changed=true;
+    const index=islandDialogs.indexOf(target);
+    if(index>=0)islandDialogs.splice(index,1);
+    if(target.open)islandDialogs.push(target);
+  }
+  if(changed)raiseActivityEvent();
 }).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 window.addEventListener('resize',placeTopIslands);
 const islandResize=new ResizeObserver(placeTopIslands);
@@ -3340,10 +3381,12 @@ function showIslandEvent(...pages         ){
   scheduleIslandEvents();
 }
 function playIslandEvents(){
+  refreshIslandList();
   const island=get('island-event'),weather=get('weather');
   const oval=get('activity-island');
-  if(!island.hidden||!islandReadyPages.length)return;
+  if(islandCurrentPages.length||!islandReadyPages.length)return;
   const pages=islandReadyPages.splice(0);
+  islandCurrentPages=pages;
   clearTimeout(islandDisplayTimer);
   resizeIsland(()=>{
     oval.style.width='';
@@ -3360,21 +3403,47 @@ function playIslandEvents(){
   });
   let index=0;
   const show=()=>{
-    if(index===pages.length){resizeIsland(()=>{
-      oval.style.width='';
-      oval.classList.remove('island-summary');
-      if(oval.matches(':popover-open'))oval.hidePopover();
-      oval.removeAttribute('popover');
-      island.hidden=true;
-      weather.hidden=false;
-      placeTopIslands();
-    });playIslandEvents();return;}
+    if(index===pages.length){finishIslandEvent();playIslandEvents();return;}
     island.textContent=pages[index++];
     island.title=island.textContent;
     islandDisplayTimer=setTimeout(show,2600);
   };
   show();
 }
+function finishIslandEvent(){
+  resizeIsland(()=>{
+    activityOval.style.width='';
+    activityOval.classList.remove('island-summary','island-expanded');
+    if(activityOval.matches(':popover-open'))activityOval.hidePopover();
+    activityOval.removeAttribute('popover');
+    if(activityOval.parentElement!==islandHeader)islandHeader.append(activityOval);
+    islandCurrentPages=[];
+    islandList.hidden=true;
+    get('island-event').hidden=true;
+    get('weather').hidden=false;
+    placeTopIslands();
+  });
+}
+let islandHoverClose                              ;
+activityOval.addEventListener('pointerenter',event=>{
+  clearTimeout(islandHoverClose);
+  if(event.pointerType==='touch'||!islandCurrentPages.length||!islandList.hidden)return;
+  clearTimeout(islandDisplayTimer);
+  activityOval.classList.add('island-expanded');
+  get('island-event').hidden=true;
+  islandList.hidden=false;
+  refreshIslandList();
+  placeTopIslands();
+});
+activityOval.addEventListener('pointerleave',()=>{
+  if(islandList.hidden)return;
+  islandHoverClose=setTimeout(()=>{
+    islandReadyPages.length=0;
+    islandPendingPages.length=0;
+    islandPendingSpend=0;
+    finishIslandEvent();
+  },350);
+});
 function recordIslandHarvest(amount       ,before                                                          ){
   const time=performance.now();
   const batch=islandHarvest??={start:time,last:time,plants:0,fruit:0,loot:{}};
@@ -5697,7 +5766,6 @@ const tick = () => {
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(extracted)showIslandEvent('⚙️ '+farm.extraction.last);
   if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || helperChanged || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
     if(saveFarm(farm)){
@@ -5710,6 +5778,29 @@ const tick = () => {
   else render();
   if(extracted&&!extractionDialog.open)farm.seeds.forEach((count,crop)=>{if(count>beforeSeeds[crop])animateExtractedSeeds(crop,count-beforeSeeds[crop]);});
 };
+const extractionIslandBatch=new Map                                                           ();
+const extractionIslandHybrids         =[];
+let extractionIslandTimer                              ;
+extractionResultListeners.set(farm,result=>{
+  if('hybrid' in result)extractionIslandHybrids.push('⚙️ '+result.hybrid+' → 🧬 +'+number(result.points));
+  else{
+    const entry=extractionIslandBatch.get(result.crop)??{processed:0,seeds:0,concentrate:0};
+    entry.processed+=result.processed;
+    entry.seeds+=result.seeds;
+    entry.concentrate+=result.concentrate;
+    extractionIslandBatch.set(result.crop,entry);
+  }
+  clearTimeout(extractionIslandTimer);
+  extractionIslandTimer=setTimeout(()=>{
+    for(const [crop,{processed,seeds,concentrate}] of extractionIslandBatch){
+      islandReadyPages.push('⚙️ '+crops[crop].name+' ×'+number(processed)+' → 🌱 +'+number(seeds)+
+        (concentrate?' · Концентрат +'+number(concentrate):''));
+    }
+    islandReadyPages.push(...extractionIslandHybrids.splice(0));
+    extractionIslandBatch.clear();
+    playIslandEvents();
+  },2000);
+});
 tick();
 setInterval(tick,1000);
 const gardenHelperHistory         =[];
@@ -6595,24 +6686,48 @@ function animateRarePickup(origin        ,amount       ,icon       ,target      
   }
 }
 
-const saveSlots = get                    ('save-slots');
-const saveSlotStatus = get('save-slot-status');
+const saveSlots=collectionOverlay('save-slots','Сохранения');
+const saveSlotStatus=document.createElement('p');
+saveSlotStatus.setAttribute('role','status');
+const saveSlotList=document.createElement('div');
+saveSlotList.id='save-slot-list';
+const saveCreate=document.createElement('form');
+saveCreate.className='glass panel save-create';
+saveCreate.innerHTML='<h3>Новый мир</h3><label>Название <input name="world" maxlength="60" required></label><label><input name="cheats" type="checkbox"> Включить читы</label><button class="quiet wide">Создать мир</button>';
+saveSlots.append(saveCreate,saveSlotStatus,saveSlotList);
+
+function storedSaveSlots(){
+  const slots         =[];
+  for(let index=0;index<localStorage.length;index++){
+    const name=localStorage.key(index);
+    if(name===slotKey(1)){slots.push(1);continue;}
+    const match=name?.match(/^glass-farm\.v1\.slot-([1-9]\d*)$/);
+    const slot=Number(match?.[1]);
+    if(Number.isSafeInteger(slot)&&slot>1)slots.push(slot);
+  }
+  return slots.sort((a,b)=>a-b);
+}
 
 function renderSaveSlots(){
-  const list=get('save-slot-list');
-  list.replaceChildren();
+  saveSlotList.replaceChildren();
   try{
-    for(let slot=1;slot<=3;slot++){
+    const slots=storedSaveSlots();
+    if(!slots.includes(activeSlot))slots.push(activeSlot);
+    for(const [index,slot] of slots.entries()){
+      const isActive=slot===activeSlot;
       const raw=localStorage.getItem(slotKey(slot));
-      const state=raw?(slot===activeSlot?farm:JSON.parse(raw)        ):null;
+      let state          =isActive?farm:null;
+      if(!isActive&&raw){
+        try{state=JSON.parse(raw)        ;}catch{/* The damaged world can still be deleted. */}
+      }
       const control=document.createElement('button');
+      control.type='button';
       control.className='quiet';
-      control.textContent='Слот '+slot+(state?' · 🪙 '+number(state.coins??0)+(state.saveCheats?' · Читы':''):' · Пусто');
-      const isActive=slot===activeSlot&&state!==null;
-      if(isActive)control.textContent+=' · Активен';
-      control.onclick=()=>{if(!isActive)switchSaveSlot(slot);};
-      if(state)bindSaveDeletion(control,slot);
-      list.append(control);
+      const name=typeof state?.saveName==='string'&&state.saveName.trim()?state.saveName:'Мир '+(index+1);
+      control.textContent=name+(state?' · 🪙 '+number(state.coins??0)+(state.saveCheats?' · Читы':''):' · Не читается')+(isActive?' · Активен':'');
+      control.onclick=()=>{if(!isActive&&state)switchSaveSlot(slot);};
+      bindSaveDeletion(control,slot);
+      saveSlotList.append(control);
     }
   }catch(error){
     saveSlotStatus.textContent='Не удалось прочитать сохранения.';
@@ -6620,27 +6735,46 @@ function renderSaveSlots(){
   }
 }
 
-function switchSaveSlot(slot       ){
+function switchSaveSlot(slot       ,newWorld      ){
+  let created=false;
   try{
-    const target=slotKey(slot);
-    if(localStorage.getItem(target)===null){
-      const cheats=get                  ('save-slot-cheats').checked;
-      if(!saveFarm({...newFarm(),saveCheats:cheats},target))throw new Error('Не удалось создать ферму');
-    }
     syncPlayTime();
-    if(slot!==activeSlot&&!saveFarm({...farm,pausedAt:Date.now()}))throw new Error('Не удалось сохранить текущую ферму');
+    if(!saveFarm({...farm,pausedAt:Date.now()}))throw new Error('Не удалось сохранить текущий мир');
+    if(newWorld){
+      if(!saveFarm(newWorld,slotKey(slot)))throw new Error('Не удалось создать мир');
+      created=true;
+    }
     localStorage.setItem(activeSlotKey,String(slot));
     reloadFarm();
   }catch(error){
-    saveSlotStatus.textContent='Не удалось переключить слот.';
+    if(created)localStorage.removeItem(slotKey(slot));
+    saveSlotStatus.textContent='Не удалось открыть мир.';
     console.error('Ферма: ошибка переключения сохранения',error);
   }
 }
-
-saveSlots.addEventListener('toggle',()=>{if(saveSlots.open)renderSaveSlots();});
+button('save-slots-open').onclick=()=>{
+  saveSlotStatus.textContent='';
+  renderSaveSlots();
+  saveSlots.showModal();
+};
+saveCreate.onsubmit=event=>{
+  event.preventDefault();
+  const data=new FormData(saveCreate);
+  const name=String(data.get('world')??'').trim();
+  if(!name){saveSlotStatus.textContent='Введи название мира.';return;}
+  try{
+    const slots=new Set([...storedSaveSlots(),activeSlot]);
+    let slot=1;
+    while(slots.has(slot))slot++;
+    switchSaveSlot(slot,{...newFarm(),saveName:name,saveCheats:data.has('cheats')});
+  }catch(error){
+    saveSlotStatus.textContent='Не удалось создать мир.';
+    console.error('Ферма: ошибка создания мира',error);
+  }
+};
 
 function bindSaveDeletion(control                  ,slot       ){
-  control.title='Зажми для удаления';
+  control.title='Удерживай 5 секунд для удаления';
   let timer                                        ;
   const cancel=()=>{
     clearTimeout(timer);
@@ -6655,7 +6789,7 @@ function bindSaveDeletion(control                  ,slot       ){
     timer=setTimeout(()=>{
       if(document.hasFocus()&&saveSlots.open)deleteSaveSlot(slot);
       cancel();
-    },10000);
+    },5000);
   };
   control.onpointerup=cancel;
   control.onpointercancel=cancel;
@@ -6664,33 +6798,16 @@ function bindSaveDeletion(control                  ,slot       ){
 
 function deleteSaveSlot(slot       ){
   try{
-    if(slot!==activeSlot){
-      syncPlayTime();
-      if(!saveFarm(farm))throw new Error('Не удалось сохранить текущую ферму');
+    if(slot===activeSlot){
+      const next=storedSaveSlots().find(id=>id!==slot)??1;
+      localStorage.setItem(activeSlotKey,String(next));
+      try{localStorage.removeItem(slotKey(slot));}
+      catch(error){localStorage.setItem(activeSlotKey,String(activeSlot));throw error;}
+      reloadFarm();
+      return;
     }
-    const previous=[1,2,3].map(id=>localStorage.getItem(slotKey(id)));
-    const activeBefore=localStorage.getItem(activeSlotKey);
-    const remaining=previous.filter((raw,index)=>raw!==null&&index!==slot-1);
-    const keptActive=slot===activeSlot?null:previous[activeSlot-1];
-    const nextActive=keptActive===null?1:previous.slice(0,activeSlot).filter((raw,index)=>raw!==null&&index!==slot-1).length;
-    try{
-      for(let index=0;index<3;index++){
-        const raw=remaining[index],target=slotKey(index+1);
-        if(raw===undefined)localStorage.removeItem(target);
-        else localStorage.setItem(target,raw);
-      }
-      localStorage.setItem(activeSlotKey,String(nextActive));
-    }catch(error){
-      previous.forEach((raw,index)=>{
-        const target=slotKey(index+1);
-        if(raw===null)localStorage.removeItem(target);
-        else localStorage.setItem(target,raw);
-      });
-      if(activeBefore===null)localStorage.removeItem(activeSlotKey);
-      else localStorage.setItem(activeSlotKey,activeBefore);
-      throw error;
-    }
-    reloadFarm();
+    localStorage.removeItem(slotKey(slot));
+    renderSaveSlots();
   }catch(error){
     saveSlotStatus.textContent='Не удалось удалить сохранение.';
     console.error('Ферма: ошибка удаления сохранения',error);
@@ -7221,6 +7338,16 @@ helperOpen.id='garden-helper-open';
 helperOpen.className='quiet wide';
 helperOpen.textContent='🌱 Помощник сада';
 button('knots-open').before(helperOpen);
+renderHelperIndicator();
+
+function renderHelperIndicator(){
+  const helper=farm.gardenHelper;
+  const running=!!helper?.enabled&&helper.crop!==null&&gardenHelperUnlocked(farm)&&unlocked(farm,helper.crop);
+  get('helper-island-dot').hidden=!running;
+  const control=get('garden-helper-open');
+  const label='🌱 Помощник сада'+(running?' · Работает':'');
+  if(control&&control.textContent!==label)control.textContent=label;
+}
 
 function renderGardenHelper(){
   const helper=farm.gardenHelper??newGardenHelper();

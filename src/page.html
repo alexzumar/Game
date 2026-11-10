@@ -11,14 +11,14 @@
 <div class="rain" aria-hidden="true"></div>
 <header class="masthead glass">
   <div class="brand"><span class="brand-icon" aria-hidden="true">✦</span><div><strong>Всходы</strong><small>СЕМЕННАЯ ФЕРМА</small></div></div>
-  <div id="activity-island" class="glass"><span class="weather" id="weather" data-upgrade-target="weather"></span><span id="island-event" role="status" hidden></span></div>
+  <div id="activity-island" class="glass"><i id="helper-island-dot" role="img" aria-label="Помощник сада работает" title="Помощник сада работает" hidden></i><span class="weather" id="weather" data-upgrade-target="weather"></span><span id="island-event" role="status" hidden></span></div>
   <button type="button" id="extractor-island" class="glass" aria-label="Открыть экстрактор" hidden></button>
   <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🪴 Теплица</a>
   <a href="#garden" id="garden-link" class="quiet greenhouse-link greenhouse-only">← В сад</a>
   <button id="settings-open" class="quiet" aria-label="Настройки" title="Настройки">⚙️</button>
 </header>
 <dialog id="settings-dialog" class="glass"><div class="window-heading"><h2>Настройки</h2><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form></div>  <div class="appearance"><div id="accents" aria-label="Цвет акцента"></div><button id="skin" class="quiet" title="Переключить стиль"></button><button id="theme" class="quiet"></button><label class="glass-control" title="От непрозрачных панелей до более выраженного стекла">Стекло <input type="range" id="glass-unified" min="0" max="100" aria-label="Эффект стекла"></label></div>
-<p>Альфа 0.3</p>
+<p>Альфа 0.3</p><button type="button" id="save-slots-open" class="quiet wide">Сохранения</button>
 <div id="build-update" hidden><p id="build-update-status" role="status"></p><button type="button" id="build-update-apply" class="quiet wide">Обновить игру</button></div>
 </dialog>
 <main class="workspace">
@@ -62,7 +62,6 @@
   </section>
   <p id="pack-animation-note" role="status"></p><button type="button" class="primary" id="pack-done">Вернуться в магазин</button>
 </dialog>
-<details class="glass save-slots" id="save-slots"><summary>Сохранения</summary><div id="save-slot-list"></div><label><input id="save-slot-cheats" type="checkbox"> Читы для нового сейва</label><p id="save-slot-status" role="status"></p></details>
 <details class="glass debug" hidden><summary>Отладка</summary><label>Время <select id="speed"><option value="1">×1</option><option value="10">×10</option><option value="60">×60</option><option value="300">×300</option></select></label><button class="quiet" id="skip-rain">До дождя</button><label>Поле <select id="debug-size" aria-label="Размер поля"></select></label><button class="quiet" id="clear-plots">Очистить грядки</button><label>Монеты <input type="number" id="debug-amount" min="1" max="1000000000000" value="100"></label><button class="quiet" id="debug-coins">Добавить</button><button class="quiet" id="debug-unlock-crops">Открыть все культуры</button><button class="quiet" id="reset-game">Сбросить весь прогресс</button>
   <div class="debug-glass">
     <label>Прозрачность <input type="range" id="glass-transparency" min="0" max="100"><output id="glass-transparency-value"></output></label>

@@ -111,7 +111,6 @@ const tick = () => {
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
-  if(extracted)showIslandEvent('⚙️ '+farm.extraction.last);
   if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || helperChanged || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
     if(saveFarm(farm)){
@@ -124,6 +123,29 @@ const tick = () => {
   else render();
   if(extracted&&!extractionDialog.open)farm.seeds.forEach((count,crop)=>{if(count>beforeSeeds[crop])animateExtractedSeeds(crop,count-beforeSeeds[crop]);});
 };
+const extractionIslandBatch=new Map<number,{processed:number;seeds:number;concentrate:number}>();
+const extractionIslandHybrids:string[]=[];
+let extractionIslandTimer:ReturnType<typeof setTimeout>;
+extractionResultListeners.set(farm,result=>{
+  if('hybrid' in result)extractionIslandHybrids.push('⚙️ '+result.hybrid+' → 🧬 +'+number(result.points));
+  else{
+    const entry=extractionIslandBatch.get(result.crop)??{processed:0,seeds:0,concentrate:0};
+    entry.processed+=result.processed;
+    entry.seeds+=result.seeds;
+    entry.concentrate+=result.concentrate;
+    extractionIslandBatch.set(result.crop,entry);
+  }
+  clearTimeout(extractionIslandTimer);
+  extractionIslandTimer=setTimeout(()=>{
+    for(const [crop,{processed,seeds,concentrate}] of extractionIslandBatch){
+      islandReadyPages.push('⚙️ '+crops[crop].name+' ×'+number(processed)+' → 🌱 +'+number(seeds)+
+        (concentrate?' · Концентрат +'+number(concentrate):''));
+    }
+    islandReadyPages.push(...extractionIslandHybrids.splice(0));
+    extractionIslandBatch.clear();
+    playIslandEvents();
+  },2000);
+});
 tick();
 setInterval(tick,1000);
 const gardenHelperHistory:string[]=[];
