@@ -4,6 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
+<meta name="farm-build" content="32e1ec05c4e271e2">
 <style>*{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{--mint:#a6d8ba;--lilac:#c9b6e7;--peach:#f2c1a5;--blue:#a9caed;--pink:#e8b0c9;--accent:var(--mint);--base:#e9eee6;--ink:#22362e;--soft:#53655b;--glass:#ffffff76;--line:#ffffffb8;--edge:#243f3026;--soil:#d9c9ae;--soil-dark:#a68a69;--shade:#283d2521;color-scheme:light;font:15px system-ui,sans-serif}
@@ -685,7 +686,19 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 .knot-effect-list{display:grid;gap:.4em;align-content:start;padding:.5em;border-radius:8px;background:color-mix(in srgb,var(--accent) 28%,var(--base))}
 .knot-effect-list b{color:var(--upgrade-next-ink,#14583d)}
 .knot-tooltip .knot-tooltip-price{margin-top:auto;padding-top:.5em;border-top:1px solid var(--edge)}
-.knot-tooltip-price>span{white-space:nowrap}
+.knot-tooltip-price>span{display:block;overflow-wrap:anywhere}
+#activity-island{position:absolute;left:50%;transform:translateX(-50%);box-sizing:border-box;display:flex;justify-content:center;width:max-content;max-width:calc(100% - 370px);padding:5px 13px;border-radius:999px;color:var(--ink);font-size:.78rem}
+#activity-island>span{width:auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#activity-island.island-summary{min-height:36px;align-items:center;text-align:center;font-weight:700}
+#settings-open.build-available{position:relative}
+#settings-open.build-available::after{content:'';position:absolute;top:1px;right:1px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:1px solid var(--ink)}
+.helper-history{margin-bottom:16px}
+.helper-history ol{max-height:240px;overflow:auto;margin:8px 0 0;padding-inline-start:1.5em;font-size:.82rem}
+.helper-history li{padding-block:5px;border-bottom:1px solid var(--edge)}
+@media(max-width:760px){
+ .masthead{min-height:94px;align-items:flex-start}
+ #activity-island{top:53px;max-width:calc(100% - 24px)}
+}
 .knot-tooltip-price .knot-cost-missing{color:#b52b3e;font-weight:750}
 [data-theme=dark] .knot-tooltip-price .knot-cost-missing{color:#ff929d}
 .knot-dots{display:flex;justify-content:flex-end;gap:4px;margin-top:3px}
@@ -803,13 +816,14 @@ button{user-select:none}
 <div class="rain" aria-hidden="true"></div>
 <header class="masthead glass">
   <div class="brand"><span class="brand-icon" aria-hidden="true">✦</span><div><strong>Всходы</strong><small>СЕМЕННАЯ ФЕРМА</small></div></div>
-  <span class="weather" id="weather" data-upgrade-target="weather"></span>
+  <div id="activity-island" class="glass"><span class="weather" id="weather" data-upgrade-target="weather"></span><span id="island-event" role="status" hidden></span></div>
   <button id="settings-open" class="quiet" aria-label="Настройки" title="Настройки">⚙️</button>
   <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🪴 Теплица</a>
   <a href="#garden" id="garden-link" class="quiet greenhouse-link greenhouse-only">← В сад</a>
 </header>
 <dialog id="settings-dialog" class="glass"><div class="window-heading"><h2>Настройки</h2><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form></div>  <div class="appearance"><div id="accents" aria-label="Цвет акцента"></div><button id="skin" class="quiet" title="Переключить стиль"></button><button id="theme" class="quiet"></button><label class="glass-control" title="От непрозрачных панелей до более выраженного стекла">Стекло <input type="range" id="glass-unified" min="0" max="100" aria-label="Эффект стекла"></label></div>
 <p>Альфа 0.3</p>
+<div id="build-update" hidden><p id="build-update-status" role="status"></p><button type="button" id="build-update-apply" class="quiet wide">Обновить игру</button></div>
 </dialog>
 <main class="workspace">
   <aside class="left" aria-label="Семена">
@@ -842,7 +856,7 @@ button{user-select:none}
     <section class="glass panel" id="upgrade-field"><span class="kicker">Расширение поля</span><p id="expand-note"></p><button class="quiet" id="expand"></button></section><section class="glass panel"><button class="quiet wide" id="hybrids-open">🧬 Гибриды</button><button class="quiet wide" id="diamonds-open">💎 Алмазные улучшения</button><button class="primary" id="upgrades-open">⬆ Улучшения</button></section>
   </aside>
 </main>
-<footer><span id="save-state"></span><span id="notice" role="status"></span></footer>
+<footer><span id="save-state"></span></footer>
 <dialog id="pack-dialog" class="glass">
   <h2><span id="pack-opening-title" data-upgrade-target="packs">Открываем пакет…</span></h2>
   <div id="reels" aria-label="Рулетки пакета"></div>
@@ -2301,7 +2315,7 @@ function buyGardenHelperUpgrade(farm     ,action                   ){
   helper.next[action]=0;
   return true;
 }
-function runGardenHelper(farm     ,now       ){
+function runGardenHelper(farm     ,now       ,harvest=collect,onCare                                                       ){
   const helper=farm.gardenHelper;
   if(!helper?.enabled||helper.crop===null||!gardenHelperUnlocked(farm)||!unlocked(farm,helper.crop))return false;
   const crop=helper.crop;
@@ -2314,7 +2328,7 @@ function runGardenHelper(farm     ,now       ){
       index=i;
       oldest=plot.ready;
     }
-    if(index>=0&&collect(farm,index,now)){
+    if(index>=0&&harvest(farm,index,now)){
       helper.next.collect=now+gardenHelperIntervals[helper.levels.collect];
       changed=true;
     }
@@ -2322,6 +2336,7 @@ function runGardenHelper(farm     ,now       ){
   if(now>=helper.next.sow){
     const index=farm.plots.indexOf(null);
     if(index>=0&&plant(farm,index,crop,now)){
+      onCare?.('sow',index,crop);
       helper.next.sow=now+gardenHelperIntervals[helper.levels.sow];
       changed=true;
     }
@@ -2334,6 +2349,7 @@ function runGardenHelper(farm     ,now       ){
       if(needsWater&&(!dry||(plot.watered??plot.planted)<(dry.watered??dry.planted)))dry=plot;
     }
     if(dry&&water(farm,dry,now)){
+      onCare?.('water',farm.plots.indexOf(dry),crop);
       helper.next.water=now+gardenHelperIntervals[helper.levels.water];
       changed=true;
     }
@@ -2967,15 +2983,12 @@ function render() {
   get("skin").textContent = farm.skin === "glossy" ? "✧ Глянец" : "◈ Классика";
   document.documentElement.dataset.accent = String(farm.accent);
   document.body.classList.toggle('raining',rain);
-  const rainLabel=document.body.classList.contains('in-greenhouse')?'🌧️ Дождь снаружи':
-    '🌧️ Дождь · расход влаги ×0,5 · рост +5%'+(farm.weather.surged?' · Рывок роста':'');
-  get('weather').textContent=rain?rainLabel+' · ещё '+clock((farm.weather.end??now)-now):'☀️ Ясно';
+  renderIslandWeather(rain,now);
   get('theme').textContent = farm.theme === 'light' ? '☾ Тёмная' : '☀ Светлая';
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
   get('counter').textContent = number(total(farm.harvest));
   get('save-state').textContent = storageError ? 'Ошибка сохранения' : '';
-  get('notice').textContent = notice;
   get('basket-coins').textContent = number(farm.coins);
   get('basket-empty').hidden = total(farm.harvest) > 0;
   get('basket-dialog').classList.toggle('empty-basket',total(farm.harvest)===0);
@@ -3195,6 +3208,7 @@ function collectAnimated(index       ,now       ,tile        ,area         =farm
   const plot = area.plots[index];
   const beforeLoot={diamonds:farm.diamonds?.balance??0,orbs:farm.resources.orbs,items:{...farm.resources.items}};
   const amount = collect(farm,index,now,Math.random,area);
+  if(amount)recordIslandHarvest(amount,beforeLoot);
   if(amount&&typeof packsUiReady!=='undefined'&&packsUiReady)animateCollectedLoot(tile,beforeLoot);
   if(!amount && plot?.line!==undefined && (plot.ready??Infinity)<=now && hybridCount(farm)>=farm.hybridSlots)notice='Инвентарь гибридов заполнен. Освободи место — растение остаётся на грядке.';
   if (!amount || !plot || matchMedia('(prefers-reduced-motion: reduce)').matches) return amount;
@@ -3225,6 +3239,80 @@ function collectAnimated(index       ,now       ,tile        ,area         =farm
     console.error('Ферма: ошибка анимации сбора',error);
   }
   return amount;
+}
+let islandHarvest                                                                                      =null;
+let islandHarvestTimer                              ;
+let islandDisplayTimer                              ;
+function resizeIsland(change         ){
+  const island=get('activity-island');
+  const before=island.getBoundingClientRect().width;
+  island.getAnimations().forEach(animation=>animation.cancel());
+  change();
+  const after=island.getBoundingClientRect().width;
+  if(before&&before!==after&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+    island.animate([{width:before+'px'},{width:after+'px'}],{duration:240,easing:'ease-out'});
+  }
+}
+function renderIslandWeather(rain        ,now       ){
+  const weather=get('weather');
+  const inside=document.body.classList.contains('in-greenhouse');
+  const effect=inside?'':farm.weather.surged?' | 💧⚡✦':' | 💧⚡';
+  const label=rain?'🌧️ '+(inside?'Дождь снаружи':'Дождь')+' | ещё '+clock((farm.weather.end??now)-now)+effect:'☀️ Ясно';
+  if(weather.textContent===label)return;
+  const change=()=>{
+    weather.textContent=label;
+    weather.title=rain&&!inside?'💧 Расход влаги ×0,5 · ⚡ Скорость роста +5%'+(farm.weather.surged?' · ✦ Рывок роста сработал':''):'';
+  };
+  if(weather.hidden)change();else resizeIsland(change);
+}
+function showIslandEvent(...pages         ){
+  const island=get('island-event'),weather=get('weather');
+  const oval=get('activity-island');
+  clearTimeout(islandDisplayTimer);
+  resizeIsland(()=>{
+    oval.style.width='';
+    oval.classList.add('island-summary');
+    weather.hidden=true;
+    island.hidden=false;
+    let width=0;
+    for(const page of pages){
+      island.textContent=page;
+      width=Math.max(width,oval.getBoundingClientRect().width);
+    }
+    oval.style.width=Math.ceil(width)+'px';
+  });
+  let index=0;
+  const show=()=>{
+    if(index===pages.length){resizeIsland(()=>{
+      oval.style.width='';
+      oval.classList.remove('island-summary');
+      island.hidden=true;
+      weather.hidden=false;
+    });return;}
+    island.textContent=pages[index++];
+    island.title=island.textContent;
+    islandDisplayTimer=setTimeout(show,2600);
+  };
+  show();
+}
+function recordIslandHarvest(amount       ,before                                                          ){
+  const time=performance.now();
+  const batch=islandHarvest??={start:time,last:time,plants:0,fruit:0,loot:{}};
+  batch.last=time;
+  batch.fruit+=amount;
+  batch.plants++;
+  const add=(label       ,count       )=>{if(count>0)batch.loot[label]=(batch.loot[label]??0)+count;};
+  add('🔮',(farm.resources.orbs-before.orbs));
+  add('💎',(farm.diamonds?.balance??0)-before.diamonds);
+  for(const material of materials)add(material.icon+' '+material.name,(farm.resources.items[material.id]??0)-(before.items[material.id]??0));
+  clearTimeout(islandHarvestTimer);
+  islandHarvestTimer=setTimeout(()=>{
+    islandHarvest=null;
+    const duration=Math.round((batch.last-batch.start)/1000);
+    showIslandEvent('За последние '+Math.max(1,duration)+' с · 🌱 Грядок: '+number(batch.plants),
+      '🧺 Урожай +'+number(batch.fruit),
+      ...Object.entries(batch.loot).map(([label,count])=>label+' +'+number(count)));
+  },4000);
 }
 
 const reelFinish = 24;
@@ -5432,6 +5520,39 @@ function reloadFarm(){
   location.reload();
 }
 
+const currentFarmBuild=document.querySelector                 ('meta[name="farm-build"]')?.content;
+async function checkFarmBuild(){
+  if(!currentFarmBuild||!/^https?:$/.test(location.protocol)||reloadingFarm)return;
+  try{
+    const response=await fetch(new URL('version.json',location.href),{cache:'no-store'});
+    if(!response.ok)return;
+    const {version}=await response.json();
+    if(typeof version!=='string'||!(/^[a-f0-9]{16}$/).test(version))return;
+    const available=version!==currentFarmBuild;
+    get('build-update').hidden=!available;
+    button('settings-open').classList.toggle('build-available',available);
+    get('build-update-status').textContent=available?'Доступна новая версия игры.':'';
+    button('build-update-apply').onclick=()=>{
+      updatePlayTime(playTimeCounter);
+      if(!saveFarm(farm)){
+        get('build-update-status').textContent='Сначала нужно сохранить игру. Повтори попытку.';
+        return;
+      }
+      reloadingFarm=true;
+      const destination=new URL(location.href);
+      destination.searchParams.set('build',version+'-'+Date.now());
+      location.replace(destination);
+    };
+  }catch{
+    // The game can continue when the version file is unreachable.
+  }
+}
+if(currentFarmBuild&&/^https?:$/.test(location.protocol)){
+  void checkFarmBuild();
+  window.addEventListener('focus',checkFarmBuild);
+  setInterval(checkFarmBuild,60_000);
+}
+
 document.addEventListener('visibilitychange',syncPlayTime);
 for(const type of ['pointerdown','keydown','wheel']){
   document.addEventListener(type,recordPlayInput,{capture:true,passive:true});
@@ -5461,6 +5582,7 @@ const tick = () => {
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
+  if(extracted)showIslandEvent('⚙️ '+farm.extraction.last);
   if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || helperChanged || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
     if(saveFarm(farm)){
@@ -5475,8 +5597,26 @@ const tick = () => {
 };
 tick();
 setInterval(tick,1000);
+const gardenHelperHistory         =[];
+function logHelperAction(index       ,message       ){
+  gardenHelperHistory.push((Math.floor(index/farm.size)+1)+':'+(index%farm.size+1)+' · '+message);
+  if(gardenHelperHistory.length>80)gardenHelperHistory.shift();
+}
 setInterval(()=>{
-  if(!reloadingFarm&&runGardenHelper(farm,nowTime()))helperChanged=true;
+  if(!reloadingFarm&&runGardenHelper(farm,nowTime(),(state,index,now)=>{
+    const before={diamonds:state.diamonds?.balance??0,orbs:state.resources.orbs,items:{...state.resources.items}};
+    const crop=crops[state.plots[index] .crop].name;
+    const amount=collect(state,index,now);
+    if(amount){
+      const loot=[[ '🔮',state.resources.orbs-before.orbs],['💎',(state.diamonds?.balance??0)-before.diamonds],
+        ...materials.map(item=>[item.icon+' '+item.name,(state.resources.items[item.id]??0)-(before.items[item.id]??0)]         )]         ;
+      logHelperAction(index,'Сбор · '+crop+' ×'+number(amount)+loot.filter(([,count])=>count>0).map(([label,count])=>' · '+label+' +'+number(count)).join(''));
+    }
+    return amount;
+  },(action,index,crop)=>logHelperAction(index,(action==='sow'?'Посадка':'Полив')+' · '+crops[crop].name))){
+    helperChanged=true;
+    if(document.querySelector('#garden-helper-dialog[open]'))renderHelperHistory();
+  }
 },50);
 
 
@@ -6750,6 +6890,8 @@ function createKnotExchange(set       ,trigger                  ){
   confirm.onclick=()=>{
     const count=quantity.valueAsNumber;
     if(!exchangeKnotMaterial(farm,set,target,count)){render();return;}
+    const material=materialsBySaveKey.get(knotMaterials[set][target]) ;
+    showIslandEvent(material.icon+' '+material.name+' +'+number(count));
     commit();
     renderKnots();
     quantity.value='1';
@@ -6909,15 +7051,14 @@ function renderKnots(){
       const requirement=document.createElement('p');
       requirement.className='knot-tooltip-price';
       if(price){
-        requirement.append('Вложить ');
-        price.forEach(({id,count},index)=>{
-          if(index)requirement.append(' + ');
+        requirement.append('Вложить для прокачки');
+        price.forEach(({id,count})=>{
           const item=document.createElement('span');
           item.classList.toggle('knot-cost-missing',(farm.resources.items[id]??0)<count);
-          item.textContent=materialsBySaveKey.get(id) .icon+' '+number(count);
+          const material=materialsBySaveKey.get(id) ;
+          item.textContent=material.icon+' '+material.name+' · '+number(count);
           requirement.append(item);
         });
-        requirement.append(' для прокачки.');
         if(!affordable)requirement.append(' Материалов пока не хватает.');
       }else{
         requirement.textContent=locked?'Сначала улучши «'+knotNames[set][tier-1]+'» до 5-го уровня.':'Достигнут 5-й уровень.';
@@ -6932,6 +7073,20 @@ const gardenHelperPanel=document.createElement('section');
 gardenHelperPanel.className='glass panel garden-helper-panel';
 gardenHelperPanel.innerHTML='<p>Сажает, поливает и собирает выбранную культуру в саду. В экстрактор отправляет урожай для запаса семян на поле. Остальное оставляет в корзине.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
 gardenHelperDialog.append(gardenHelperPanel);
+const helperHistory=document.createElement('section');
+helperHistory.className='glass panel helper-history';
+helperHistory.innerHTML='<h3>История помощника</h3><p>Грядки указаны как ряд:столбец.</p><ol tabindex="0" aria-label="Действия помощника"></ol>';
+gardenHelperDialog.append(helperHistory);
+function renderHelperHistory(){
+  const list=helperHistory.querySelector('ol') ;
+  const atEnd=list.scrollHeight-list.clientHeight-list.scrollTop<12;
+  list.replaceChildren(...(gardenHelperHistory.length?gardenHelperHistory:['Действий пока нет.']).map(message=>{
+    const row=document.createElement('li');
+    row.textContent=message;
+    return row;
+  }));
+  if(atEnd)list.scrollTop=list.scrollHeight;
+}
 const helperGate=gardenHelperPanel.querySelector             ('.garden-helper-gate') ;
 const helperCrop=gardenHelperPanel.querySelector                   ('select') ;
 const helperToggle=gardenHelperPanel.querySelector                   ('button') ;
@@ -6955,7 +7110,7 @@ function renderGardenHelper(){
   helperToggle.disabled=!open||helper.crop===null;
   helperToggle.textContent=helper.enabled?'Выключить':'Включить';
 }
-helperOpen.onclick=()=>{renderGardenHelper();gardenHelperDialog.showModal();};
+helperOpen.onclick=()=>{renderGardenHelper();gardenHelperDialog.showModal();renderHelperHistory();};
 helperCrop.onchange=()=>{
   if(!gardenHelperUnlocked(farm))return;
   const helper=farm.gardenHelper??=newGardenHelper();

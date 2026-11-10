@@ -109,6 +109,8 @@ function createKnotExchange(set:number,trigger:HTMLButtonElement){
   confirm.onclick=()=>{
     const count=quantity.valueAsNumber;
     if(!exchangeKnotMaterial(farm,set,target,count)){render();return;}
+    const material=materialsBySaveKey.get(knotMaterials[set][target])!;
+    showIslandEvent(material.icon+' '+material.name+' +'+number(count));
     commit();
     renderKnots();
     quantity.value='1';
@@ -268,15 +270,14 @@ function renderKnots(){
       const requirement=document.createElement('p');
       requirement.className='knot-tooltip-price';
       if(price){
-        requirement.append('Вложить ');
-        price.forEach(({id,count},index)=>{
-          if(index)requirement.append(' + ');
+        requirement.append('Вложить для прокачки');
+        price.forEach(({id,count})=>{
           const item=document.createElement('span');
           item.classList.toggle('knot-cost-missing',(farm.resources.items[id]??0)<count);
-          item.textContent=materialsBySaveKey.get(id)!.icon+' '+number(count);
+          const material=materialsBySaveKey.get(id)!;
+          item.textContent=material.icon+' '+material.name+' · '+number(count);
           requirement.append(item);
         });
-        requirement.append(' для прокачки.');
         if(!affordable)requirement.append(' Материалов пока не хватает.');
       }else{
         requirement.textContent=locked?'Сначала улучши «'+knotNames[set][tier-1]+'» до 5-го уровня.':'Достигнут 5-й уровень.';

@@ -64,15 +64,12 @@ function render() {
   get("skin").textContent = farm.skin === "glossy" ? "✧ Глянец" : "◈ Классика";
   document.documentElement.dataset.accent = String(farm.accent);
   document.body.classList.toggle('raining',rain);
-  const rainLabel=document.body.classList.contains('in-greenhouse')?'🌧️ Дождь снаружи':
-    '🌧️ Дождь · расход влаги ×0,5 · рост +5%'+(farm.weather.surged?' · Рывок роста':'');
-  get('weather').textContent=rain?rainLabel+' · ещё '+clock((farm.weather.end??now)-now):'☀️ Ясно';
+  renderIslandWeather(rain,now);
   get('theme').textContent = farm.theme === 'light' ? '☾ Тёмная' : '☀ Светлая';
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
   get('counter').textContent = number(total(farm.harvest));
   get('save-state').textContent = storageError ? 'Ошибка сохранения' : '';
-  get('notice').textContent = notice;
   get('basket-coins').textContent = number(farm.coins);
   get('basket-empty').hidden = total(farm.harvest) > 0;
   get('basket-dialog').classList.toggle('empty-basket',total(farm.harvest)===0);

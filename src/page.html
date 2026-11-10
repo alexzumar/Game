@@ -4,19 +4,21 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
+<!-- BUILD_VERSION -->
 <style>/* CSS */</style>
 </head>
 <body>
 <div class="rain" aria-hidden="true"></div>
 <header class="masthead glass">
   <div class="brand"><span class="brand-icon" aria-hidden="true">✦</span><div><strong>Всходы</strong><small>СЕМЕННАЯ ФЕРМА</small></div></div>
-  <span class="weather" id="weather" data-upgrade-target="weather"></span>
+  <div id="activity-island" class="glass"><span class="weather" id="weather" data-upgrade-target="weather"></span><span id="island-event" role="status" hidden></span></div>
   <button id="settings-open" class="quiet" aria-label="Настройки" title="Настройки">⚙️</button>
   <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🪴 Теплица</a>
   <a href="#garden" id="garden-link" class="quiet greenhouse-link greenhouse-only">← В сад</a>
 </header>
 <dialog id="settings-dialog" class="glass"><div class="window-heading"><h2>Настройки</h2><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form></div>  <div class="appearance"><div id="accents" aria-label="Цвет акцента"></div><button id="skin" class="quiet" title="Переключить стиль"></button><button id="theme" class="quiet"></button><label class="glass-control" title="От непрозрачных панелей до более выраженного стекла">Стекло <input type="range" id="glass-unified" min="0" max="100" aria-label="Эффект стекла"></label></div>
 <p>Альфа 0.3</p>
+<div id="build-update" hidden><p id="build-update-status" role="status"></p><button type="button" id="build-update-apply" class="quiet wide">Обновить игру</button></div>
 </dialog>
 <main class="workspace">
   <aside class="left" aria-label="Семена">
@@ -49,7 +51,7 @@
     <section class="glass panel" id="upgrade-field"><span class="kicker">Расширение поля</span><p id="expand-note"></p><button class="quiet" id="expand"></button></section><section class="glass panel"><button class="quiet wide" id="hybrids-open">🧬 Гибриды</button><button class="quiet wide" id="diamonds-open">💎 Алмазные улучшения</button><button class="primary" id="upgrades-open">⬆ Улучшения</button></section>
   </aside>
 </main>
-<footer><span id="save-state"></span><span id="notice" role="status"></span></footer>
+<footer><span id="save-state"></span></footer>
 <dialog id="pack-dialog" class="glass">
   <h2><span id="pack-opening-title" data-upgrade-target="packs">Открываем пакет…</span></h2>
   <div id="reels" aria-label="Рулетки пакета"></div>

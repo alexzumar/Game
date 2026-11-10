@@ -26,7 +26,7 @@ function buyGardenHelperUpgrade(farm:Farm,action:GardenHelperAction){
   helper.next[action]=0;
   return true;
 }
-function runGardenHelper(farm:Farm,now:number){
+function runGardenHelper(farm:Farm,now:number,harvest=collect,onCare?:(action:'sow'|'water',index:number,crop:number)=>void){
   const helper=farm.gardenHelper;
   if(!helper?.enabled||helper.crop===null||!gardenHelperUnlocked(farm)||!unlocked(farm,helper.crop))return false;
   const crop=helper.crop;
@@ -39,7 +39,7 @@ function runGardenHelper(farm:Farm,now:number){
       index=i;
       oldest=plot.ready;
     }
-    if(index>=0&&collect(farm,index,now)){
+    if(index>=0&&harvest(farm,index,now)){
       helper.next.collect=now+gardenHelperIntervals[helper.levels.collect];
       changed=true;
     }
@@ -47,6 +47,7 @@ function runGardenHelper(farm:Farm,now:number){
   if(now>=helper.next.sow){
     const index=farm.plots.indexOf(null);
     if(index>=0&&plant(farm,index,crop,now)){
+      onCare?.('sow',index,crop);
       helper.next.sow=now+gardenHelperIntervals[helper.levels.sow];
       changed=true;
     }
@@ -59,6 +60,7 @@ function runGardenHelper(farm:Farm,now:number){
       if(needsWater&&(!dry||(plot.watered??plot.planted)<(dry.watered??dry.planted)))dry=plot;
     }
     if(dry&&water(farm,dry,now)){
+      onCare?.('water',farm.plots.indexOf(dry),crop);
       helper.next.water=now+gardenHelperIntervals[helper.levels.water];
       changed=true;
     }

@@ -152,6 +152,7 @@ function collectAnimated(index:number,now:number,tile:Element,area:PlotArea=farm
   const plot = area.plots[index];
   const beforeLoot={diamonds:farm.diamonds?.balance??0,orbs:farm.resources.orbs,items:{...farm.resources.items}};
   const amount = collect(farm,index,now,Math.random,area);
+  if(amount)recordIslandHarvest(amount,beforeLoot);
   if(amount&&typeof packsUiReady!=='undefined'&&packsUiReady)animateCollectedLoot(tile,beforeLoot);
   if(!amount && plot?.line!==undefined && (plot.ready??Infinity)<=now && hybridCount(farm)>=farm.hybridSlots)notice='Инвентарь гибридов заполнен. Освободи место — растение остаётся на грядке.';
   if (!amount || !plot || matchMedia('(prefers-reduced-motion: reduce)').matches) return amount;
@@ -182,4 +183,78 @@ function collectAnimated(index:number,now:number,tile:Element,area:PlotArea=farm
     console.error('Ферма: ошибка анимации сбора',error);
   }
   return amount;
+}
+let islandHarvest:{start:number;last:number;plants:number;fruit:number;loot:Record<string,number>}|null=null;
+let islandHarvestTimer:ReturnType<typeof setTimeout>;
+let islandDisplayTimer:ReturnType<typeof setTimeout>;
+function resizeIsland(change:()=>void){
+  const island=get('activity-island');
+  const before=island.getBoundingClientRect().width;
+  island.getAnimations().forEach(animation=>animation.cancel());
+  change();
+  const after=island.getBoundingClientRect().width;
+  if(before&&before!==after&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+    island.animate([{width:before+'px'},{width:after+'px'}],{duration:240,easing:'ease-out'});
+  }
+}
+function renderIslandWeather(rain:boolean,now:number){
+  const weather=get('weather');
+  const inside=document.body.classList.contains('in-greenhouse');
+  const effect=inside?'':farm.weather.surged?' | 💧⚡✦':' | 💧⚡';
+  const label=rain?'🌧️ '+(inside?'Дождь снаружи':'Дождь')+' | ещё '+clock((farm.weather.end??now)-now)+effect:'☀️ Ясно';
+  if(weather.textContent===label)return;
+  const change=()=>{
+    weather.textContent=label;
+    weather.title=rain&&!inside?'💧 Расход влаги ×0,5 · ⚡ Скорость роста +5%'+(farm.weather.surged?' · ✦ Рывок роста сработал':''):'';
+  };
+  if(weather.hidden)change();else resizeIsland(change);
+}
+function showIslandEvent(...pages:string[]){
+  const island=get('island-event'),weather=get('weather');
+  const oval=get('activity-island');
+  clearTimeout(islandDisplayTimer);
+  resizeIsland(()=>{
+    oval.style.width='';
+    oval.classList.add('island-summary');
+    weather.hidden=true;
+    island.hidden=false;
+    let width=0;
+    for(const page of pages){
+      island.textContent=page;
+      width=Math.max(width,oval.getBoundingClientRect().width);
+    }
+    oval.style.width=Math.ceil(width)+'px';
+  });
+  let index=0;
+  const show=()=>{
+    if(index===pages.length){resizeIsland(()=>{
+      oval.style.width='';
+      oval.classList.remove('island-summary');
+      island.hidden=true;
+      weather.hidden=false;
+    });return;}
+    island.textContent=pages[index++];
+    island.title=island.textContent;
+    islandDisplayTimer=setTimeout(show,2600);
+  };
+  show();
+}
+function recordIslandHarvest(amount:number,before:{diamonds:number;orbs:number;items:Record<string,number>}){
+  const time=performance.now();
+  const batch=islandHarvest??={start:time,last:time,plants:0,fruit:0,loot:{}};
+  batch.last=time;
+  batch.fruit+=amount;
+  batch.plants++;
+  const add=(label:string,count:number)=>{if(count>0)batch.loot[label]=(batch.loot[label]??0)+count;};
+  add('🔮',(farm.resources.orbs-before.orbs));
+  add('💎',(farm.diamonds?.balance??0)-before.diamonds);
+  for(const material of materials)add(material.icon+' '+material.name,(farm.resources.items[material.id]??0)-(before.items[material.id]??0));
+  clearTimeout(islandHarvestTimer);
+  islandHarvestTimer=setTimeout(()=>{
+    islandHarvest=null;
+    const duration=Math.round((batch.last-batch.start)/1000);
+    showIslandEvent('За последние '+Math.max(1,duration)+' с · 🌱 Грядок: '+number(batch.plants),
+      '🧺 Урожай +'+number(batch.fruit),
+      ...Object.entries(batch.loot).map(([label,count])=>label+' +'+number(count)));
+  },4000);
 }

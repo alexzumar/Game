@@ -48,6 +48,39 @@ function reloadFarm(){
   location.reload();
 }
 
+const currentFarmBuild=document.querySelector<HTMLMetaElement>('meta[name="farm-build"]')?.content;
+async function checkFarmBuild(){
+  if(!currentFarmBuild||!/^https?:$/.test(location.protocol)||reloadingFarm)return;
+  try{
+    const response=await fetch(new URL('version.json',location.href),{cache:'no-store'});
+    if(!response.ok)return;
+    const {version}=await response.json();
+    if(typeof version!=='string'||!(/^[a-f0-9]{16}$/).test(version))return;
+    const available=version!==currentFarmBuild;
+    get('build-update').hidden=!available;
+    button('settings-open').classList.toggle('build-available',available);
+    get('build-update-status').textContent=available?'Доступна новая версия игры.':'';
+    button('build-update-apply').onclick=()=>{
+      updatePlayTime(playTimeCounter);
+      if(!saveFarm(farm)){
+        get('build-update-status').textContent='Сначала нужно сохранить игру. Повтори попытку.';
+        return;
+      }
+      reloadingFarm=true;
+      const destination=new URL(location.href);
+      destination.searchParams.set('build',version+'-'+Date.now());
+      location.replace(destination);
+    };
+  }catch{
+    // The game can continue when the version file is unreachable.
+  }
+}
+if(currentFarmBuild&&/^https?:$/.test(location.protocol)){
+  void checkFarmBuild();
+  window.addEventListener('focus',checkFarmBuild);
+  setInterval(checkFarmBuild,60_000);
+}
+
 document.addEventListener('visibilitychange',syncPlayTime);
 for(const type of ['pointerdown','keydown','wheel']){
   document.addEventListener(type,recordPlayInput,{capture:true,passive:true});
@@ -77,6 +110,7 @@ const tick = () => {
   const beforeSeeds=[...farm.seeds];
   const extracted=finishExtraction(farm,nowTime());
   if(extracted)notice=farm.extraction.last;
+  if(extracted)showIslandEvent('⚙️ '+farm.extraction.last);
   if(greenhouseChanged || abilitiesChanged || ripened || weatherChanged || extracted || helperChanged || speed !== 1 ||
     totalPlayTime()-lastPlayTimeSave>=15_000){
     if(saveFarm(farm)){
@@ -91,8 +125,26 @@ const tick = () => {
 };
 tick();
 setInterval(tick,1000);
+const gardenHelperHistory:string[]=[];
+function logHelperAction(index:number,message:string){
+  gardenHelperHistory.push((Math.floor(index/farm.size)+1)+':'+(index%farm.size+1)+' · '+message);
+  if(gardenHelperHistory.length>80)gardenHelperHistory.shift();
+}
 setInterval(()=>{
-  if(!reloadingFarm&&runGardenHelper(farm,nowTime()))helperChanged=true;
+  if(!reloadingFarm&&runGardenHelper(farm,nowTime(),(state,index,now)=>{
+    const before={diamonds:state.diamonds?.balance??0,orbs:state.resources.orbs,items:{...state.resources.items}};
+    const crop=crops[state.plots[index]!.crop].name;
+    const amount=collect(state,index,now);
+    if(amount){
+      const loot=[[ '🔮',state.resources.orbs-before.orbs],['💎',(state.diamonds?.balance??0)-before.diamonds],
+        ...materials.map(item=>[item.icon+' '+item.name,(state.resources.items[item.id]??0)-(before.items[item.id]??0)] as const)] as const;
+      logHelperAction(index,'Сбор · '+crop+' ×'+number(amount)+loot.filter(([,count])=>count>0).map(([label,count])=>' · '+label+' +'+number(count)).join(''));
+    }
+    return amount;
+  },(action,index,crop)=>logHelperAction(index,(action==='sow'?'Посадка':'Полив')+' · '+crops[crop].name))){
+    helperChanged=true;
+    if(document.querySelector('#garden-helper-dialog[open]'))renderHelperHistory();
+  }
 },50);
 
 

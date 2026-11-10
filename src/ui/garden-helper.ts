@@ -3,6 +3,20 @@ const gardenHelperPanel=document.createElement('section');
 gardenHelperPanel.className='glass panel garden-helper-panel';
 gardenHelperPanel.innerHTML='<p>Сажает, поливает и собирает выбранную культуру в саду. В экстрактор отправляет урожай для запаса семян на поле. Остальное оставляет в корзине.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
 gardenHelperDialog.append(gardenHelperPanel);
+const helperHistory=document.createElement('section');
+helperHistory.className='glass panel helper-history';
+helperHistory.innerHTML='<h3>История помощника</h3><p>Грядки указаны как ряд:столбец.</p><ol tabindex="0" aria-label="Действия помощника"></ol>';
+gardenHelperDialog.append(helperHistory);
+function renderHelperHistory(){
+  const list=helperHistory.querySelector('ol')!;
+  const atEnd=list.scrollHeight-list.clientHeight-list.scrollTop<12;
+  list.replaceChildren(...(gardenHelperHistory.length?gardenHelperHistory:['Действий пока нет.']).map(message=>{
+    const row=document.createElement('li');
+    row.textContent=message;
+    return row;
+  }));
+  if(atEnd)list.scrollTop=list.scrollHeight;
+}
 const helperGate=gardenHelperPanel.querySelector<HTMLElement>('.garden-helper-gate')!;
 const helperCrop=gardenHelperPanel.querySelector<HTMLSelectElement>('select')!;
 const helperToggle=gardenHelperPanel.querySelector<HTMLButtonElement>('button')!;
@@ -26,7 +40,7 @@ function renderGardenHelper(){
   helperToggle.disabled=!open||helper.crop===null;
   helperToggle.textContent=helper.enabled?'Выключить':'Включить';
 }
-helperOpen.onclick=()=>{renderGardenHelper();gardenHelperDialog.showModal();};
+helperOpen.onclick=()=>{renderGardenHelper();gardenHelperDialog.showModal();renderHelperHistory();};
 helperCrop.onchange=()=>{
   if(!gardenHelperUnlocked(farm))return;
   const helper=farm.gardenHelper??=newGardenHelper();
