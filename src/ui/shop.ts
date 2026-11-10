@@ -19,7 +19,7 @@ for (const [i,crop] of crops.entries()) {
   const price = document.createElement('small');
   price.id = 'buy-seed-price-'+i;
   item.append(icon,label,price);
-  item.onclick = () => {if (buySeed(farm,i)) commit('Куплено семечко: '+crop.name+'.');};
+  item.onclick = () => {if (buySeed(farm,i)) reportSeedPurchase(i,1);};
   get('shop-seeds').append(item);
   const odds = document.createElement('li');
   odds.id = 'odds-'+i;

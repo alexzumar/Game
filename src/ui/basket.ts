@@ -33,6 +33,7 @@ function sell(index:number,count:number) {
   selling = -1;
   if (saleDialog.open) saleDialog.close();
   commit('Продано: '+count+' · 🪙 +'+number(earned));
+  showIslandEvent('🧺 Продажа · 🪙 +'+number(earned));
 }
 function offerSale(index:number) {
   const count = farm.harvest[index];
@@ -89,6 +90,7 @@ button('receipt-confirm').onclick = () => {
   const amount = sellBasket(farm,receipt);
   const earned=farm.coins-before;
   receiptDialog.close();
+  if(amount)showIslandEvent('🧺 Продажа · 🪙 +'+number(earned));
   commit(amount ? 'Продан весь урожай: '+number(amount)+' · 🪙 +'+number(earned) :
     'Корзина изменилась. Открой чек ещё раз.');
 };

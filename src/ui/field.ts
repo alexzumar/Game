@@ -187,6 +187,31 @@ function collectAnimated(index:number,now:number,tile:Element,area:PlotArea=farm
 let islandHarvest:{start:number;last:number;plants:number;fruit:number;loot:Record<string,number>}|null=null;
 let islandHarvestTimer:ReturnType<typeof setTimeout>;
 let islandDisplayTimer:ReturnType<typeof setTimeout>;
+let islandQueueTimer:ReturnType<typeof setTimeout>|undefined;
+const islandPendingPages:string[]=[];
+const islandReadyPages:string[]=[];
+let islandPendingSpend=0;
+let islandCoinsSpent=farm.statistics?.coinsSpent??0;
+function recordIslandSpending(){
+  const spent=farm.statistics?.coinsSpent??0;
+  if(spent>islandCoinsSpent){
+    islandPendingSpend+=spent-islandCoinsSpent;
+    scheduleIslandEvents();
+  }
+  islandCoinsSpent=spent;
+}
+function scheduleIslandEvents(){
+  if(islandQueueTimer!==undefined)return;
+  islandQueueTimer=setTimeout(()=>{
+    islandQueueTimer=undefined;
+    islandReadyPages.push(...islandPendingPages.splice(0));
+    if(islandPendingSpend){
+      islandReadyPages.push('🪙 Потрачено −'+number(islandPendingSpend));
+      islandPendingSpend=0;
+    }
+    playIslandEvents();
+  },2000);
+}
 function resizeIsland(change:()=>void){
   const island=get('activity-island');
   const before=island.getBoundingClientRect().width;
@@ -209,9 +234,42 @@ function renderIslandWeather(rain:boolean,now:number){
   };
   if(weather.hidden)change();else resizeIsland(change);
 }
+const activityOval=get('activity-island');
+const extractorOval=get('extractor-island');
+const islandHeader=activityOval.parentElement!;
+function placeTopIslands(){
+  const bounds=islandHeader.getBoundingClientRect();
+  const narrow=matchMedia('(max-width:760px)').matches;
+  const stacked=matchMedia('(max-width:1100px)').matches;
+  const activityTop=narrow?53:(bounds.height-activityOval.offsetHeight-(stacked&&!extractorOval.hidden?28:0))/2;
+  activityOval.style.top=(activityTop+(activityOval.matches(':popover-open')?bounds.top:0))+'px';
+  extractorOval.style.top=(stacked?bounds.height-extractorOval.offsetHeight-5:
+    (bounds.height-extractorOval.offsetHeight)/2)+'px';
+  extractorOval.style.left='calc(50% + '+(stacked?0:activityOval.offsetWidth/2+8)+'px)';
+}
+function raiseActivityEvent(){
+  if(!activityOval.classList.contains('island-summary'))return;
+  if(activityOval.matches(':popover-open'))activityOval.hidePopover();
+  activityOval.setAttribute('popover','manual');
+  activityOval.showPopover();
+  placeTopIslands();
+}
+new MutationObserver(records=>{
+  if(records.some(({target})=>target instanceof HTMLDialogElement&&target.open))raiseActivityEvent();
+}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
+window.addEventListener('resize',placeTopIslands);
+const islandResize=new ResizeObserver(placeTopIslands);
+for(const element of [activityOval,extractorOval,islandHeader])islandResize.observe(element);
+placeTopIslands();
 function showIslandEvent(...pages:string[]){
+  islandPendingPages.push(...pages);
+  scheduleIslandEvents();
+}
+function playIslandEvents(){
   const island=get('island-event'),weather=get('weather');
   const oval=get('activity-island');
+  if(!island.hidden||!islandReadyPages.length)return;
+  const pages=islandReadyPages.splice(0);
   clearTimeout(islandDisplayTimer);
   resizeIsland(()=>{
     oval.style.width='';
@@ -224,15 +282,19 @@ function showIslandEvent(...pages:string[]){
       width=Math.max(width,oval.getBoundingClientRect().width);
     }
     oval.style.width=Math.ceil(width)+'px';
+    raiseActivityEvent();
   });
   let index=0;
   const show=()=>{
     if(index===pages.length){resizeIsland(()=>{
       oval.style.width='';
       oval.classList.remove('island-summary');
+      if(oval.matches(':popover-open'))oval.hidePopover();
+      oval.removeAttribute('popover');
       island.hidden=true;
       weather.hidden=false;
-    });return;}
+      placeTopIslands();
+    });playIslandEvents();return;}
     island.textContent=pages[index++];
     island.title=island.textContent;
     islandDisplayTimer=setTimeout(show,2600);
@@ -253,8 +315,9 @@ function recordIslandHarvest(amount:number,before:{diamonds:number;orbs:number;i
   islandHarvestTimer=setTimeout(()=>{
     islandHarvest=null;
     const duration=Math.round((batch.last-batch.start)/1000);
-    showIslandEvent('За последние '+Math.max(1,duration)+' с · 🌱 Грядок: '+number(batch.plants),
+    islandReadyPages.push('За последние '+Math.max(1,duration)+' с · 🌱 Грядок: '+number(batch.plants),
       '🧺 Урожай +'+number(batch.fruit),
       ...Object.entries(batch.loot).map(([label,count])=>label+' +'+number(count)));
-  },4000);
+    playIslandEvents();
+  },2000);
 }

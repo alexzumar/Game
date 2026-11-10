@@ -60,6 +60,9 @@ async function showPackOpening(results:number[]){
 function showPackOutcome(outcome:NonNullable<ReturnType<typeof finishPackOpening>>){
  const grid=get('pack-results'),grouped=new Map<number,{count:number;first:boolean}>();
  for(const entry of outcome.entries){const group=grouped.get(entry.crop)??{count:0,first:false};group.count++;group.first||=entry.first;grouped.set(entry.crop,group);}
+ if(grouped.size)showIslandEvent(...[...grouped].map(([crop,{count,first}])=>
+   '🎁 '+crops[crop].name+' ×'+number(count)+(first?' · новый вид':'')),
+   ...(outcome.returned?['↩ Возврат · 🪙 +'+number(outcome.returned)]:[]));
  grid.replaceChildren(...[...grouped].map(([crop,data])=>{
    const item=resultCard(crop,data.count),label=document.createElement('small');
    label.textContent=data.first?'Новый вид · семя ×1':'Повторка';

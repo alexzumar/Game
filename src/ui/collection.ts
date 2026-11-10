@@ -1,7 +1,5 @@
 // Unified collections, contextual details and a dedicated enhancement workflow.
 var refinementReady=true;
-const cultureTab=get('resources-dialog').querySelector('[data-resource-tab="cultures"]');
-if(cultureTab)get('resources-dialog').querySelector('[data-resource-tab="seeds"]')?.after(cultureTab);
 var selectingEnhancement=false;
 var skipEnhancementFold=false;
 var enhancementTransfer:{target:number;id:string}|null=null;
@@ -64,7 +62,7 @@ function renderSetDetails(){
  const intro=document.createElement('p');const count=set.crops.filter(i=>farm.harvested[i]>0).length;
  intro.textContent='Собрано '+count+'/4. Для полного набора собери хотя бы один плод каждого вида. Новые виды находятся в пакетах семян. Урожай не расходуется.';
  const grid=document.createElement('div');grid.className='set-crop-grid';
- for(const i of set.crops){const found=farm.harvested[i]>0,card=document.createElement('div');card.className='glass resource-card set-crop'+(found?'':' unknown-crop');card.tabIndex=0;
+ for(const i of set.crops){const found=unlocked(farm,i)||farm.harvested[i]>0,card=document.createElement('div');card.className='glass resource-card set-crop'+(found?'':' unknown-crop');card.tabIndex=0;
  const icon=document.createElement('span');icon.textContent=crops[i].symbol;icon.className=found?'plant-glow':'muted-crop';icon.style.setProperty('--icon-rarity',rarityColors[cropRarities[i]]);
  const name=document.createElement('small');name.textContent=found?crops[i].name:'Не найдено';const tier=document.createElement('small');tier.textContent=baseRarityNames[cropTiers[i]];card.append(icon,name,tier);
  collectionTooltip(card,crops[i].name+'\nБазовый шанс в обычном пакете без удачи: '+formatChance(openingOdds(farm,0,0)[i])+'%\n'+(found?'Урожай этого вида уже собран':unlocked(farm,i)?'Семена открыты. Собери первый урожай.':'Найди семя в пакете и собери урожай.'));grid.append(card);}
@@ -81,6 +79,7 @@ function renderHarvestDetails(){
  const specimen={name:crop.name,crop:i,seeds:0,traits:properties,powers};
  const lines=[
    baseRarityNames[tier]+' · Базовый рост '+clock(cropTimes[i]*1000)+' · С улучшениями '+clock(growthTime(i,farm.levels[i].growth)),
+   '🌱 Семян на складе: '+number(farm.seeds[i]),
    '🪙 Цена свежего плода: '+number(cropPrices[i]*(1+(powers.sweet??0)/100)*(1+level/100)),
    'Собрано: '+number(count)+' / '+number(nextCollectionAt(count))+' · Уровень коллекции '+level+' · Бонус к стоимости урожая +'+level+'%',
    '',
@@ -112,23 +111,23 @@ function renderResourceCollections(){
    get('resource-note').textContent='';
    return;
  }
- const categoryData=resourceCategory==='cultures'?farm.harvested:
-   resourceCategory==='seeds'?[farm.collection,farm.seeds]:
+ const categoryData=resourceCategory==='cultures'?[farm.harvested,farm.collection,farm.seeds]:
    resourceCategory==='sets'?[farm.harvested,farm.collection,farm.resources.items]:
    [farm.resources.items,farm.resources.found];
  const signature=JSON.stringify([resourceCategory,categoryData]);
  if(signature===collectionViewSignature)return;collectionViewSignature=signature;collectionTip.hidden=true;
  const cropGrid=get('resource-crop-grid');cropGrid.replaceChildren();
  const order=crops.map((_,i)=>i).sort((a,b)=>cropTiers[a]-cropTiers[b]||cropTimes[a]-cropTimes[b]);
- for(const i of order){const found=farm.harvested[i]>0,card=document.createElement('button');card.type='button';card.className='glass resource-card'+(found?'':' resource-locked');card.dataset.crop=String(i);
- const icon=document.createElement('span');icon.textContent=crops[i].symbol;card.append(icon);
+ for(const i of order){const found=unlocked(farm,i)||farm.harvested[i]>0,card=document.createElement('button');card.type='button';card.className='glass resource-card'+(found?'':' resource-locked');card.dataset.crop=String(i);
+ const icon=document.createElement('span');icon.textContent=crops[i].symbol;
+ const name=document.createElement('small');name.textContent=found?crops[i].name:'Не открыто';
+ card.append(icon,name);
+ if(found){const seeds=document.createElement('small');seeds.textContent='🌱 '+number(farm.seeds[i]);seeds.title='Семян на складе';card.append(seeds);}
  if(found){icon.className='plant-glow';icon.style.setProperty('--icon-rarity',rarityColors[cropRarities[i]]);const count=document.createElement('small');count.textContent=number(farm.harvested[i])+'/'+number(nextCollectionAt(farm.harvested[i]));card.append(count);
  collectionTooltip(card,crops[i].name+' · '+baseRarityNames[cropTiers[i]]+'\nСобрано: '+number(farm.harvested[i])+'/'+number(nextCollectionAt(farm.harvested[i]))+'\nСтоимость урожая: +'+collectionLevel(farm.harvested[i])+'%\nДо следующего уровня: '+number(Math.max(0,nextCollectionAt(farm.harvested[i])-farm.harvested[i])));card.onclick=()=>{selectedHarvest=i;renderHarvestDetails();harvestDetails.showModal();};}
  else{icon.className='muted-crop';card.disabled=true;card.setAttribute('aria-label','Неизвестная культура');}cropGrid.append(card);}
  const grid=get('resource-grid');grid.replaceChildren();
- if(resourceCategory==='seeds'){
- for(const i of order){const found=unlocked(farm,i),card=document.createElement('div');card.className='glass resource-card'+(found?'':' resource-locked');card.dataset.seed=String(i);const icon=document.createElement('span');icon.textContent=crops[i].symbol;const name=document.createElement('small');name.textContent=found?crops[i].name:'Не открыто';const count=document.createElement('strong');count.textContent=found?'🌱 '+number(farm.seeds[i]):'—';card.append(icon,name,count);if(found){icon.className='plant-glow';icon.style.setProperty('--icon-rarity',rarityColors[cropRarities[i]]);collectionTooltip(card,crops[i].name+' · '+baseRarityNames[cropTiers[i]]+'\nСемян на складе: '+number(farm.seeds[i])+'\nВид открыт — семена доступны в магазине.');}grid.append(card);}
- }else if(resourceCategory==='sets'){
+ if(resourceCategory==='sets'){
 
  cropSets.forEach((set,index)=>{const count=set.crops.filter(i=>farm.harvested[i]>0).length;const card=document.createElement('button');card.type='button';card.className='glass resource-card set-collection-card';card.dataset.set=String(index);card.style.setProperty('--completion',count*25+'%');
  const icon=document.createElement('span');icon.textContent=materials.find(item=>item.id==='set'+index)!.icon;const name=document.createElement('strong');name.textContent=setLabels[index];const progress=document.createElement('small');progress.textContent=count+'/4';card.append(icon,name,progress);
@@ -136,7 +135,7 @@ function renderResourceCollections(){
  }else for(const item of materials.filter(item=>resourceCategory==='materials'||item.category===resourceCategory)){
  const found=!!farm.resources.found[item.id]||(farm.resources.items[item.id]??0)>0,card=document.createElement('div');card.className='glass resource-card material-card'+(found?'':' resource-locked');card.tabIndex=0;
  const icon=document.createElement('span');icon.textContent=item.icon;const count=document.createElement('small');count.textContent=number(farm.resources.items[item.id]??0);card.append(icon,count);if(resourceCategory==='materials'&&found){const name=document.createElement('small');name.textContent=item.name;card.append(name);}
- collectionTooltip(card,item.name+'\n'+item.description+(item.category==='sets'?'\nДобывается с плодов своего набора; собирать весь набор для выпадения не требуется.':item.id==='duplication'?'\nПервый уровень: 1%, следующие: +0,1 п. п. Цена в кристаллах дублирования растёт с уровнем. Улучшения → Инструменты.':'\nОдна попытка усиления тратит 1 материал. Открой «Усиление гибридов» справа.')+'\n'+(found?'В запасе: '+number(farm.resources.items[item.id]??0):'Ещё не найдено'));grid.append(card);}
+ collectionTooltip(card,item.name+'\n'+item.description+(item.category==='sets'?'\nДобывается с плодов своего набора; собирать весь набор для выпадения не требуется.':item.id==='duplication'?'\nПервый уровень: 1%, следующие: +0,1 п. п. Цена в кристаллах дублирования растёт с уровнем. Улучшения → Инструменты.':'\nОдна попытка усиления тратит 1 материал. Открой «Усиление гибридов» в теплице.')+'\n'+(found?'В запасе: '+number(farm.resources.items[item.id]??0):'Ещё не найдено'));grid.append(card);}
  get('resource-note').textContent=resourceCategory==='seeds'?'Открытые виды семян и их запас. Новый вид можно найти в пакете семян.':resourceCategory==='materials'?'Все материалы в одном месте. Наведи на найденный предмет, чтобы узнать его применение.':resourceCategory==='cultures'?'Каждый уровень коллекции даёт +1% к стоимости урожая. Нажми на культуру, чтобы увидеть прогресс.':resourceCategory==='sets'?'Нажми на набор: состав, базовые шансы и применение материала.':'Наведи на предмет, чтобы узнать его действие и применение.';
  if(setDetails.open)renderSetDetails();if(harvestDetails.open)renderHarvestDetails();
 }

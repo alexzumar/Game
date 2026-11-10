@@ -103,6 +103,7 @@ const tick = () => {
   if(reloadingFarm)return;
   updatePlayTime(playTimeCounter);
   advanceDebug();
+  recordIslandSpending();
   const weatherChanged=applyRain(farm,nowTime());
   const greenhouseChanged=tickGreenhouse(nowTime());
   const abilitiesChanged=updatePlantAbilities(farm,nowTime());

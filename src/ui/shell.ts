@@ -53,6 +53,7 @@ let selectedPack = -1;
 let hoveredPlot = -1;
 function commit(message = '') {
   notice = message;
+  recordIslandSpending();
   saveFarm(farm);
   render();
 }

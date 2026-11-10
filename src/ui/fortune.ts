@@ -114,8 +114,10 @@ function renderFortune(){
       control.className='quiet';
       control.textContent=item.icon+' '+item.name;
       control.onclick=()=>{
+        const amount=state.choice?.amount??0;
         if(claimFortuneMaterial(farm,id)){
           commit('Получено: '+item.name);
+          showIslandEvent('🎡 '+item.icon+' '+item.name+' +'+number(amount));
           renderFortune();
         }
       };
@@ -197,6 +199,7 @@ get<HTMLFormElement>('fortune-form').onsubmit=async event=>{
       prize.type==='jackpot'?'Джекпот · '+currency+' +'+number(payout):prize.label;
     fortuneResults[selectedWheel]={label:message,chance:prize.weight};
     commit(message);
+    showIslandEvent('🎡 '+message);
     renderFortune();
   }
 };

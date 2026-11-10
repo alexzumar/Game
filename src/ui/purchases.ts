@@ -1,3 +1,7 @@
+function reportSeedPurchase(crop:number,count:number){
+  commit();
+  showIslandEvent('🌱 '+crops[crop].name+' +'+number(count)+' семян');
+}
 // Purchase batches atomically; holding accelerates without looping over every seed.
 const seedPurchasePopover=document.createElement('form');seedPurchasePopover.id='seed-purchase-popover';seedPurchasePopover.className='glass';seedPurchasePopover.setAttribute('popover','manual');seedPurchasePopover.hidden=true;
 seedPurchasePopover.innerHTML='<strong id="purchase-name"></strong><div class="purchase-equation"><input type="number" id="purchase-count" min="1" max="1000000000" value="10" aria-label="Количество семян"> × <span id="purchase-unit"></span> = <strong id="purchase-total"></strong></div><button class="primary" id="purchase-confirm">Купить</button><small id="purchase-note"></small>';
@@ -23,23 +27,23 @@ function hidePurchaseSoon(){clearTimeout(purchaseHideTimer);purchaseHideTimer=se
 seedPurchasePopover.onpointerenter=()=>clearTimeout(purchaseHideTimer);seedPurchasePopover.onpointerleave=hidePurchaseSoon;
 get('purchase-count').oninput=updatePurchaseQuote;
 get('purchase-count').addEventListener('wheel',event=>{event.preventDefault();const input=get<HTMLInputElement>('purchase-count');input.value=String(Math.max(1,Math.min(1e9,(input.valueAsNumber||1)+(event.deltaY<0?1:-1))));updatePurchaseQuote();},{passive:false});
-seedPurchasePopover.onsubmit=event=>{event.preventDefault();const input=get<HTMLInputElement>('purchase-count'),count=input.valueAsNumber;if(!Number.isSafeInteger(count)||count<1||count>1e9)return;const bought=buySeeds(farm,purchaseCrop,count);if(bought)commit('Куплено: '+crops[purchaseCrop].name+' ×'+number(bought));updatePurchaseQuote();};
+seedPurchasePopover.onsubmit=event=>{event.preventDefault();const input=get<HTMLInputElement>('purchase-count'),count=input.valueAsNumber;if(!Number.isSafeInteger(count)||count<1||count>1e9)return;const bought=buySeeds(farm,purchaseCrop,count);if(bought)reportSeedPurchase(purchaseCrop,bought);updatePurchaseQuote();};
 function seedHoldStep(){
  const hold=holdPurchase;if(!hold)return;
  try{
  const now=performance.now(),elapsed=now-hold.start,dt=Math.min(150,now-hold.last);hold.last=now;
  if(elapsed>350){const rate=Math.min(10000,4*2**((elapsed-350)/600));hold.credit+=rate*dt/1000;const count=Math.floor(hold.credit);hold.credit-=count;
- if(count){const bought=buySeeds(farm,hold.crop,count,true);if(!bought){stopSeedPurchase();return;}commit('Куплено: '+crops[hold.crop].name+' ×'+number(bought));updatePurchaseQuote();}}
+ if(count){const bought=buySeeds(farm,hold.crop,count,true);if(!bought){stopSeedPurchase();return;}reportSeedPurchase(hold.crop,bought);updatePurchaseQuote();}}
  hold.timer=setTimeout(seedHoldStep,60);
  }catch(error){stopSeedPurchase();console.error('Ферма: ошибка массовой покупки семян',error);}
 }
 for(const [i] of crops.entries()){
  const card=button('buy-seed-'+i);
- card.onclick=event=>{if(event.detail>0&&performance.now()<suppressPurchaseClickUntil)return;if(buySeed(farm,i))commit('Куплено семечко: '+crops[i].name);updatePurchaseQuote();};
+ card.onclick=event=>{if(event.detail>0&&performance.now()<suppressPurchaseClickUntil)return;if(buySeed(farm,i))reportSeedPurchase(i,1);updatePurchaseQuote();};
  card.addEventListener('pointerenter',()=>showSeedPurchase(i,card));card.addEventListener('pointerleave',hidePurchaseSoon);
  card.addEventListener('focus',()=>showSeedPurchase(i,card));
  card.addEventListener('pointerdown',event=>{if(event.button!==0||!event.isPrimary||!unlocked(farm,i))return;event.preventDefault();stopSeedPurchase();
- const bought=buySeeds(farm,i,1);if(!bought)return;commit('Куплено семечко: '+crops[i].name);suppressPurchaseClickUntil=Infinity;
+ const bought=buySeeds(farm,i,1);if(!bought)return;reportSeedPurchase(i,1);suppressPurchaseClickUntil=Infinity;
  const now=performance.now();holdPurchase={crop:i,start:now,last:now,credit:0,timer:undefined};seedHoldStep();
  });
 }

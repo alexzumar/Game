@@ -1,7 +1,18 @@
 const extractionDialog=get<HTMLDialogElement>('extractor-dialog');
 let extractionCrop=0;
 button('extractor-open').onclick=()=>{extractionDialog.showModal();renderExtraction();};
-button('extraction-toast').onclick=()=>{extractionDialog.showModal();renderExtraction();};
+const extractorIsland=button('extractor-island');
+extractorIsland.onclick=()=>{if(!extractionDialog.open)button('extractor-open').click();};
+const extractorIslandSlots=Array.from({length:3},(_,index)=>{
+  const slot=document.createElement('span');
+  slot.className='extractor-island-slot';
+  const ring=document.createElement('b');
+  ring.textContent=String(index+1);
+  const label=document.createElement('span');
+  slot.append(ring,label);
+  extractorIsland.append(slot);
+  return {slot,ring,label};
+});
 extractionDialog.onclose=renderExtraction;
 const extractionPicker=get<HTMLDialogElement>('extractor-picker');
 let selectedExtractionSlot=0;
@@ -112,12 +123,32 @@ function renderExtraction(){
     card.querySelector('span:not(.extractor-fill)')!.textContent=current?current.recycledHybrid??crops[current.crop].name+' ×'+(current.input-current.done):'Слот '+(slot+1);
     card.querySelector('small')!.textContent=current?clock(period-elapsed)+(current.recycledHybrid!==undefined?' · 🧬 +'+current.output:' · 🌱 '+total(current.outputs.slice(0,current.done))):'Добавить урожай';
     card.title=current?(current.recycledHybrid!==undefined?'Утилизация семени':'Нажми, чтобы остановить партию'):'Выбрать урожай и количество';
+    const chip=extractorIslandSlots[slot];
+    chip.slot.hidden=!current||slot>=slots;
+    if(current){
+      const left=current.input-current.done;
+      const remaining=Math.max(0,period-elapsed);
+      chip.label.textContent=crops[current.crop].symbol+' ×'+number(left);
+      chip.slot.title='Слот №'+(slot+1)+' · '+(current.recycledHybrid??crops[current.crop].name)+' · осталось '+number(left)+' · текущая обработка '+clock(remaining);
+      if(chip.ring.dataset.cycle!==cycle){
+        chip.ring.getAnimations().forEach(animation=>animation.cancel());
+        chip.ring.dataset.cycle=cycle;
+        chip.ring.animate([{'--extractor-progress':Math.min(1,remaining/period)*100+'%'},{'--extractor-progress':'0%'}],{
+          duration:remaining/speed,fill:'forwards',easing:'linear'
+        });
+      }
+    }else{
+      delete chip.ring.dataset.cycle;
+      chip.ring.getAnimations().forEach(animation=>animation.cancel());
+    }
   });
-  const activeJobs=jobs.filter(Boolean);
-  const toast=get('extraction-toast');
-  toast.hidden=extractionDialog.open||!activeJobs.length;
-  get('extraction-toast-label').textContent='⚙️ Занято слотов: '+activeJobs.length+' из '+slots;
-  get('extraction-toast-time').textContent=activeJobs.length?'До ближайшего результата: '+clock(Math.max(0,Math.min(...activeJobs.map(job=>extractionDeadline(job!,job!.done)))-now)):'';
+  const idle=!jobs.slice(0,slots).some(Boolean);
+  if(extractorIsland.hidden!==idle){
+    extractorIsland.hidden=idle;
+    islandHeader.classList.toggle('has-extractor-island',!idle);
+    placeTopIslands();
+  }
+  extractorIsland.setAttribute('aria-label','Открыть экстрактор. '+extractorIslandSlots.filter(({slot})=>!slot.hidden).map(({slot})=>slot.title).join('. '));
   get('extractor-last').textContent=machine.last||'Результат появится после обработки первого плода.';
   crops.forEach((crop,i)=>{
     const card=button('extractor-crop-'+i);card.hidden=!farm.harvest[i];

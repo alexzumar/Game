@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
-<meta name="farm-build" content="32e1ec05c4e271e2">
+<meta name="farm-build" content="0294ce10e2699f3d">
 <style>*{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{--mint:#a6d8ba;--lilac:#c9b6e7;--peach:#f2c1a5;--blue:#a9caed;--pink:#e8b0c9;--accent:var(--mint);--base:#e9eee6;--ink:#22362e;--soft:#53655b;--glass:#ffffff76;--line:#ffffffb8;--edge:#243f3026;--soil:#d9c9ae;--soil-dark:#a68a69;--shade:#283d2521;color-scheme:light;font:15px system-ui,sans-serif}
@@ -185,13 +185,10 @@ dialog.glass,#pack-dialog,#sale-dialog,#receipt-dialog,#upgrades-dialog .trait-p
 #extractor-crops .out-of-stock{opacity:.5}
 #extractor-dialog>h2{margin-right:30px}
 #upgrades-open{margin-top:8px}
-.processing-toast{position:fixed;bottom:15px;left:18px;z-index:2;padding:11px 15px;text-align:left;display:grid;gap:4px;max-width:min(220px,42vw);color:var(--ink)}
-.processing-toast small{color:var(--soft)}
 #basket-dialog.empty-basket{overflow:hidden;display:none}
 #basket-dialog.empty-basket[open]{display:flex;flex-direction:column}
 #basket-dialog.empty-basket #yields{display:none;min-height:0;margin:0}
 #basket-dialog.empty-basket #shop{margin-top:auto}
-@media(max-width:600px){.processing-toast{bottom:55px}}
 [data-upgrade-target]{cursor:pointer;text-decoration:underline dotted transparent;text-underline-offset:5px;transition:text-decoration-color .18s}
 [data-upgrade-target]:hover{ text-decoration-color:var(--soft)}
 [data-upgrade-target]:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:4px}
@@ -687,9 +684,28 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 .knot-effect-list b{color:var(--upgrade-next-ink,#14583d)}
 .knot-tooltip .knot-tooltip-price{margin-top:auto;padding-top:.5em;border-top:1px solid var(--edge)}
 .knot-tooltip-price>span{display:block;overflow-wrap:anywhere}
-#activity-island{position:absolute;left:50%;transform:translateX(-50%);box-sizing:border-box;display:flex;justify-content:center;width:max-content;max-width:calc(100% - 370px);padding:5px 13px;border-radius:999px;color:var(--ink);font-size:.78rem}
+#activity-island{left:50%;transform:translateX(-50%);justify-content:center;max-width:calc(100% - 370px)}
 #activity-island>span{width:auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#activity-island.island-summary{min-height:36px;align-items:center;text-align:center;font-weight:700}
+#activity-island,#extractor-island{box-sizing:border-box;display:flex;width:max-content;min-height:33px;align-items:center;padding:4px 8px;border-radius:999px;color:var(--ink);font-size:.74rem}
+#activity-island>.weather{font-size:inherit;color:inherit}
+#activity-island.island-summary{min-height:36px;text-align:center}
+#activity-island,#extractor-island{position:absolute}
+#activity-island:popover-open{position:fixed;right:auto;bottom:auto;margin:0}
+#activity-island.island-summary{pointer-events:none}
+@property --extractor-progress{syntax:"<percentage>";inherits:false;initial-value:0%}
+#extractor-island{gap:7px;cursor:pointer}
+body:not(.in-greenhouse) #enhancement-open{display:none}
+.extractor-island-slot{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.extractor-island-slot b{display:grid;place-items:center;width:23px;height:23px;border-radius:50%;background:radial-gradient(circle,var(--base) 57%,transparent 59%),conic-gradient(var(--accent) var(--extractor-progress),var(--line) 0)}
+@media(min-width:1101px){
+ .masthead.has-extractor-island #activity-island{max-width:calc(50% - 290px)}
+}
+@media(max-width:1100px){
+ .masthead.has-extractor-island{padding-bottom:40px}
+ #extractor-island{transform:translateX(-50%)}
+}
+.masthead #settings-open{margin-left:0}
+.masthead>.greenhouse-link{margin-left:auto}
 #settings-open.build-available{position:relative}
 #settings-open.build-available::after{content:'';position:absolute;top:1px;right:1px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:1px solid var(--ink)}
 .helper-history{margin-bottom:16px}
@@ -697,6 +713,7 @@ dialog>.window-heading>#hybrid-search{box-shadow:inset 0 1px 3px var(--shade);ba
 .helper-history li{padding-block:5px;border-bottom:1px solid var(--edge)}
 @media(max-width:760px){
  .masthead{min-height:94px;align-items:flex-start}
+ .masthead.has-extractor-island{min-height:125px}
  #activity-island{top:53px;max-width:calc(100% - 24px)}
 }
 .knot-tooltip-price .knot-cost-missing{color:#b52b3e;font-weight:750}
@@ -817,9 +834,10 @@ button{user-select:none}
 <header class="masthead glass">
   <div class="brand"><span class="brand-icon" aria-hidden="true">✦</span><div><strong>Всходы</strong><small>СЕМЕННАЯ ФЕРМА</small></div></div>
   <div id="activity-island" class="glass"><span class="weather" id="weather" data-upgrade-target="weather"></span><span id="island-event" role="status" hidden></span></div>
-  <button id="settings-open" class="quiet" aria-label="Настройки" title="Настройки">⚙️</button>
+  <button type="button" id="extractor-island" class="glass" aria-label="Открыть экстрактор" hidden></button>
   <a href="#greenhouse" id="greenhouse-link" class="quiet greenhouse-link">🪴 Теплица</a>
   <a href="#garden" id="garden-link" class="quiet greenhouse-link greenhouse-only">← В сад</a>
+  <button id="settings-open" class="quiet" aria-label="Настройки" title="Настройки">⚙️</button>
 </header>
 <dialog id="settings-dialog" class="glass"><div class="window-heading"><h2>Настройки</h2><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form></div>  <div class="appearance"><div id="accents" aria-label="Цвет акцента"></div><button id="skin" class="quiet" title="Переключить стиль"></button><button id="theme" class="quiet"></button><label class="glass-control" title="От непрозрачных панелей до более выраженного стекла">Стекло <input type="range" id="glass-unified" min="0" max="100" aria-label="Эффект стекла"></label></div>
 <p>Альфа 0.3</p>
@@ -984,7 +1002,6 @@ button{user-select:none}
 </form>
 
 </dialog>
-<button class="glass processing-toast" id="extraction-toast" hidden><strong id="extraction-toast-label"></strong><small id="extraction-toast-time"></small></button>
 <dialog id="mutation-dialog" class="glass comparison-dialog"><form method="dialog"><button class="quiet close">×</button></form>
 <h2>🧬 Полевая находка</h2><div id="mutation-icon"></div><p id="mutation-info"></p>
 <div id="mutation-genes" class="genetics"></div><div id="mutation-traits"></div><p id="mutation-comparison-note">Стрелки сравнивают потомка с лучшим значением родителей. Родители показаны слева и справа.</p><aside class="parent-panel parent-left"></aside><aside class="parent-panel parent-right"></aside>
@@ -1015,7 +1032,7 @@ button{user-select:none}
     <button type="button" class="primary" id="hybrid-recycle-confirm">Переработать</button>
   </form>
 </dialog>
-<div id="hybrid-dock-wrap" class="glass" hidden><button id="dock-close" class="quiet" aria-label="Свернуть или скрыть панель">×</button><button id="dock-handle" aria-label="Открыть панель гибридов">Гибриды</button><div id="hybrid-dock" aria-label="Быстрая посадка гибридов"></div><small class="dock-instruction">Перетяните, чтобы посадить. Нажмите, чтобы открыть инвентарь.</small></div><div class="glass" id="dock-tooltip" role="tooltip" hidden></div><div id="quick-seeds" class="glass" role="group" aria-label="Быстрая посадка" hidden></div><div id="seed-tooltip" class="glass" role="tooltip" hidden></div><dialog id="rot-dialog" class="glass"><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><h2>🍂 Растение сгнило</h2><p id="rot-description"></p><div id="rot-genetics"></div><div id="rot-properties"></div><button class="quiet" id="rot-clear">Убрать остатки</button></dialog><dialog id="resources-dialog" class="glass basket"><div class="window-heading"><h2 class="glass basket-chip"><span id="resource-upgrade-title" data-upgrade-target="discovery">📖 Коллекция</span></h2><span class="basket-wallet glass basket-chip" id="resources-balance"></span><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><nav class="shop-tabs" aria-label="Категории коллекции"><button class="quiet" data-resource-tab="seeds">Семена</button><button class="quiet" data-resource-tab="materials">Предметы</button><button class="quiet" data-resource-tab="cultures">Культуры</button><button class="quiet" data-resource-tab="sets">Наборы</button><button class="quiet" data-resource-tab="stats">Статистика</button></nav></div><section id="resource-cultures"><button id="collection-open" class="primary">📖 Коллекция культур</button><div id="resource-crop-grid"></div></section><div id="resource-grid"></div><section id="resource-stats" hidden></section><p id="resource-note" class="muted"></p></dialog><script>// legacySlot is the numeric identity stored in existing saves. Never reuse it.
+<div id="hybrid-dock-wrap" class="glass" hidden><button id="dock-close" class="quiet" aria-label="Свернуть или скрыть панель">×</button><button id="dock-handle" aria-label="Открыть панель гибридов">Гибриды</button><div id="hybrid-dock" aria-label="Быстрая посадка гибридов"></div><small class="dock-instruction">Перетяните, чтобы посадить. Нажмите, чтобы открыть инвентарь.</small></div><div class="glass" id="dock-tooltip" role="tooltip" hidden></div><div id="quick-seeds" class="glass" role="group" aria-label="Быстрая посадка" hidden></div><div id="seed-tooltip" class="glass" role="tooltip" hidden></div><dialog id="rot-dialog" class="glass"><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><h2>🍂 Растение сгнило</h2><p id="rot-description"></p><div id="rot-genetics"></div><div id="rot-properties"></div><button class="quiet" id="rot-clear">Убрать остатки</button></dialog><dialog id="resources-dialog" class="glass basket"><div class="window-heading"><h2 class="glass basket-chip"><span id="resource-upgrade-title" data-upgrade-target="discovery">📖 Коллекция</span></h2><span class="basket-wallet glass basket-chip" id="resources-balance"></span><form method="dialog"><button class="quiet close" aria-label="Закрыть">×</button></form><nav class="shop-tabs" aria-label="Категории коллекции"><button class="quiet" data-resource-tab="cultures">Культуры</button><button class="quiet" data-resource-tab="materials">Предметы</button><button class="quiet" data-resource-tab="sets">Наборы</button><button class="quiet" data-resource-tab="stats">Статистика</button></nav></div><section id="resource-cultures"><button id="collection-open" class="primary">📖 Коллекция культур</button><div id="resource-crop-grid"></div></section><div id="resource-grid"></div><section id="resource-stats" hidden></section><p id="resource-note" class="muted"></p></dialog><script>// legacySlot is the numeric identity stored in existing saves. Never reuse it.
 
 
 
@@ -2972,6 +2989,7 @@ let selectedPack = -1;
 let hoveredPlot = -1;
 function commit(message = '') {
   notice = message;
+  recordIslandSpending();
   saveFarm(farm);
   render();
 }
@@ -3243,6 +3261,31 @@ function collectAnimated(index       ,now       ,tile        ,area         =farm
 let islandHarvest                                                                                      =null;
 let islandHarvestTimer                              ;
 let islandDisplayTimer                              ;
+let islandQueueTimer                                        ;
+const islandPendingPages         =[];
+const islandReadyPages         =[];
+let islandPendingSpend=0;
+let islandCoinsSpent=farm.statistics?.coinsSpent??0;
+function recordIslandSpending(){
+  const spent=farm.statistics?.coinsSpent??0;
+  if(spent>islandCoinsSpent){
+    islandPendingSpend+=spent-islandCoinsSpent;
+    scheduleIslandEvents();
+  }
+  islandCoinsSpent=spent;
+}
+function scheduleIslandEvents(){
+  if(islandQueueTimer!==undefined)return;
+  islandQueueTimer=setTimeout(()=>{
+    islandQueueTimer=undefined;
+    islandReadyPages.push(...islandPendingPages.splice(0));
+    if(islandPendingSpend){
+      islandReadyPages.push('🪙 Потрачено −'+number(islandPendingSpend));
+      islandPendingSpend=0;
+    }
+    playIslandEvents();
+  },2000);
+}
 function resizeIsland(change         ){
   const island=get('activity-island');
   const before=island.getBoundingClientRect().width;
@@ -3265,9 +3308,42 @@ function renderIslandWeather(rain        ,now       ){
   };
   if(weather.hidden)change();else resizeIsland(change);
 }
+const activityOval=get('activity-island');
+const extractorOval=get('extractor-island');
+const islandHeader=activityOval.parentElement ;
+function placeTopIslands(){
+  const bounds=islandHeader.getBoundingClientRect();
+  const narrow=matchMedia('(max-width:760px)').matches;
+  const stacked=matchMedia('(max-width:1100px)').matches;
+  const activityTop=narrow?53:(bounds.height-activityOval.offsetHeight-(stacked&&!extractorOval.hidden?28:0))/2;
+  activityOval.style.top=(activityTop+(activityOval.matches(':popover-open')?bounds.top:0))+'px';
+  extractorOval.style.top=(stacked?bounds.height-extractorOval.offsetHeight-5:
+    (bounds.height-extractorOval.offsetHeight)/2)+'px';
+  extractorOval.style.left='calc(50% + '+(stacked?0:activityOval.offsetWidth/2+8)+'px)';
+}
+function raiseActivityEvent(){
+  if(!activityOval.classList.contains('island-summary'))return;
+  if(activityOval.matches(':popover-open'))activityOval.hidePopover();
+  activityOval.setAttribute('popover','manual');
+  activityOval.showPopover();
+  placeTopIslands();
+}
+new MutationObserver(records=>{
+  if(records.some(({target})=>target instanceof HTMLDialogElement&&target.open))raiseActivityEvent();
+}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
+window.addEventListener('resize',placeTopIslands);
+const islandResize=new ResizeObserver(placeTopIslands);
+for(const element of [activityOval,extractorOval,islandHeader])islandResize.observe(element);
+placeTopIslands();
 function showIslandEvent(...pages         ){
+  islandPendingPages.push(...pages);
+  scheduleIslandEvents();
+}
+function playIslandEvents(){
   const island=get('island-event'),weather=get('weather');
   const oval=get('activity-island');
+  if(!island.hidden||!islandReadyPages.length)return;
+  const pages=islandReadyPages.splice(0);
   clearTimeout(islandDisplayTimer);
   resizeIsland(()=>{
     oval.style.width='';
@@ -3280,15 +3356,19 @@ function showIslandEvent(...pages         ){
       width=Math.max(width,oval.getBoundingClientRect().width);
     }
     oval.style.width=Math.ceil(width)+'px';
+    raiseActivityEvent();
   });
   let index=0;
   const show=()=>{
     if(index===pages.length){resizeIsland(()=>{
       oval.style.width='';
       oval.classList.remove('island-summary');
+      if(oval.matches(':popover-open'))oval.hidePopover();
+      oval.removeAttribute('popover');
       island.hidden=true;
       weather.hidden=false;
-    });return;}
+      placeTopIslands();
+    });playIslandEvents();return;}
     island.textContent=pages[index++];
     island.title=island.textContent;
     islandDisplayTimer=setTimeout(show,2600);
@@ -3309,10 +3389,11 @@ function recordIslandHarvest(amount       ,before                               
   islandHarvestTimer=setTimeout(()=>{
     islandHarvest=null;
     const duration=Math.round((batch.last-batch.start)/1000);
-    showIslandEvent('За последние '+Math.max(1,duration)+' с · 🌱 Грядок: '+number(batch.plants),
+    islandReadyPages.push('За последние '+Math.max(1,duration)+' с · 🌱 Грядок: '+number(batch.plants),
       '🧺 Урожай +'+number(batch.fruit),
       ...Object.entries(batch.loot).map(([label,count])=>label+' +'+number(count)));
-  },4000);
+    playIslandEvents();
+  },2000);
 }
 
 const reelFinish = 24;
@@ -3524,6 +3605,7 @@ function sell(index       ,count       ) {
   selling = -1;
   if (saleDialog.open) saleDialog.close();
   commit('Продано: '+count+' · 🪙 +'+number(earned));
+  showIslandEvent('🧺 Продажа · 🪙 +'+number(earned));
 }
 function offerSale(index       ) {
   const count = farm.harvest[index];
@@ -3580,6 +3662,7 @@ button('receipt-confirm').onclick = () => {
   const amount = sellBasket(farm,receipt);
   const earned=farm.coins-before;
   receiptDialog.close();
+  if(amount)showIslandEvent('🧺 Продажа · 🪙 +'+number(earned));
   commit(amount ? 'Продан весь урожай: '+number(amount)+' · 🪙 +'+number(earned) :
     'Корзина изменилась. Открой чек ещё раз.');
 };
@@ -3670,7 +3753,7 @@ for (const [i,crop] of crops.entries()) {
   const price = document.createElement('small');
   price.id = 'buy-seed-price-'+i;
   item.append(icon,label,price);
-  item.onclick = () => {if (buySeed(farm,i)) commit('Куплено семечко: '+crop.name+'.');};
+  item.onclick = () => {if (buySeed(farm,i)) reportSeedPurchase(i,1);};
   get('shop-seeds').append(item);
   const odds = document.createElement('li');
   odds.id = 'odds-'+i;
@@ -4382,7 +4465,18 @@ document.querySelectorAll                   ('dialog').forEach(dialog=>{
 const extractionDialog=get                   ('extractor-dialog');
 let extractionCrop=0;
 button('extractor-open').onclick=()=>{extractionDialog.showModal();renderExtraction();};
-button('extraction-toast').onclick=()=>{extractionDialog.showModal();renderExtraction();};
+const extractorIsland=button('extractor-island');
+extractorIsland.onclick=()=>{if(!extractionDialog.open)button('extractor-open').click();};
+const extractorIslandSlots=Array.from({length:3},(_,index)=>{
+  const slot=document.createElement('span');
+  slot.className='extractor-island-slot';
+  const ring=document.createElement('b');
+  ring.textContent=String(index+1);
+  const label=document.createElement('span');
+  slot.append(ring,label);
+  extractorIsland.append(slot);
+  return {slot,ring,label};
+});
 extractionDialog.onclose=renderExtraction;
 const extractionPicker=get                   ('extractor-picker');
 let selectedExtractionSlot=0;
@@ -4493,12 +4587,32 @@ function renderExtraction(){
     card.querySelector('span:not(.extractor-fill)') .textContent=current?current.recycledHybrid??crops[current.crop].name+' ×'+(current.input-current.done):'Слот '+(slot+1);
     card.querySelector('small') .textContent=current?clock(period-elapsed)+(current.recycledHybrid!==undefined?' · 🧬 +'+current.output:' · 🌱 '+total(current.outputs.slice(0,current.done))):'Добавить урожай';
     card.title=current?(current.recycledHybrid!==undefined?'Утилизация семени':'Нажми, чтобы остановить партию'):'Выбрать урожай и количество';
+    const chip=extractorIslandSlots[slot];
+    chip.slot.hidden=!current||slot>=slots;
+    if(current){
+      const left=current.input-current.done;
+      const remaining=Math.max(0,period-elapsed);
+      chip.label.textContent=crops[current.crop].symbol+' ×'+number(left);
+      chip.slot.title='Слот №'+(slot+1)+' · '+(current.recycledHybrid??crops[current.crop].name)+' · осталось '+number(left)+' · текущая обработка '+clock(remaining);
+      if(chip.ring.dataset.cycle!==cycle){
+        chip.ring.getAnimations().forEach(animation=>animation.cancel());
+        chip.ring.dataset.cycle=cycle;
+        chip.ring.animate([{'--extractor-progress':Math.min(1,remaining/period)*100+'%'},{'--extractor-progress':'0%'}],{
+          duration:remaining/speed,fill:'forwards',easing:'linear'
+        });
+      }
+    }else{
+      delete chip.ring.dataset.cycle;
+      chip.ring.getAnimations().forEach(animation=>animation.cancel());
+    }
   });
-  const activeJobs=jobs.filter(Boolean);
-  const toast=get('extraction-toast');
-  toast.hidden=extractionDialog.open||!activeJobs.length;
-  get('extraction-toast-label').textContent='⚙️ Занято слотов: '+activeJobs.length+' из '+slots;
-  get('extraction-toast-time').textContent=activeJobs.length?'До ближайшего результата: '+clock(Math.max(0,Math.min(...activeJobs.map(job=>extractionDeadline(job ,job .done)))-now)):'';
+  const idle=!jobs.slice(0,slots).some(Boolean);
+  if(extractorIsland.hidden!==idle){
+    extractorIsland.hidden=idle;
+    islandHeader.classList.toggle('has-extractor-island',!idle);
+    placeTopIslands();
+  }
+  extractorIsland.setAttribute('aria-label','Открыть экстрактор. '+extractorIslandSlots.filter(({slot})=>!slot.hidden).map(({slot})=>slot.title).join('. '));
   get('extractor-last').textContent=machine.last||'Результат появится после обработки первого плода.';
   crops.forEach((crop,i)=>{
     const card=button('extractor-crop-'+i);card.hidden=!farm.harvest[i];
@@ -5575,6 +5689,7 @@ const tick = () => {
   if(reloadingFarm)return;
   updatePlayTime(playTimeCounter);
   advanceDebug();
+  recordIslandSpending();
   const weatherChanged=applyRain(farm,nowTime());
   const greenhouseChanged=tickGreenhouse(nowTime());
   const abilitiesChanged=updatePlantAbilities(farm,nowTime());
@@ -5919,8 +6034,6 @@ button('diamonds-open').onclick=()=>{renderDiamondShop();diamondDialog.showModal
 
 // Unified collections, contextual details and a dedicated enhancement workflow.
 var refinementReady=true;
-const cultureTab=get('resources-dialog').querySelector('[data-resource-tab="cultures"]');
-if(cultureTab)get('resources-dialog').querySelector('[data-resource-tab="seeds"]')?.after(cultureTab);
 var selectingEnhancement=false;
 var skipEnhancementFold=false;
 var enhancementTransfer                               =null;
@@ -5983,7 +6096,7 @@ function renderSetDetails(){
  const intro=document.createElement('p');const count=set.crops.filter(i=>farm.harvested[i]>0).length;
  intro.textContent='Собрано '+count+'/4. Для полного набора собери хотя бы один плод каждого вида. Новые виды находятся в пакетах семян. Урожай не расходуется.';
  const grid=document.createElement('div');grid.className='set-crop-grid';
- for(const i of set.crops){const found=farm.harvested[i]>0,card=document.createElement('div');card.className='glass resource-card set-crop'+(found?'':' unknown-crop');card.tabIndex=0;
+ for(const i of set.crops){const found=unlocked(farm,i)||farm.harvested[i]>0,card=document.createElement('div');card.className='glass resource-card set-crop'+(found?'':' unknown-crop');card.tabIndex=0;
  const icon=document.createElement('span');icon.textContent=crops[i].symbol;icon.className=found?'plant-glow':'muted-crop';icon.style.setProperty('--icon-rarity',rarityColors[cropRarities[i]]);
  const name=document.createElement('small');name.textContent=found?crops[i].name:'Не найдено';const tier=document.createElement('small');tier.textContent=baseRarityNames[cropTiers[i]];card.append(icon,name,tier);
  collectionTooltip(card,crops[i].name+'\nБазовый шанс в обычном пакете без удачи: '+formatChance(openingOdds(farm,0,0)[i])+'%\n'+(found?'Урожай этого вида уже собран':unlocked(farm,i)?'Семена открыты. Собери первый урожай.':'Найди семя в пакете и собери урожай.'));grid.append(card);}
@@ -6000,6 +6113,7 @@ function renderHarvestDetails(){
  const specimen={name:crop.name,crop:i,seeds:0,traits:properties,powers};
  const lines=[
    baseRarityNames[tier]+' · Базовый рост '+clock(cropTimes[i]*1000)+' · С улучшениями '+clock(growthTime(i,farm.levels[i].growth)),
+   '🌱 Семян на складе: '+number(farm.seeds[i]),
    '🪙 Цена свежего плода: '+number(cropPrices[i]*(1+(powers.sweet??0)/100)*(1+level/100)),
    'Собрано: '+number(count)+' / '+number(nextCollectionAt(count))+' · Уровень коллекции '+level+' · Бонус к стоимости урожая +'+level+'%',
    '',
@@ -6031,23 +6145,23 @@ function renderResourceCollections(){
    get('resource-note').textContent='';
    return;
  }
- const categoryData=resourceCategory==='cultures'?farm.harvested:
-   resourceCategory==='seeds'?[farm.collection,farm.seeds]:
+ const categoryData=resourceCategory==='cultures'?[farm.harvested,farm.collection,farm.seeds]:
    resourceCategory==='sets'?[farm.harvested,farm.collection,farm.resources.items]:
    [farm.resources.items,farm.resources.found];
  const signature=JSON.stringify([resourceCategory,categoryData]);
  if(signature===collectionViewSignature)return;collectionViewSignature=signature;collectionTip.hidden=true;
  const cropGrid=get('resource-crop-grid');cropGrid.replaceChildren();
  const order=crops.map((_,i)=>i).sort((a,b)=>cropTiers[a]-cropTiers[b]||cropTimes[a]-cropTimes[b]);
- for(const i of order){const found=farm.harvested[i]>0,card=document.createElement('button');card.type='button';card.className='glass resource-card'+(found?'':' resource-locked');card.dataset.crop=String(i);
- const icon=document.createElement('span');icon.textContent=crops[i].symbol;card.append(icon);
+ for(const i of order){const found=unlocked(farm,i)||farm.harvested[i]>0,card=document.createElement('button');card.type='button';card.className='glass resource-card'+(found?'':' resource-locked');card.dataset.crop=String(i);
+ const icon=document.createElement('span');icon.textContent=crops[i].symbol;
+ const name=document.createElement('small');name.textContent=found?crops[i].name:'Не открыто';
+ card.append(icon,name);
+ if(found){const seeds=document.createElement('small');seeds.textContent='🌱 '+number(farm.seeds[i]);seeds.title='Семян на складе';card.append(seeds);}
  if(found){icon.className='plant-glow';icon.style.setProperty('--icon-rarity',rarityColors[cropRarities[i]]);const count=document.createElement('small');count.textContent=number(farm.harvested[i])+'/'+number(nextCollectionAt(farm.harvested[i]));card.append(count);
  collectionTooltip(card,crops[i].name+' · '+baseRarityNames[cropTiers[i]]+'\nСобрано: '+number(farm.harvested[i])+'/'+number(nextCollectionAt(farm.harvested[i]))+'\nСтоимость урожая: +'+collectionLevel(farm.harvested[i])+'%\nДо следующего уровня: '+number(Math.max(0,nextCollectionAt(farm.harvested[i])-farm.harvested[i])));card.onclick=()=>{selectedHarvest=i;renderHarvestDetails();harvestDetails.showModal();};}
  else{icon.className='muted-crop';card.disabled=true;card.setAttribute('aria-label','Неизвестная культура');}cropGrid.append(card);}
  const grid=get('resource-grid');grid.replaceChildren();
- if(resourceCategory==='seeds'){
- for(const i of order){const found=unlocked(farm,i),card=document.createElement('div');card.className='glass resource-card'+(found?'':' resource-locked');card.dataset.seed=String(i);const icon=document.createElement('span');icon.textContent=crops[i].symbol;const name=document.createElement('small');name.textContent=found?crops[i].name:'Не открыто';const count=document.createElement('strong');count.textContent=found?'🌱 '+number(farm.seeds[i]):'—';card.append(icon,name,count);if(found){icon.className='plant-glow';icon.style.setProperty('--icon-rarity',rarityColors[cropRarities[i]]);collectionTooltip(card,crops[i].name+' · '+baseRarityNames[cropTiers[i]]+'\nСемян на складе: '+number(farm.seeds[i])+'\nВид открыт — семена доступны в магазине.');}grid.append(card);}
- }else if(resourceCategory==='sets'){
+ if(resourceCategory==='sets'){
 
  cropSets.forEach((set,index)=>{const count=set.crops.filter(i=>farm.harvested[i]>0).length;const card=document.createElement('button');card.type='button';card.className='glass resource-card set-collection-card';card.dataset.set=String(index);card.style.setProperty('--completion',count*25+'%');
  const icon=document.createElement('span');icon.textContent=materials.find(item=>item.id==='set'+index) .icon;const name=document.createElement('strong');name.textContent=setLabels[index];const progress=document.createElement('small');progress.textContent=count+'/4';card.append(icon,name,progress);
@@ -6055,7 +6169,7 @@ function renderResourceCollections(){
  }else for(const item of materials.filter(item=>resourceCategory==='materials'||item.category===resourceCategory)){
  const found=!!farm.resources.found[item.id]||(farm.resources.items[item.id]??0)>0,card=document.createElement('div');card.className='glass resource-card material-card'+(found?'':' resource-locked');card.tabIndex=0;
  const icon=document.createElement('span');icon.textContent=item.icon;const count=document.createElement('small');count.textContent=number(farm.resources.items[item.id]??0);card.append(icon,count);if(resourceCategory==='materials'&&found){const name=document.createElement('small');name.textContent=item.name;card.append(name);}
- collectionTooltip(card,item.name+'\n'+item.description+(item.category==='sets'?'\nДобывается с плодов своего набора; собирать весь набор для выпадения не требуется.':item.id==='duplication'?'\nПервый уровень: 1%, следующие: +0,1 п. п. Цена в кристаллах дублирования растёт с уровнем. Улучшения → Инструменты.':'\nОдна попытка усиления тратит 1 материал. Открой «Усиление гибридов» справа.')+'\n'+(found?'В запасе: '+number(farm.resources.items[item.id]??0):'Ещё не найдено'));grid.append(card);}
+ collectionTooltip(card,item.name+'\n'+item.description+(item.category==='sets'?'\nДобывается с плодов своего набора; собирать весь набор для выпадения не требуется.':item.id==='duplication'?'\nПервый уровень: 1%, следующие: +0,1 п. п. Цена в кристаллах дублирования растёт с уровнем. Улучшения → Инструменты.':'\nОдна попытка усиления тратит 1 материал. Открой «Усиление гибридов» в теплице.')+'\n'+(found?'В запасе: '+number(farm.resources.items[item.id]??0):'Ещё не найдено'));grid.append(card);}
  get('resource-note').textContent=resourceCategory==='seeds'?'Открытые виды семян и их запас. Новый вид можно найти в пакете семян.':resourceCategory==='materials'?'Все материалы в одном месте. Наведи на найденный предмет, чтобы узнать его применение.':resourceCategory==='cultures'?'Каждый уровень коллекции даёт +1% к стоимости урожая. Нажми на культуру, чтобы увидеть прогресс.':resourceCategory==='sets'?'Нажми на набор: состав, базовые шансы и применение материала.':'Наведи на предмет, чтобы узнать его действие и применение.';
  if(setDetails.open)renderSetDetails();if(harvestDetails.open)renderHarvestDetails();
 }
@@ -6166,6 +6280,10 @@ function renderFarmStatistics(){
 }
 
 
+function reportSeedPurchase(crop       ,count       ){
+  commit();
+  showIslandEvent('🌱 '+crops[crop].name+' +'+number(count)+' семян');
+}
 // Purchase batches atomically; holding accelerates without looping over every seed.
 const seedPurchasePopover=document.createElement('form');seedPurchasePopover.id='seed-purchase-popover';seedPurchasePopover.className='glass';seedPurchasePopover.setAttribute('popover','manual');seedPurchasePopover.hidden=true;
 seedPurchasePopover.innerHTML='<strong id="purchase-name"></strong><div class="purchase-equation"><input type="number" id="purchase-count" min="1" max="1000000000" value="10" aria-label="Количество семян"> × <span id="purchase-unit"></span> = <strong id="purchase-total"></strong></div><button class="primary" id="purchase-confirm">Купить</button><small id="purchase-note"></small>';
@@ -6191,23 +6309,23 @@ function hidePurchaseSoon(){clearTimeout(purchaseHideTimer);purchaseHideTimer=se
 seedPurchasePopover.onpointerenter=()=>clearTimeout(purchaseHideTimer);seedPurchasePopover.onpointerleave=hidePurchaseSoon;
 get('purchase-count').oninput=updatePurchaseQuote;
 get('purchase-count').addEventListener('wheel',event=>{event.preventDefault();const input=get                  ('purchase-count');input.value=String(Math.max(1,Math.min(1e9,(input.valueAsNumber||1)+(event.deltaY<0?1:-1))));updatePurchaseQuote();},{passive:false});
-seedPurchasePopover.onsubmit=event=>{event.preventDefault();const input=get                  ('purchase-count'),count=input.valueAsNumber;if(!Number.isSafeInteger(count)||count<1||count>1e9)return;const bought=buySeeds(farm,purchaseCrop,count);if(bought)commit('Куплено: '+crops[purchaseCrop].name+' ×'+number(bought));updatePurchaseQuote();};
+seedPurchasePopover.onsubmit=event=>{event.preventDefault();const input=get                  ('purchase-count'),count=input.valueAsNumber;if(!Number.isSafeInteger(count)||count<1||count>1e9)return;const bought=buySeeds(farm,purchaseCrop,count);if(bought)reportSeedPurchase(purchaseCrop,bought);updatePurchaseQuote();};
 function seedHoldStep(){
  const hold=holdPurchase;if(!hold)return;
  try{
  const now=performance.now(),elapsed=now-hold.start,dt=Math.min(150,now-hold.last);hold.last=now;
  if(elapsed>350){const rate=Math.min(10000,4*2**((elapsed-350)/600));hold.credit+=rate*dt/1000;const count=Math.floor(hold.credit);hold.credit-=count;
- if(count){const bought=buySeeds(farm,hold.crop,count,true);if(!bought){stopSeedPurchase();return;}commit('Куплено: '+crops[hold.crop].name+' ×'+number(bought));updatePurchaseQuote();}}
+ if(count){const bought=buySeeds(farm,hold.crop,count,true);if(!bought){stopSeedPurchase();return;}reportSeedPurchase(hold.crop,bought);updatePurchaseQuote();}}
  hold.timer=setTimeout(seedHoldStep,60);
  }catch(error){stopSeedPurchase();console.error('Ферма: ошибка массовой покупки семян',error);}
 }
 for(const [i] of crops.entries()){
  const card=button('buy-seed-'+i);
- card.onclick=event=>{if(event.detail>0&&performance.now()<suppressPurchaseClickUntil)return;if(buySeed(farm,i))commit('Куплено семечко: '+crops[i].name);updatePurchaseQuote();};
+ card.onclick=event=>{if(event.detail>0&&performance.now()<suppressPurchaseClickUntil)return;if(buySeed(farm,i))reportSeedPurchase(i,1);updatePurchaseQuote();};
  card.addEventListener('pointerenter',()=>showSeedPurchase(i,card));card.addEventListener('pointerleave',hidePurchaseSoon);
  card.addEventListener('focus',()=>showSeedPurchase(i,card));
  card.addEventListener('pointerdown',event=>{if(event.button!==0||!event.isPrimary||!unlocked(farm,i))return;event.preventDefault();stopSeedPurchase();
- const bought=buySeeds(farm,i,1);if(!bought)return;commit('Куплено семечко: '+crops[i].name);suppressPurchaseClickUntil=Infinity;
+ const bought=buySeeds(farm,i,1);if(!bought)return;reportSeedPurchase(i,1);suppressPurchaseClickUntil=Infinity;
  const now=performance.now();holdPurchase={crop:i,start:now,last:now,credit:0,timer:undefined};seedHoldStep();
  });
 }
@@ -6385,6 +6503,9 @@ async function showPackOpening(results         ){
 function showPackOutcome(outcome                                                  ){
  const grid=get('pack-results'),grouped=new Map                                     ();
  for(const entry of outcome.entries){const group=grouped.get(entry.crop)??{count:0,first:false};group.count++;group.first||=entry.first;grouped.set(entry.crop,group);}
+ if(grouped.size)showIslandEvent(...[...grouped].map(([crop,{count,first}])=>
+   '🎁 '+crops[crop].name+' ×'+number(count)+(first?' · новый вид':'')),
+   ...(outcome.returned?['↩ Возврат · 🪙 +'+number(outcome.returned)]:[]));
  grid.replaceChildren(...[...grouped].map(([crop,data])=>{
    const item=resultCard(crop,data.count),label=document.createElement('small');
    label.textContent=data.first?'Новый вид · семя ×1':'Повторка';
@@ -6692,8 +6813,10 @@ function renderFortune(){
       control.className='quiet';
       control.textContent=item.icon+' '+item.name;
       control.onclick=()=>{
+        const amount=state.choice?.amount??0;
         if(claimFortuneMaterial(farm,id)){
           commit('Получено: '+item.name);
+          showIslandEvent('🎡 '+item.icon+' '+item.name+' +'+number(amount));
           renderFortune();
         }
       };
@@ -6775,6 +6898,7 @@ get                 ('fortune-form').onsubmit=async event=>{
       prize.type==='jackpot'?'Джекпот · '+currency+' +'+number(payout):prize.label;
     fortuneResults[selectedWheel]={label:message,chance:prize.weight};
     commit(message);
+    showIslandEvent('🎡 '+message);
     renderFortune();
   }
 };
