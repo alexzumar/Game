@@ -1,34 +1,26 @@
 const gardenHelperActions=['sow','water','collect'] as const;
 type GardenHelperAction=typeof gardenHelperActions[number];
-type GardenHelper={cycleRevision:2;crop:number|null;enabled:boolean;actions?:Record<GardenHelperAction,boolean>;levels:Record<GardenHelperAction,number>;next:Record<GardenHelperAction,number>};
+type GardenHelper={cycleRevision:3;crop:number|null;enabled:boolean;actions?:Record<GardenHelperAction,boolean>;levels:Record<GardenHelperAction,number>;next:Record<GardenHelperAction,number>};
 const helperActionEnabled=(helper:GardenHelper,action:GardenHelperAction)=>
   (action!=='sow'||helper.crop!==null)&&(helper.actions?.[action]??true);
 const gardenHelperCycles=(value:number)=>({sow:value,water:value,collect:value});
-const newGardenHelper=():GardenHelper=>({cycleRevision:2,crop:null,enabled:false,levels:gardenHelperCycles(0),next:gardenHelperCycles(0)});
-const gardenHelperIntervals=[10000,8500,7000,5800,4800,4000,3200,2500,2000,1600,1200,950,700,530,400,300,200,165,140,120,100];
+const newGardenHelper=():GardenHelper=>({cycleRevision:3,crop:null,enabled:false,levels:gardenHelperCycles(0),next:gardenHelperCycles(0)});
+const gardenHelperIntervals=[5000,4000,3000,2000,1000,500,400,300,200,150,100];
 const previousGardenHelperLevels=[0,2,5,8,10,12,14,16,20];
 const gardenHelperMax=gardenHelperIntervals.length-1;
 const gardenHelperUnlocked=(farm:Farm)=>farm.size>=2&&farm.collected>=4&&farm.extraction.processed>=1;
-const gardenHelperRankTotal=(farm:Farm)=>(farm.knotRanks??[]).flat().reduce((sum,rank)=>sum+rank,0);
+const gardenHelperCosts=[1,1,2,4,8,16,32,64,128,256];
 function gardenHelperUpgrade(farm:Farm,action:GardenHelperAction){
   const level=farm.gardenHelper?.levels[action]??0;
-  const starterCosts=[4,9,18];
-  if(level<starterCosts.length)return {ranks:0,cost:starterCosts[level],id:null};
   return level<gardenHelperMax?{
-    ranks:Math.min(40,5+3*(level-starterCosts.length)),
-    cost:Math.ceil((level-starterCosts.length+1)**1.4),
+    cost:gardenHelperCosts[level],
     id:knotMaterials[gardenHelperActions.indexOf(action)][0]
   }:null;
 }
-function gardenHelperUpgradeBalance(farm:Farm,price:NonNullable<ReturnType<typeof gardenHelperUpgrade>>){
-  return price.id===null?farm.resources.orbs:(farm.resources.items[price.id]??0);
-}
 function buyGardenHelperUpgrade(farm:Farm,action:GardenHelperAction){
   const price=gardenHelperUpgrade(farm,action);
-  if(!gardenHelperUnlocked(farm)||!price||gardenHelperRankTotal(farm)<price.ranks||
-    gardenHelperUpgradeBalance(farm,price)<price.cost)return false;
-  if(price.id===null)spendFarmOrbs(farm,price.cost);
-  else farm.resources.items[price.id]-=price.cost;
+  if(!gardenHelperUnlocked(farm)||!price||(farm.resources.items[price.id]??0)<price.cost)return false;
+  farm.resources.items[price.id]-=price.cost;
   const helper=farm.gardenHelper??=newGardenHelper();
   helper.levels[action]++;
   helper.next[action]=0;

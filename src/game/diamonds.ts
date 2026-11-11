@@ -1,14 +1,20 @@
 const diamondBranches = {
   find:'💎 Поиск кристаллов', double:'✨ Двойная находка', charge:'⚡ Кристальный заряд',
-  income:'🪙 Монеты при сборе', seedReturn:'🌱 Возврат семян', dryGrowth:'🌿 Рост без полива',
-  fruit:'🧺 Дополнительный плод', extract:'⏱️ Досрочная переработка', discount:'🛒 Скидка на семена',
+  income:'🪙 Цена плодов гибридов', seedReturn:'🌱 Максимальный выход семян', dryGrowth:'🌿 Рост без полива',
+  fruit:'🧺 Щедрый горшок', extract:'⏱️ Досрочная переработка', discount:'🛒 Скидка на семена',
   enhancementShield:'🛡️ Щит усиления'
 } as const;
 type DiamondBranch=keyof typeof diamondBranches;
-type DiamondState={balance:number;charge:number;coinCarry:number;discountCarry:number;sets:boolean[];levels:Partial<Record<DiamondBranch,number>>};
-const newDiamonds=():DiamondState=>({balance:0,charge:0,coinCarry:0,discountCarry:0,sets:[false,false,false,false],levels:{}});
+type DiamondState={effectRevision:1;balance:number;charge:number;coinCarry:number;discountCarry:number;sets:boolean[];levels:Partial<Record<DiamondBranch,number>>};
+const newDiamonds=():DiamondState=>({effectRevision:1,balance:0,charge:0,coinCarry:0,discountCarry:0,sets:[false,false,false,false],levels:{}});
 const diamondLevel=(farm:Farm,branch:DiamondBranch)=>farm.diamonds?.levels[branch]??0;
 const diamondCurve=(level:number)=>1-.99**level;
+const diamondFindChance=(crop:number,level:number)=>cropTimes[crop]/120*.0005*(1+level*.25);
+const diamondDoubleChance=(level:number)=>Math.min(1,level*.1);
+const diamondDryGrowth=(level:number)=>1-.85**level;
+const diamondMaxSeedsChance=(max:number,level:number)=>Math.min(1,1/max+level*.02);
+const diamondHybridValue=(level:number)=>1+level*.1;
+const diamondPotFruit=(level:number)=>1+level*.25;
 const enhancementShieldChance=(level:number)=>level>0?1-.95*.98**(level-1):0;
 const diamondPrice=(level:number)=>Math.ceil(1.35**level);
 function diamondBonusCount(value:number,random:()=>number){
@@ -28,10 +34,10 @@ function awardDiamondSets(farm:Farm){
   });
   return changed;
 }
-function awardDiamonds(farm:Farm,crop:number,harvestIncome:number,random:()=>number){
+function awardDiamonds(farm:Farm,crop:number,random:()=>number){
   const state=farm.diamonds??=newDiamonds();
-  const chance=cropTimes[crop]/120*.0005*(1+diamondLevel(farm,'find')/100);
-  const extra=diamondLevel(farm,'double')*.0005;
+  const chance=diamondFindChance(crop,diamondLevel(farm,'find'));
+  const extra=diamondDoubleChance(diamondLevel(farm,'double'));
   const stats=farmStatistics(farm);
   stats.crystalRolls++;
   const found=diamondBonusCount(chance,random);
@@ -44,13 +50,6 @@ function awardDiamonds(farm:Farm,crop:number,harvestIncome:number,random:()=>num
     const paid=Math.floor(state.charge);
     state.balance+=paid;
     state.charge-=paid;
-  }
-  const income=diamondLevel(farm,'income');
-  if(income){
-    state.coinCarry+=harvestIncome*income/100;
-    const paid=Math.floor(state.coinCarry);
-    farm.coins+=paid;
-    state.coinCarry-=paid;
   }
   awardDiamondSets(farm);
 }

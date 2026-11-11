@@ -48,16 +48,16 @@ assert.equal(runGardenHelper(helperFarm,helperTime+99),false);
 assert.equal(runGardenHelper(helperFarm,helperTime+100),true);
 assert.equal(helperFarm.plots.filter(Boolean).length,2);
 helperFarm.gardenHelper.enabled=false;
-assert.equal(runGardenHelper(helperFarm,helperTime+200),false);
+assert.equal(runGardenHelper(helperFarm,helperTime+600),false);
 helperFarm.gardenHelper.levels=gardenHelperCycles(0);
-helperFarm.resources.orbs=4;
+helperFarm.resources.items[knotMaterials[0][0]]=1;
 assert.equal(buyGardenHelperUpgrade(helperFarm,'sow'),true);
-assert.equal(helperFarm.resources.orbs,0);
+assert.equal(helperFarm.resources.items[knotMaterials[0][0]],0);
 assert.deepEqual(helperFarm.gardenHelper.levels,{sow:1,water:0,collect:0});
 saveFarm(helperFarm);assert.deepEqual(loadFarm().gardenHelper,helperFarm.gardenHelper);
 const oldHelperFarm={...helperFarm,gardenHelper:{...helperFarm.gardenHelper,cycleRevision:undefined,levels:{sow:3,water:7,collect:8}}};
-saveFarm(oldHelperFarm);assert.deepEqual(loadFarm().gardenHelper.levels,{sow:8,water:16,collect:20});
-assert.equal(gardenHelperIntervals.length,21);
+saveFarm(oldHelperFarm);assert.deepEqual(loadFarm().gardenHelper.levels,{sow:5,water:5,collect:5});
+assert.equal(gardenHelperIntervals.length,11);
 const potted=newFarm(),potTime=potted.epoch;
 potted.lines.push({name:'Горшечный гибрид',crop:0,seeds:1,traits:[],genes:{gr:30,ga:4,re:1},powers:{}});
 assert.equal(plantGreenhousePot(potted,0,0,potTime),true);
@@ -223,6 +223,16 @@ console.log('PASS: parallel extraction, save/reload and individual cancellation'
 
 vm.runInContext(`
 const gemFarm=newFarm();
+assert.ok(Math.abs(diamondMaxSeedsChance(10,1)-.12)<1e-12);
+const oldDiamonds=newFarm();
+oldDiamonds.diamonds=newDiamonds();
+delete oldDiamonds.diamonds.effectRevision;
+oldDiamonds.diamonds.levels={income:2,seedReturn:1,fruit:1,find:1};
+saveFarm(oldDiamonds);
+const refundedDiamonds=loadFarm();
+assert.equal(refundedDiamonds.diamonds.balance,5);
+assert.deepEqual(refundedDiamonds.diamonds.levels,{find:1});
+assert.equal(loadFarm().diamonds.balance,5);
 for(const crop of cropSets[0].crops)gemFarm.harvested[crop]=1;
 assert.equal(awardDiamondSets(gemFarm),true);
 assert.equal(awardDiamondSets(gemFarm),false);
@@ -264,6 +274,21 @@ assert.ok(returnedFarm.offset<=-60000);
 assert.equal(returnedFarm.pausedAt,undefined);
 assert.equal(loadFarm().offset,returnedFarm.offset);
 assert.equal(returnedFarm.statistics.coinsSpent,5);
+const closedFarm=newFarm(),closedAt=Date.now();
+closedFarm.lines.push({name:'Тест',crop:0,seeds:1,traits:[],genes:{gr:1,ga:1,re:1},powers:{}});
+plantGreenhousePot(closedFarm,0,0,closedAt);
+closedFarm.harvest[0]=1;
+startExtraction(closedFarm,0,1,closedAt,()=>.5);
+saveFarm(closedFarm);
+const savedClock=JSON.parse(localStorage.getItem(key)).clockSavedAt;
+const realNow=Date.now;
+Date.now=()=>savedClock+8*60*60*1000;
+try{
+  const reopened=loadFarm(),gameNow=Date.now()+reopened.offset;
+  assert.equal(gameNow,savedClock);
+  assert.equal(tickGreenhousePots(reopened,gameNow),false);
+  assert.equal(finishExtraction(reopened,gameNow),false);
+}finally{Date.now=realNow;}
 console.log('PASS: inactive save clock and persisted spending');
 `,context);
 

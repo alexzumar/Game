@@ -105,17 +105,29 @@ button('debug-material-add').onclick=grantDebugMaterial;get('debug-material-coun
 
 const diamondDialog=get<HTMLDialogElement>('diamonds-dialog');
 const diamondPercent=(fraction:number)=>fraction.toLocaleString('ru-RU',{style:'percent',maximumFractionDigits:4});
+const diamondDescriptions:Record<DiamondBranch,string>={
+  find:'Алмазы чаще выпадают при сборе.',
+  double:'Шанс получить второй алмаз при находке.',
+  charge:'Сбор наполняет заряд. Полный заряд даёт алмаз.',
+  income:'Плоды гибридов продаются дороже.',
+  seedReturn:'Экстрактор чаще выдаёт максимум семян.',
+  dryGrowth:'Растения продолжают расти без воды.',
+  fruit:'Горшки приносят больше плодов.',
+  extract:'Экстрактор может обработать плод раньше.',
+  discount:'Семена в магазине стоят дешевле.',
+  enhancementShield:'Щит может сохранить усиление при неудаче.'
+};
 const diamondEffects:Record<DiamondBranch,(level:number)=>string>={
-  find:level=>'+'+level+'% к базовому шансу. Редис: '+diamondPercent(.0005*(1+level/100))+' за грядку.',
-  double:level=>diamondPercent(level*.0005)+' дополнительной добычи при находке.',
-  charge:level=>diamondPercent(level?1-.9*.99**(level-1):0)+' от шанса находки в заряд',
-  income:level=>level+'% цены плодов начисляется сразу при сборе.',
-  seedReturn:level=>diamondPercent(diamondCurve(level))+' шанс получить обычное семя за грядку.',
-  dryGrowth:level=>diamondPercent(diamondCurve(level))+' обычной скорости на сухой грядке.',
-  fruit:level=>level+'% дополнительного урожая в пересчёте на один плод за грядку.',
-  extract:level=>'Шанс закончить плод раньше растёт каждую секунду до '+diamondPercent(diamondCurve(level))+'.',
-  discount:level=>diamondPercent(.5*(1-.9**level))+' скидки в магазине семян.',
-  enhancementShield:level=>diamondPercent(enhancementShieldChance(level))+' защитить уровень усиления при неудаче. Материал расходуется.'
+  find:level=>'×'+number(1+level*.25),
+  double:level=>diamondPercent(diamondDoubleChance(level)),
+  charge:level=>diamondPercent(level?1-.9*.99**(level-1):0)+' в заряд',
+  income:level=>'×'+number(diamondHybridValue(level)),
+  seedReturn:level=>diamondPercent(diamondMaxSeedsChance(extractionRange(farm.extraction.yield).max,level)),
+  dryGrowth:level=>diamondPercent(diamondDryGrowth(level))+' скорости',
+  fruit:level=>'×'+number(diamondPotFruit(level)),
+  extract:level=>'До '+diamondPercent(diamondCurve(level)),
+  discount:level=>diamondPercent(.5*(1-.9**level))+' скидки',
+  enhancementShield:level=>diamondPercent(enhancementShieldChance(level))
 };
 const diamondCards=Object.entries(diamondBranches).map(([id,label])=>{
   const branch=id as DiamondBranch;
@@ -137,6 +149,9 @@ const diamondCards=Object.entries(diamondBranches).map(([id,label])=>{
   };
   card.append(title,detail,buy);
   const charge=document.createElement('small');
+  if(branch==='find')addUpgradeDetails(detail,'Точный шанс зависит от культуры и указан в коллекции.');
+  if(branch==='seedReturn')addUpgradeDetails(detail,'Карточка показывает шанс для обычного выхода. При расширении диапазона бонус применяется к новому максимуму.');
+  if(branch==='enhancementShield')addUpgradeDetails(detail,'При срабатывании щита уровень остаётся прежним. Материал расходуется.');
   if(branch==='charge'){
     addUpgradeDetails(detail,'Каждый сбор добавляет немного заряда, даже если алмаз не выпал. Чем выше шанс найти алмаз, тем больше заряд за сбор. За каждые 100% заряда получаешь дополнительный алмаз.');
     buy.before(charge);
@@ -149,7 +164,7 @@ function renderDiamondShop(){
   get('diamond-shop-balance').textContent=number(state?.balance??0);
   for(const {branch,detail,buy,charge} of diamondCards){
     const level=diamondLevel(farm,branch),price=diamondPrice(level);
-    renderUpgradeChange(detail,level,diamondEffects[branch](level),Number.isFinite(price)?diamondEffects[branch](level+1):undefined);
+    renderUpgradeChange(detail,level,diamondEffects[branch](level),Number.isFinite(price)?diamondEffects[branch](level+1):undefined,'',diamondDescriptions[branch]);
     if(branch==='charge')charge.textContent='Накоплено '+diamondPercent(state?.charge??0)+' из 100%';
     buy.textContent=Number.isFinite(price)?'💎 '+number(price):'Цена слишком велика';
     buy.disabled=!Number.isFinite(price)||(state?.balance??0)<price;

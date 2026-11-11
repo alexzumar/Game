@@ -1,10 +1,16 @@
-function renderUpgradeChange(host:HTMLElement,level:number,current:string,next?:string,note=''){
+function renderUpgradeChange(host:HTMLElement,level:number,current:string,next?:string,note='',description=''){
   const before='Ур. '+level+' · '+current;
   const after=next===undefined?'':'Ур. '+(level+1)+' · '+next;
-  const signature=JSON.stringify([before,after,note]);
+  const signature=JSON.stringify([before,after,note,description]);
   if(host.dataset.change===signature)return;
   host.dataset.change=signature;
   host.textContent=before;
+  if(description){
+    const intro=document.createElement('span');
+    intro.className='upgrade-description';
+    intro.textContent=description;
+    host.prepend(intro);
+  }
   if(after){
     const result=document.createElement('strong');
     result.className='upgrade-next';
@@ -27,7 +33,7 @@ function addUpgradeDetails(anchor:HTMLElement,description:string){
   const details=document.createElement('div');
   details.className='upgrade-details';
   const summary=document.createElement('span');
-  summary.textContent='Наведи для подробностей';
+  summary.textContent='Подробнее';
   summary.tabIndex=0;
   const content=document.createElement('span');
   content.id=anchor.id?anchor.id+'-help':'upgrade-help-'+document.querySelectorAll('.upgrade-details').length;
@@ -285,8 +291,9 @@ function renderTraits() {
     const orbs=traitOrbPrice(index,farm.levels[index][id]);
     const effect = (n:number) => id === 'growth' ? clock(growthTime(index,n)) :
       id === 'yield' ? formatChance(n)+'%' : clock(wateringDuration(farm,{crop:index,planted:0,ready:null},n));
-    const unit=id==='growth'?' роста':id==='yield'?' на дополнительный плод':' влаги от лейки';
-    renderUpgradeChange(get('trait-detail-'+id),level,effect(level)+unit,maxed?undefined:effect(level+1)+unit);
+    const description=id==='growth'?'Культура созревает быстрее.':
+      id==='yield'?'При сборе чаще выпадает дополнительный плод.':'После полива грядка дольше остаётся влажной.';
+    renderUpgradeChange(get('trait-detail-'+id),level,effect(level),maxed?undefined:effect(level+1),'',description);
     const buy = button('trait-buy-'+id);
     buy.disabled = locked || maxed || farm.coins < price || farm.resources.orbs<orbs;
     buy.textContent = maxed ? 'Максимальный уровень' : '🪙 '+number(price)+(orbs?' · 🔮 '+number(orbs):'');

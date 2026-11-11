@@ -29,9 +29,10 @@ function loadFarm():Farm {
       if(Array.isArray(s.levels)&&s.levels.length===savedSlots)s.levels=s.levels.concat(emptyLevels().slice(savedSlots));
     }
     const resumed=s.pausedAt!==undefined;
-    if(resumed){
-      if(!int(s.pausedAt,0))throw new Error('Повреждена отметка паузы сохранения');
-      s.offset=(s.offset??0)-Math.max(0,Date.now()-s.pausedAt);
+    const stoppedAt=s.pausedAt??s.clockSavedAt;
+    if(stoppedAt!==undefined){
+      if(!int(stoppedAt,0))throw new Error('Повреждена отметка времени сохранения');
+      s.offset=(s.offset??0)-Math.max(0,Date.now()-stoppedAt);
       delete s.pausedAt;
     }
     if(s.activePlayMs!==undefined&&!int(s.activePlayMs,0))throw new Error('Повреждено время игры');
@@ -69,15 +70,18 @@ function loadFarm():Farm {
       if(helper.actions!==undefined&&(!helper.actions||gardenHelperActions.some(action=>typeof helper.actions[action]!=='boolean')))
         throw new Error('Повреждены переключатели помощника сада');
       delete s.gardenHelper.waitForFull;
-      if(!gardenHelperActions.every(action=>int(s.gardenHelper.levels?.[action],0,gardenHelperMax)&&int(s.gardenHelper.next?.[action],0)))
+      const revision=s.gardenHelper.cycleRevision;
+      const maxLevel=revision===3?gardenHelperMax:revision===2?20:maxOldLevel;
+      if(!gardenHelperActions.every(action=>int(s.gardenHelper.levels?.[action],0,maxLevel)&&int(s.gardenHelper.next?.[action],0)))
         throw new Error('Повреждены циклы помощника сада');
-      if(s.gardenHelper.cycleRevision!==2){
+      if(revision!==3){
         for(const action of gardenHelperActions){
-          const level=previousGardenHelperLevels[s.gardenHelper.levels[action]];
-          if(level===undefined)throw new Error('Повреждены старые уровни помощника сада');
-          s.gardenHelper.levels[action]=level;
+          const savedLevel=s.gardenHelper.levels[action];
+          const level=revision===2?savedLevel:previousGardenHelperLevels[savedLevel];
+          s.gardenHelper.levels[action]=Math.min(level,5);
+          s.gardenHelper.next[action]=0;
         }
-        s.gardenHelper.cycleRevision=2;
+        s.gardenHelper.cycleRevision=3;
       }
     }
     if(s.knotRanks!==undefined&&(!Array.isArray(s.knotRanks)||s.knotRanks.length!==cropSets.length||
@@ -292,10 +296,20 @@ function loadFarm():Farm {
       !Array.isArray(diamonds.sets)||diamonds.sets.length!==4||!diamonds.sets.every(value=>typeof value==='boolean')||
       !diamonds.levels||Object.entries(diamonds.levels).some(([branch,level])=>!Object.hasOwn(diamondBranches,branch)||!int(level,0)))
       throw new Error('Повреждены алмазные улучшения');
+    const diamondEffectsMigrated=diamonds.effectRevision!==1;
+    if(diamondEffectsMigrated){
+      for(const branch of ['income','seedReturn','fruit']){
+        const level=diamonds.levels[branch]??0;
+        if(!Number.isFinite(diamondPrice(Math.max(0,level-1))))throw new Error('Повреждён уровень алмазного улучшения');
+        for(let n=0;n<level;n++)diamonds.balance+=diamondPrice(n);
+        delete diamonds.levels[branch];
+      }
+      diamonds.effectRevision=1;
+    }
     const awardedSets=awardDiamondSets(s);
     finishDiscovery(s);
     migratePackProgress(s);
-    if(finishPackOpening(s)||weatherMigrated||barriersMigrated||refundedWeatherDiamonds||awardedSets||resumed)saveFarm(s);
+    if(finishPackOpening(s)||weatherMigrated||barriersMigrated||refundedWeatherDiamonds||diamondEffectsMigrated||awardedSets||resumed)saveFarm(s);
     return s;
   } catch (error) {
     storageError = true;
@@ -305,7 +319,7 @@ function loadFarm():Farm {
 }
 function saveFarm(state:Farm,targetKey=key) {
   try {
-    localStorage.setItem(targetKey,JSON.stringify({...state,catalogSlots:crops.length}));
+    localStorage.setItem(targetKey,JSON.stringify({...state,catalogSlots:crops.length,clockSavedAt:Date.now()}));
     storageError = false;
     return true;
   } catch (error) {

@@ -34,7 +34,7 @@ function tickGreenhousePots(farm:Farm,now:number,random=Math.random){
       expected+=reach*(1+(powers.head??0)/100);
     }
     expected*=1+(powers.bounty??0)/100;
-    expected+=diamondLevel(farm,'fruit')/100;
+    expected*=diamondPotFruit(diamondLevel(farm,'fruit'));
     const fruit=pot.carry+cycles*expected*15/cropTimes[crop];
     pot.fruit+=Math.floor(fruit);
     pot.carry=fruit%1;
@@ -71,7 +71,7 @@ function claimGreenhousePot(farm:Farm,index:number,now:number){
   const plot={crop,line:pot.line,planted:pot.ready,ready:pot.ready};
   const {genes,powers}=effectiveGenome(farm,plot);
   farm.harvest[crop]+=pot.fruit;
-  farm.harvestValue[crop]+=pot.fruit*cropPrices[crop]*(1+(powers.sweet??0)/100)*(1+collectionLevel(farm.harvested[crop])/100);
+  farm.harvestValue[crop]+=pot.fruit*cropPrices[crop]*diamondHybridValue(diamondLevel(farm,"income"))*(1+(powers.sweet??0)/100)*(1+collectionLevel(farm.harvested[crop])/100);
   farm.harvestQuality[crop]+=pot.fruit*((genes.ga-1)/29+(genes.gr-1)/58+(genes.re-1)/58);
   farm.harvested[crop]+=pot.fruit;
   farm.collected+=pot.fruit;

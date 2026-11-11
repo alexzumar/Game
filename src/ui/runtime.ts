@@ -6,6 +6,7 @@ let playActiveUntil=0;
 const totalPlayTime=()=>(farm.activePlayMs??0)+(farm.backgroundPlayMs??0);
 let lastPlayTimeSave=totalPlayTime();
 let reloadingFarm=false;
+let pagePausedAt:number|null=null;
 let helperChanged=false;
 
 function updatePlayTime(nextCounter:PlayTimeCounter|null){
@@ -94,13 +95,22 @@ window.addEventListener('blur',()=>{
 window.addEventListener('pagehide',()=>{
   if(reloadingFarm)return;
   updatePlayTime(null);
-  savePlayTime();
+  pagePausedAt=Date.now();
+  saveFarm(farm);
 });
-window.addEventListener('pageshow',syncPlayTime);
+window.addEventListener('pageshow',()=>{
+  if(pagePausedAt!==null){
+    farm.offset-=Math.max(0,Date.now()-pagePausedAt);
+    lastTick=Date.now();
+    pagePausedAt=null;
+    saveFarm(farm);
+  }
+  syncPlayTime();
+});
 syncPlayTime();
 
 const tick = () => {
-  if(reloadingFarm)return;
+  if(reloadingFarm||pagePausedAt!==null)return;
   updatePlayTime(playTimeCounter);
   advanceDebug();
   recordIslandSpending();
@@ -159,7 +169,7 @@ function logHelperAction(index:number,message:string){
   if(gardenHelperHistory.length>80)gardenHelperHistory.shift();
 }
 setInterval(()=>{
-  if(!reloadingFarm&&runGardenHelper(farm,nowTime(),(state,index,now)=>{
+  if(!reloadingFarm&&pagePausedAt===null&&runGardenHelper(farm,nowTime(),(state,index,now)=>{
     const before={diamonds:state.diamonds?.balance??0,orbs:state.resources.orbs,items:{...state.resources.items}};
     const crop=crops[state.plots[index]!.crop].name;
     const amount=collect(state,index,now);

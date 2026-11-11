@@ -60,14 +60,14 @@ function renderSetDetails(){
  if(selectedSet<0)return;const set=cropSets[selectedSet],material=materials.find(item=>item.id==='set'+selectedSet)!;
  get('set-details-dialog-title').textContent=set.name;setBody.replaceChildren();
  const intro=document.createElement('p');const count=set.crops.filter(i=>farm.harvested[i]>0).length;
- intro.textContent='Собрано '+count+'/4. Для полного набора собери хотя бы один плод каждого вида. Новые виды находятся в пакетах семян. Урожай не расходуется.';
+ intro.textContent='Собрано '+count+'/4. Чтобы закрыть набор, собери по одному плоду каждой культуры.';
  const grid=document.createElement('div');grid.className='set-crop-grid';
  for(const i of set.crops){const found=unlocked(farm,i)||farm.harvested[i]>0,card=document.createElement('div');card.className='glass resource-card set-crop'+(found?'':' unknown-crop');card.tabIndex=0;
  const icon=document.createElement('span');icon.textContent=crops[i].symbol;icon.className=found?'plant-glow':'muted-crop';icon.style.setProperty('--icon-rarity',rarityColors[cropRarities[i]]);
  const name=document.createElement('small');name.textContent=found?crops[i].name:'Не найдено';const tier=document.createElement('small');tier.textContent=baseRarityNames[cropTiers[i]];card.append(icon,name,tier);
- collectionTooltip(card,crops[i].name+'\nБазовый шанс в обычном пакете без удачи: '+formatChance(openingOdds(farm,0,0)[i])+'%\n'+(found?'Урожай этого вида уже собран':unlocked(farm,i)?'Семена открыты. Собери первый урожай.':'Найди семя в пакете и собери урожай.'));grid.append(card);}
+ collectionTooltip(card,crops[i].name+'\nВ обычном пакете — '+formatChance(openingOdds(farm,0)[i])+'%\n'+(farm.harvested[i]>0?'Первый урожай собран.':unlocked(farm,i)?'Собери первый урожай.':'Найди семя в пакете.'));grid.append(card);}
  const reward=document.createElement('p');reward.textContent=material.icon+' '+material.name+' · В запасе: '+number(farm.resources.items[material.id]??0)+'\n'+material.description+'\nШанс с каждого плода: обычные 1%, редкие 1,5%, эпические 2%, легендарные 5%.';
- const bonus=document.createElement('p');bonus.textContent='Материал можно добывать с каждой открытой культуры набора, не дожидаясь полного сбора. Постоянный бонус за полный набор пока не назначен.';
+ const bonus=document.createElement('p');bonus.textContent='Материал выпадает при сборе любой культуры из этого набора.';
  const gift=document.createElement('p');gift.textContent=farm.diamonds?.sets[selectedSet]?'💎 Награда за набор получена.':'💎 За первый полный набор — 1 алмаз.';
  setBody.append(intro,grid,reward,bonus,gift);
 }
@@ -95,7 +95,7 @@ function renderHarvestDetails(){
      return material.icon+' '+material.name+' — '+formatChance(probability*100)+'%';
    }),
    '✨ Дополнительные копии материалов — '+formatChance(farm.resources.duplication?1+(farm.resources.duplication-1)*.1:0)+'%',
-   '💎 Алмаз за грядку — '+formatChance(cropTimes[i]/120*.05*(1+diamondLevel(farm,'find')/100))+'%'
+   '💎 Алмаз за грядку — '+formatChance(diamondFindChance(i,diamondLevel(farm,'find'))*100)+'%'
  ];
  harvestBody.textContent=lines.join('\n');
 }
@@ -205,8 +205,8 @@ function renderFarmStatistics(){
     ['⚙️ Переработано плодов',farm.extraction.processed],
     ['🌱 Семян из экстрактора',farm.extraction.produced],
     ['✨ Добыто материалов',stats.materialsFound],
-    ['💎 Проверок на выпадение',stats.crystalRolls],
-    ['💎 Выпало при сборе',stats.crystalDrops],
+    ['💎 Попыток найти алмаз при сборе',stats.crystalRolls],
+    ['💎 Найдено алмазов при сборе',stats.crystalDrops],
     ['🪙 Потрачено монет',stats.coinsSpent],
     ['🔮 Потрачено орбов',stats.orbsSpent],
     ['💎 Потрачено алмазов',stats.diamondsSpent]
@@ -241,7 +241,7 @@ function renderFarmStatistics(){
     list.append(row);
   }
   const note=document.createElement('p');
-  note.textContent='Добыча материалов, броски на алмазы и расходы учитываются с этого обновления.';
+  note.textContent='В старых сейвах часть ранних находок и расходов может отсутствовать.';
   host.replaceChildren(list,note);
 }
 

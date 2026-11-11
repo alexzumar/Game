@@ -23,7 +23,7 @@ function updateRipening(farm:Farm,now:number,random=Math.random,area:PlotArea=fa
 
 
 function advanceDryGrowth(farm:Farm,plot:Plant,now:number){
-  const strength=Math.max(effectiveGenome(farm,plot).powers.drought??0,diamondCurve(diamondLevel(farm,'dryGrowth'))*100);
+  const strength=Math.max(effectiveGenome(farm,plot).powers.drought??0,diamondDryGrowth(diamondLevel(farm,'dryGrowth'))*100);
   if(!strength||plot.ready!==null)return false;
   plot.duration??=plantGrowthTime(farm,plot);
   plot.remaining??=plot.duration;

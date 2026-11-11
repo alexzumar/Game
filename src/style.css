@@ -456,6 +456,7 @@ dialog>h2{padding-right:32px}
 .in-greenhouse .masthead .game-help.greenhouse-only{display:inline-grid}
 #game-help-dialog{width:min(460px,calc(100% - 24px));height:auto;max-height:calc(100% - 24px);padding-bottom:20px}
 .upgrade-note{display:block;margin-top:4px;color:var(--soft)}
+.upgrade-description{display:block;margin-bottom:6px;color:var(--ink)}
 .upgrade-shortcut{font-size:.75rem;padding:4px 8px}
 .upgrade-shortcut{margin-inline-start:8px}
 #upgrade-field.field-expansion-complete{padding-block:10px}

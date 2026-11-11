@@ -86,11 +86,11 @@ for(const [id,icon,label] of [['speed','⚡','Скорость перерабо�
   const buy=document.createElement('button');buy.id='extraction-buy-'+id;buy.className='quiet';
   buy.onclick=()=>{if(buyExtraction(farm,id))commit('Экстрактор улучшен.');};
   panel.append(title,info,buy);get('extractor-upgrades').append(panel);
-  if(id==='yield')addUpgradeDetails(info,'Сначала экстрактор проверяет, повысится ли максимум. Затем выбирает число семян от 1 до полученного максимума. В этом диапазоне все числа равновероятны. Отдельно есть 1% на неудачу. Последний посевной материал защищён.');
+  if(id==='yield')addUpgradeDetails(info,'Иногда верхняя граница повышается на одно семя. Алмазное улучшение помогает чаще получить максимум. Шанс неудачи — 1%. Последний посевной материал защищён.');
 }
 function seedOutputText(level:number){
   const {max,extra}=extractionRange(level);
-  return extra?'Максимум '+max+' или '+(max+1)+' семян ('+formatChance(extra*100)+'% на максимум '+(max+1)+')':'1–'+max+' семян';
+  return '1–'+max+' семян'+(extra?' · до '+(max+1)+' с шансом '+formatChance(extra*100)+'%':'');
 }
 function renderExtraction(){
   const machine=farm.extraction,now=nowTime();
@@ -174,8 +174,9 @@ function renderExtraction(){
   button('extractor-start').disabled=!!jobs[selectedExtractionSlot] || !Number.isSafeInteger(count)||count<1||count>Math.min(extractionCapacity,available);
   for(const id of ['speed','yield'] as const){
     const level=machine[id],price=extractionCost(level,id);
-    const effect=id==='yield'?seedOutputText:(rank:number)=>(extractionTime(rank)/1000).toLocaleString('ru-RU',{maximumFractionDigits:2})+' с на плод';
-    renderUpgradeChange(get('extraction-info-'+id),level,effect(level),extractionUpgradeMaxed(farm,id)?undefined:effect(level+1));
+    const effect=id==='yield'?seedOutputText:(rank:number)=>(extractionTime(rank)/1000).toLocaleString('ru-RU',{maximumFractionDigits:2})+' с';
+    renderUpgradeChange(get('extraction-info-'+id),level,effect(level),extractionUpgradeMaxed(farm,id)?undefined:effect(level+1),'',
+      id==='yield'?'Из одного плода может выпасть больше семян.':'Сколько времени занимает переработка одного плода.');
     const buy=button('extraction-buy-'+id);buy.disabled=extractionUpgradeMaxed(farm,id)||farm.coins<price;buy.textContent=extractionUpgradeMaxed(farm,id)?'Максимум':'🪙 '+number(price);
   }
 }

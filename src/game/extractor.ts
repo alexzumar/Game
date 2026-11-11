@@ -27,12 +27,19 @@ function startExtraction(farm:Farm,crop:number,count:number,now:number,random=Ma
   const bonus=extractionRange(machine.yield);
   const quality=farm.harvestQuality[crop]/farm.harvest[crop];
   const catalyst=knotEffect(farm,2,2);
+  const maxSeedsLevel=diamondLevel(farm,'seedReturn');
+  const rollSeeds=()=>{
+    const max=bonus.max+(random()<bonus.extra?1:0);
+    const roll=random();
+    if(!maxSeedsLevel)return 1+Math.min(max-1,Math.floor(roll*max));
+    const others=1-diamondMaxSeedsChance(max,maxSeedsLevel);
+    return roll>=others?max:1+Math.floor(roll*(max-1)/others);
+  };
   const outputs=Array.from({length:count},(_,index)=>{
     if(random()<.01)return 0;
-    const max=bonus.max+(random()<bonus.extra?1:0);
-    return 1+Math.min(max-1,Math.floor(random()*max))+(index>0&&catalyst&&random()<catalyst?1:0);
+    return rollSeeds()+(index>0&&catalyst&&random()<catalyst?1:0);
   });
-  if(!outputs.some(Boolean)&&farm.seeds[crop]===0&&![...farm.plots,...(farm.greenhouse?.plots??[])].some(plot=>plot?.crop===crop)&&farm.harvest[crop]===count){const max=bonus.max+(random()<bonus.extra?1:0);outputs[outputs.length-1]=1+Math.min(max-1,Math.floor(random()*max));}
+  if(!outputs.some(Boolean)&&farm.seeds[crop]===0&&![...farm.plots,...(farm.greenhouse?.plots??[])].some(plot=>plot?.crop===crop)&&farm.harvest[crop]===count)outputs[outputs.length-1]=rollSeeds();
   const output=total(outputs);
   const period=extractionTime(machine.speed);
   const early=diamondCurve(diamondLevel(farm,'extract'));

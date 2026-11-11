@@ -23,8 +23,13 @@ function renderPackWorkshop(){
  crops.forEach((crop,i)=>{const row=get('odds-'+i);row.hidden=odds[i]<=0;row.textContent=(unlocked(farm,i)?crop.symbol+' '+crop.name:'❔ Неизвестно · '+baseRarityNames[cropTiers[i]])+' · '+preciseChance(odds[i])+'%';row.classList.toggle('unknown-crop',!unlocked(farm,i));});}
  seedPacks.forEach((_,i)=>{get('pack-card-note-'+i).textContent='Упор: '+['обычные','редкие','эпические','легендарные'][i];});
  const chosen=Math.max(0,selectedPack);
- const luckEffect=(level:number)=>seedPacks[chosen].name+' пакет · '+preciseChance(total(openingOdds(farm,chosen,level).filter((_,i)=>cropTiers[i]===chosen)))+'% на культуру той же редкости';
- renderUpgradeChange(get('luck-preview'),farm.luck,luckEffect(farm.luck),luckEffect(farm.luck+1));
+ const cropType=['обычную','редкую','эпическую','легендарную'][chosen];
+ const luckEffect=(level:number)=>{
+   const chance=total(openingOdds(farm,chosen,level).filter((_,i)=>cropTiers[i]===chosen));
+   return chance.toLocaleString('ru-RU',{maximumFractionDigits:3})+'%';
+ };
+ renderUpgradeChange(get('luck-preview'),farm.luck,luckEffect(farm.luck),luckEffect(farm.luck+1),'',
+   'Из выбранного пакета легче получить '+cropType+' культуру.');
  button('buy-luck').disabled=farm.coins<luckPrice(farm.luck);button('buy-luck').textContent='🪙 '+number(luckPrice(farm.luck));
  for(const id of ['speed','slots','refund'] as const){const level=farm.packProgress[id],blocked=id==='refund'&&level>=3&&!farm.packProgress.refundGate,offer=blocked?packGateOffer(farm,'refund'):packUpgradeOffer(farm,id);
  const detail=get('pack-upgrade-'+id);

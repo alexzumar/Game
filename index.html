@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
-<meta name="farm-build" content="4ff2c7f7780dc70d">
+<meta name="farm-build" content="c3d459a70120d08d">
 <style>*{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{--mint:#a6d8ba;--lilac:#c9b6e7;--peach:#f2c1a5;--blue:#a9caed;--pink:#e8b0c9;--accent:var(--mint);--base:#e9eee6;--ink:#22362e;--soft:#53655b;--glass:#ffffff76;--line:#ffffffb8;--edge:#243f3026;--soil:#d9c9ae;--soil-dark:#a68a69;--shade:#283d2521;color-scheme:light;font:15px system-ui,sans-serif}
@@ -463,6 +463,7 @@ dialog>h2{padding-right:32px}
 .in-greenhouse .masthead .game-help.greenhouse-only{display:inline-grid}
 #game-help-dialog{width:min(460px,calc(100% - 24px));height:auto;max-height:calc(100% - 24px);padding-bottom:20px}
 .upgrade-note{display:block;margin-top:4px;color:var(--soft)}
+.upgrade-description{display:block;margin-bottom:6px;color:var(--ink)}
 .upgrade-shortcut{font-size:.75rem;padding:4px 8px}
 .upgrade-shortcut{margin-inline-start:8px}
 #upgrade-field.field-expansion-complete{padding-block:10px}
@@ -1440,7 +1441,7 @@ function collect(farm     ,index       ,now       ,random=Math.random,area      
   const baseAmount=amount+lineTrait(farm,plot,"yield");
   const ordinary=plot.line===undefined;
   const doubleChance=ordinary?knotEffect(farm,0,1):0;
-  const finalAmount=(baseAmount*(random()<(powers.bounty??0)/100?2:1)+diamondBonusCount(diamondLevel(farm,"fruit")/100,random))*
+  const finalAmount=(baseAmount*(random()<(powers.bounty??0)/100?2:1))*
     (doubleChance&&random()<doubleChance?2:1);
   if(plot.line!==undefined){
     const line=farm.lines[plot.line];
@@ -1451,7 +1452,7 @@ function collect(farm     ,index       ,now       ,random=Math.random,area      
   farm.harvested[plot.crop]+=finalAmount;
   farm.harvest[plot.crop]+=finalAmount;
   const harvestIncome=finalAmount*cropPrices[plot.crop]*(plot.ripening?.value??1)*(1+(powers.sweet??0)/100)*(1+collectionLevel(farm.harvested[plot.crop])/100);
-  farm.harvestValue[plot.crop]+=harvestIncome;
+  farm.harvestValue[plot.crop]+=harvestIncome*(ordinary?1:diamondHybridValue(diamondLevel(farm,"income")));
   if(ordinary){
     farm.coins+=Math.floor(harvestIncome*knotEffect(farm,0,2));
     const premium=knotEffect(farm,3,0);
@@ -1469,8 +1470,7 @@ function collect(farm     ,index       ,now       ,random=Math.random,area      
     const reserve=knotEffect(farm,2,0);
     if(reserve&&random()<reserve)farm.seeds[plot.crop]++;
   }
-  awardDiamonds(farm,plot.crop,harvestIncome,random);
-  if(plot.line===undefined&&diamondLevel(farm,'seedReturn')&&random()<diamondCurve(diamondLevel(farm,'seedReturn')))farm.seeds[plot.crop]++;
+  awardDiamonds(farm,plot.crop,random);
   if(plot.line!==undefined){const genes=genome(farm,plot).genes;farm.harvestQuality[plot.crop]+=finalAmount*((genes.ga-1)/29+(genes.gr-1)/58+(genes.re-1)/58);}
   if(random()<(powers.pod??0)/100){if(plot.line===undefined)farm.seeds[plot.crop]+=2;else farm.lines[plot.line].seeds+=2;}
   farm.collected += finalAmount;
@@ -1625,12 +1625,19 @@ function startExtraction(farm     ,crop       ,count       ,now       ,random=Ma
   const bonus=extractionRange(machine.yield);
   const quality=farm.harvestQuality[crop]/farm.harvest[crop];
   const catalyst=knotEffect(farm,2,2);
+  const maxSeedsLevel=diamondLevel(farm,'seedReturn');
+  const rollSeeds=()=>{
+    const max=bonus.max+(random()<bonus.extra?1:0);
+    const roll=random();
+    if(!maxSeedsLevel)return 1+Math.min(max-1,Math.floor(roll*max));
+    const others=1-diamondMaxSeedsChance(max,maxSeedsLevel);
+    return roll>=others?max:1+Math.floor(roll*(max-1)/others);
+  };
   const outputs=Array.from({length:count},(_,index)=>{
     if(random()<.01)return 0;
-    const max=bonus.max+(random()<bonus.extra?1:0);
-    return 1+Math.min(max-1,Math.floor(random()*max))+(index>0&&catalyst&&random()<catalyst?1:0);
+    return rollSeeds()+(index>0&&catalyst&&random()<catalyst?1:0);
   });
-  if(!outputs.some(Boolean)&&farm.seeds[crop]===0&&![...farm.plots,...(farm.greenhouse?.plots??[])].some(plot=>plot?.crop===crop)&&farm.harvest[crop]===count){const max=bonus.max+(random()<bonus.extra?1:0);outputs[outputs.length-1]=1+Math.min(max-1,Math.floor(random()*max));}
+  if(!outputs.some(Boolean)&&farm.seeds[crop]===0&&![...farm.plots,...(farm.greenhouse?.plots??[])].some(plot=>plot?.crop===crop)&&farm.harvest[crop]===count)outputs[outputs.length-1]=rollSeeds();
   const output=total(outputs);
   const period=extractionTime(machine.speed);
   const early=diamondCurve(diamondLevel(farm,'extract'));
@@ -1993,7 +2000,7 @@ function updateRipening(farm     ,now       ,random=Math.random,area         =fa
 
 
 function advanceDryGrowth(farm     ,plot      ,now       ){
-  const strength=Math.max(effectiveGenome(farm,plot).powers.drought??0,diamondCurve(diamondLevel(farm,'dryGrowth'))*100);
+  const strength=Math.max(effectiveGenome(farm,plot).powers.drought??0,diamondDryGrowth(diamondLevel(farm,'dryGrowth'))*100);
   if(!strength||plot.ready!==null)return false;
   plot.duration??=plantGrowthTime(farm,plot);
   plot.remaining??=plot.duration;
@@ -2073,15 +2080,21 @@ const mutationChance = (potential       ) => .24+.26*((Math.max(1,Math.min(30,po
 
 const diamondBranches = {
   find:'💎 Поиск кристаллов', double:'✨ Двойная находка', charge:'⚡ Кристальный заряд',
-  income:'🪙 Монеты при сборе', seedReturn:'🌱 Возврат семян', dryGrowth:'🌿 Рост без полива',
-  fruit:'🧺 Дополнительный плод', extract:'⏱️ Досрочная переработка', discount:'🛒 Скидка на семена',
+  income:'🪙 Цена плодов гибридов', seedReturn:'🌱 Максимальный выход семян', dryGrowth:'🌿 Рост без полива',
+  fruit:'🧺 Щедрый горшок', extract:'⏱️ Досрочная переработка', discount:'🛒 Скидка на семена',
   enhancementShield:'🛡️ Щит усиления'
 }         ;
 
 
-const newDiamonds=()             =>({balance:0,charge:0,coinCarry:0,discountCarry:0,sets:[false,false,false,false],levels:{}});
+const newDiamonds=()             =>({effectRevision:1,balance:0,charge:0,coinCarry:0,discountCarry:0,sets:[false,false,false,false],levels:{}});
 const diamondLevel=(farm     ,branch              )=>farm.diamonds?.levels[branch]??0;
 const diamondCurve=(level       )=>1-.99**level;
+const diamondFindChance=(crop       ,level       )=>cropTimes[crop]/120*.0005*(1+level*.25);
+const diamondDoubleChance=(level       )=>Math.min(1,level*.1);
+const diamondDryGrowth=(level       )=>1-.85**level;
+const diamondMaxSeedsChance=(max       ,level       )=>Math.min(1,1/max+level*.02);
+const diamondHybridValue=(level       )=>1+level*.1;
+const diamondPotFruit=(level       )=>1+level*.25;
 const enhancementShieldChance=(level       )=>level>0?1-.95*.98**(level-1):0;
 const diamondPrice=(level       )=>Math.ceil(1.35**level);
 function diamondBonusCount(value       ,random           ){
@@ -2101,10 +2114,10 @@ function awardDiamondSets(farm     ){
   });
   return changed;
 }
-function awardDiamonds(farm     ,crop       ,harvestIncome       ,random           ){
+function awardDiamonds(farm     ,crop       ,random           ){
   const state=farm.diamonds??=newDiamonds();
-  const chance=cropTimes[crop]/120*.0005*(1+diamondLevel(farm,'find')/100);
-  const extra=diamondLevel(farm,'double')*.0005;
+  const chance=diamondFindChance(crop,diamondLevel(farm,'find'));
+  const extra=diamondDoubleChance(diamondLevel(farm,'double'));
   const stats=farmStatistics(farm);
   stats.crystalRolls++;
   const found=diamondBonusCount(chance,random);
@@ -2117,13 +2130,6 @@ function awardDiamonds(farm     ,crop       ,harvestIncome       ,random        
     const paid=Math.floor(state.charge);
     state.balance+=paid;
     state.charge-=paid;
-  }
-  const income=diamondLevel(farm,'income');
-  if(income){
-    state.coinCarry+=harvestIncome*income/100;
-    const paid=Math.floor(state.coinCarry);
-    farm.coins+=paid;
-    state.coinCarry-=paid;
   }
   awardDiamondSets(farm);
 }
@@ -2362,31 +2368,23 @@ const gardenHelperActions=['sow','water','collect']         ;
 const helperActionEnabled=(helper             ,action                   )=>
   (action!=='sow'||helper.crop!==null)&&(helper.actions?.[action]??true);
 const gardenHelperCycles=(value       )=>({sow:value,water:value,collect:value});
-const newGardenHelper=()             =>({cycleRevision:2,crop:null,enabled:false,levels:gardenHelperCycles(0),next:gardenHelperCycles(0)});
-const gardenHelperIntervals=[10000,8500,7000,5800,4800,4000,3200,2500,2000,1600,1200,950,700,530,400,300,200,165,140,120,100];
+const newGardenHelper=()             =>({cycleRevision:3,crop:null,enabled:false,levels:gardenHelperCycles(0),next:gardenHelperCycles(0)});
+const gardenHelperIntervals=[5000,4000,3000,2000,1000,500,400,300,200,150,100];
 const previousGardenHelperLevels=[0,2,5,8,10,12,14,16,20];
 const gardenHelperMax=gardenHelperIntervals.length-1;
 const gardenHelperUnlocked=(farm     )=>farm.size>=2&&farm.collected>=4&&farm.extraction.processed>=1;
-const gardenHelperRankTotal=(farm     )=>(farm.knotRanks??[]).flat().reduce((sum,rank)=>sum+rank,0);
+const gardenHelperCosts=[1,1,2,4,8,16,32,64,128,256];
 function gardenHelperUpgrade(farm     ,action                   ){
   const level=farm.gardenHelper?.levels[action]??0;
-  const starterCosts=[4,9,18];
-  if(level<starterCosts.length)return {ranks:0,cost:starterCosts[level],id:null};
   return level<gardenHelperMax?{
-    ranks:Math.min(40,5+3*(level-starterCosts.length)),
-    cost:Math.ceil((level-starterCosts.length+1)**1.4),
+    cost:gardenHelperCosts[level],
     id:knotMaterials[gardenHelperActions.indexOf(action)][0]
   }:null;
 }
-function gardenHelperUpgradeBalance(farm     ,price                                                    ){
-  return price.id===null?farm.resources.orbs:(farm.resources.items[price.id]??0);
-}
 function buyGardenHelperUpgrade(farm     ,action                   ){
   const price=gardenHelperUpgrade(farm,action);
-  if(!gardenHelperUnlocked(farm)||!price||gardenHelperRankTotal(farm)<price.ranks||
-    gardenHelperUpgradeBalance(farm,price)<price.cost)return false;
-  if(price.id===null)spendFarmOrbs(farm,price.cost);
-  else farm.resources.items[price.id]-=price.cost;
+  if(!gardenHelperUnlocked(farm)||!price||(farm.resources.items[price.id]??0)<price.cost)return false;
+  farm.resources.items[price.id]-=price.cost;
   const helper=farm.gardenHelper??=newGardenHelper();
   helper.levels[action]++;
   helper.next[action]=0;
@@ -2701,7 +2699,7 @@ function tickGreenhousePots(farm     ,now       ,random=Math.random){
       expected+=reach*(1+(powers.head??0)/100);
     }
     expected*=1+(powers.bounty??0)/100;
-    expected+=diamondLevel(farm,'fruit')/100;
+    expected*=diamondPotFruit(diamondLevel(farm,'fruit'));
     const fruit=pot.carry+cycles*expected*15/cropTimes[crop];
     pot.fruit+=Math.floor(fruit);
     pot.carry=fruit%1;
@@ -2738,7 +2736,7 @@ function claimGreenhousePot(farm     ,index       ,now       ){
   const plot={crop,line:pot.line,planted:pot.ready,ready:pot.ready};
   const {genes,powers}=effectiveGenome(farm,plot);
   farm.harvest[crop]+=pot.fruit;
-  farm.harvestValue[crop]+=pot.fruit*cropPrices[crop]*(1+(powers.sweet??0)/100)*(1+collectionLevel(farm.harvested[crop])/100);
+  farm.harvestValue[crop]+=pot.fruit*cropPrices[crop]*diamondHybridValue(diamondLevel(farm,"income"))*(1+(powers.sweet??0)/100)*(1+collectionLevel(farm.harvested[crop])/100);
   farm.harvestQuality[crop]+=pot.fruit*((genes.ga-1)/29+(genes.gr-1)/58+(genes.re-1)/58);
   farm.harvested[crop]+=pot.fruit;
   farm.collected+=pot.fruit;
@@ -2791,9 +2789,10 @@ function loadFarm()      {
       if(Array.isArray(s.levels)&&s.levels.length===savedSlots)s.levels=s.levels.concat(emptyLevels().slice(savedSlots));
     }
     const resumed=s.pausedAt!==undefined;
-    if(resumed){
-      if(!int(s.pausedAt,0))throw new Error('Повреждена отметка паузы сохранения');
-      s.offset=(s.offset??0)-Math.max(0,Date.now()-s.pausedAt);
+    const stoppedAt=s.pausedAt??s.clockSavedAt;
+    if(stoppedAt!==undefined){
+      if(!int(stoppedAt,0))throw new Error('Повреждена отметка времени сохранения');
+      s.offset=(s.offset??0)-Math.max(0,Date.now()-stoppedAt);
       delete s.pausedAt;
     }
     if(s.activePlayMs!==undefined&&!int(s.activePlayMs,0))throw new Error('Повреждено время игры');
@@ -2831,15 +2830,18 @@ function loadFarm()      {
       if(helper.actions!==undefined&&(!helper.actions||gardenHelperActions.some(action=>typeof helper.actions[action]!=='boolean')))
         throw new Error('Повреждены переключатели помощника сада');
       delete s.gardenHelper.waitForFull;
-      if(!gardenHelperActions.every(action=>int(s.gardenHelper.levels?.[action],0,gardenHelperMax)&&int(s.gardenHelper.next?.[action],0)))
+      const revision=s.gardenHelper.cycleRevision;
+      const maxLevel=revision===3?gardenHelperMax:revision===2?20:maxOldLevel;
+      if(!gardenHelperActions.every(action=>int(s.gardenHelper.levels?.[action],0,maxLevel)&&int(s.gardenHelper.next?.[action],0)))
         throw new Error('Повреждены циклы помощника сада');
-      if(s.gardenHelper.cycleRevision!==2){
+      if(revision!==3){
         for(const action of gardenHelperActions){
-          const level=previousGardenHelperLevels[s.gardenHelper.levels[action]];
-          if(level===undefined)throw new Error('Повреждены старые уровни помощника сада');
-          s.gardenHelper.levels[action]=level;
+          const savedLevel=s.gardenHelper.levels[action];
+          const level=revision===2?savedLevel:previousGardenHelperLevels[savedLevel];
+          s.gardenHelper.levels[action]=Math.min(level,5);
+          s.gardenHelper.next[action]=0;
         }
-        s.gardenHelper.cycleRevision=2;
+        s.gardenHelper.cycleRevision=3;
       }
     }
     if(s.knotRanks!==undefined&&(!Array.isArray(s.knotRanks)||s.knotRanks.length!==cropSets.length||
@@ -3054,10 +3056,20 @@ function loadFarm()      {
       !Array.isArray(diamonds.sets)||diamonds.sets.length!==4||!diamonds.sets.every(value=>typeof value==='boolean')||
       !diamonds.levels||Object.entries(diamonds.levels).some(([branch,level])=>!Object.hasOwn(diamondBranches,branch)||!int(level,0)))
       throw new Error('Повреждены алмазные улучшения');
+    const diamondEffectsMigrated=diamonds.effectRevision!==1;
+    if(diamondEffectsMigrated){
+      for(const branch of ['income','seedReturn','fruit']){
+        const level=diamonds.levels[branch]??0;
+        if(!Number.isFinite(diamondPrice(Math.max(0,level-1))))throw new Error('Повреждён уровень алмазного улучшения');
+        for(let n=0;n<level;n++)diamonds.balance+=diamondPrice(n);
+        delete diamonds.levels[branch];
+      }
+      diamonds.effectRevision=1;
+    }
     const awardedSets=awardDiamondSets(s);
     finishDiscovery(s);
     migratePackProgress(s);
-    if(finishPackOpening(s)||weatherMigrated||barriersMigrated||refundedWeatherDiamonds||awardedSets||resumed)saveFarm(s);
+    if(finishPackOpening(s)||weatherMigrated||barriersMigrated||refundedWeatherDiamonds||diamondEffectsMigrated||awardedSets||resumed)saveFarm(s);
     return s;
   } catch (error) {
     storageError = true;
@@ -3067,7 +3079,7 @@ function loadFarm()      {
 }
 function saveFarm(state     ,targetKey=key) {
   try {
-    localStorage.setItem(targetKey,JSON.stringify({...state,catalogSlots:crops.length}));
+    localStorage.setItem(targetKey,JSON.stringify({...state,catalogSlots:crops.length,clockSavedAt:Date.now()}));
     storageError = false;
     return true;
   } catch (error) {
@@ -4227,13 +4239,19 @@ document.addEventListener('pointerdown',resetTilt);
 window.addEventListener('blur',resetTilt);
 canTilt.addEventListener('change',resetTilt);
 
-function renderUpgradeChange(host            ,level       ,current       ,next        ,note=''){
+function renderUpgradeChange(host            ,level       ,current       ,next        ,note='',description=''){
   const before='Ур. '+level+' · '+current;
   const after=next===undefined?'':'Ур. '+(level+1)+' · '+next;
-  const signature=JSON.stringify([before,after,note]);
+  const signature=JSON.stringify([before,after,note,description]);
   if(host.dataset.change===signature)return;
   host.dataset.change=signature;
   host.textContent=before;
+  if(description){
+    const intro=document.createElement('span');
+    intro.className='upgrade-description';
+    intro.textContent=description;
+    host.prepend(intro);
+  }
   if(after){
     const result=document.createElement('strong');
     result.className='upgrade-next';
@@ -4256,7 +4274,7 @@ function addUpgradeDetails(anchor            ,description       ){
   const details=document.createElement('div');
   details.className='upgrade-details';
   const summary=document.createElement('span');
-  summary.textContent='Наведи для подробностей';
+  summary.textContent='Подробнее';
   summary.tabIndex=0;
   const content=document.createElement('span');
   content.id=anchor.id?anchor.id+'-help':'upgrade-help-'+document.querySelectorAll('.upgrade-details').length;
@@ -4514,8 +4532,9 @@ function renderTraits() {
     const orbs=traitOrbPrice(index,farm.levels[index][id]);
     const effect = (n       ) => id === 'growth' ? clock(growthTime(index,n)) :
       id === 'yield' ? formatChance(n)+'%' : clock(wateringDuration(farm,{crop:index,planted:0,ready:null},n));
-    const unit=id==='growth'?' роста':id==='yield'?' на дополнительный плод':' влаги от лейки';
-    renderUpgradeChange(get('trait-detail-'+id),level,effect(level)+unit,maxed?undefined:effect(level+1)+unit);
+    const description=id==='growth'?'Культура созревает быстрее.':
+      id==='yield'?'При сборе чаще выпадает дополнительный плод.':'После полива грядка дольше остаётся влажной.';
+    renderUpgradeChange(get('trait-detail-'+id),level,effect(level),maxed?undefined:effect(level+1),'',description);
     const buy = button('trait-buy-'+id);
     buy.disabled = locked || maxed || farm.coins < price || farm.resources.orbs<orbs;
     buy.textContent = maxed ? 'Максимальный уровень' : '🪙 '+number(price)+(orbs?' · 🔮 '+number(orbs):'');
@@ -4841,11 +4860,11 @@ for(const [id,icon,label] of [['speed','⚡','Скорость перерабо�
   const buy=document.createElement('button');buy.id='extraction-buy-'+id;buy.className='quiet';
   buy.onclick=()=>{if(buyExtraction(farm,id))commit('Экстрактор улучшен.');};
   panel.append(title,info,buy);get('extractor-upgrades').append(panel);
-  if(id==='yield')addUpgradeDetails(info,'Сначала экстрактор проверяет, повысится ли максимум. Затем выбирает число семян от 1 до полученного максимума. В этом диапазоне все числа равновероятны. Отдельно есть 1% на неудачу. Последний посевной материал защищён.');
+  if(id==='yield')addUpgradeDetails(info,'Иногда верхняя граница повышается на одно семя. Алмазное улучшение помогает чаще получить максимум. Шанс неудачи — 1%. Последний посевной материал защищён.');
 }
 function seedOutputText(level       ){
   const {max,extra}=extractionRange(level);
-  return extra?'Максимум '+max+' или '+(max+1)+' семян ('+formatChance(extra*100)+'% на максимум '+(max+1)+')':'1–'+max+' семян';
+  return '1–'+max+' семян'+(extra?' · до '+(max+1)+' с шансом '+formatChance(extra*100)+'%':'');
 }
 function renderExtraction(){
   const machine=farm.extraction,now=nowTime();
@@ -4929,8 +4948,9 @@ function renderExtraction(){
   button('extractor-start').disabled=!!jobs[selectedExtractionSlot] || !Number.isSafeInteger(count)||count<1||count>Math.min(extractionCapacity,available);
   for(const id of ['speed','yield']         ){
     const level=machine[id],price=extractionCost(level,id);
-    const effect=id==='yield'?seedOutputText:(rank       )=>(extractionTime(rank)/1000).toLocaleString('ru-RU',{maximumFractionDigits:2})+' с на плод';
-    renderUpgradeChange(get('extraction-info-'+id),level,effect(level),extractionUpgradeMaxed(farm,id)?undefined:effect(level+1));
+    const effect=id==='yield'?seedOutputText:(rank       )=>(extractionTime(rank)/1000).toLocaleString('ru-RU',{maximumFractionDigits:2})+' с';
+    renderUpgradeChange(get('extraction-info-'+id),level,effect(level),extractionUpgradeMaxed(farm,id)?undefined:effect(level+1),'',
+      id==='yield'?'Из одного плода может выпасть больше семян.':'Сколько времени занимает переработка одного плода.');
     const buy=button('extraction-buy-'+id);buy.disabled=extractionUpgradeMaxed(farm,id)||farm.coins<price;buy.textContent=extractionUpgradeMaxed(farm,id)?'Максимум':'🪙 '+number(price);
   }
 }
@@ -5137,7 +5157,7 @@ const mutationUpgradeCards=mutationUpgradeIds.map(id=>{
 });
 function mutationUpgradeEffect(id                ,level       ){
   const seconds=(ms       )=>(ms/1000).toLocaleString('ru-RU',{maximumFractionDigits:1})+' с';
-  if(id==='interval')return seconds(upgradedMutationInterval(1,level))+' при Re 1, '+seconds(upgradedMutationInterval(30,level))+' при Re 30';
+  if(id==='interval')return seconds(upgradedMutationInterval(30,level))+'–'+seconds(upgradedMutationInterval(1,level));
   if(id==='maturity')return 'До '+seconds(mutationMaturityDuration(120000,level));
   return formatChance(mutationInheritanceWeight(level)*100)+'% веса сильного родителя · '+formatChance(mutationStatGainChance(level)*100)+'% на +1 к гену';
 }
@@ -5895,6 +5915,7 @@ let playActiveUntil=0;
 const totalPlayTime=()=>(farm.activePlayMs??0)+(farm.backgroundPlayMs??0);
 let lastPlayTimeSave=totalPlayTime();
 let reloadingFarm=false;
+let pagePausedAt            =null;
 let helperChanged=false;
 
 function updatePlayTime(nextCounter                     ){
@@ -5983,13 +6004,22 @@ window.addEventListener('blur',()=>{
 window.addEventListener('pagehide',()=>{
   if(reloadingFarm)return;
   updatePlayTime(null);
-  savePlayTime();
+  pagePausedAt=Date.now();
+  saveFarm(farm);
 });
-window.addEventListener('pageshow',syncPlayTime);
+window.addEventListener('pageshow',()=>{
+  if(pagePausedAt!==null){
+    farm.offset-=Math.max(0,Date.now()-pagePausedAt);
+    lastTick=Date.now();
+    pagePausedAt=null;
+    saveFarm(farm);
+  }
+  syncPlayTime();
+});
 syncPlayTime();
 
 const tick = () => {
-  if(reloadingFarm)return;
+  if(reloadingFarm||pagePausedAt!==null)return;
   updatePlayTime(playTimeCounter);
   advanceDebug();
   recordIslandSpending();
@@ -6048,7 +6078,7 @@ function logHelperAction(index       ,message       ){
   if(gardenHelperHistory.length>80)gardenHelperHistory.shift();
 }
 setInterval(()=>{
-  if(!reloadingFarm&&runGardenHelper(farm,nowTime(),(state,index,now)=>{
+  if(!reloadingFarm&&pagePausedAt===null&&runGardenHelper(farm,nowTime(),(state,index,now)=>{
     const before={diamonds:state.diamonds?.balance??0,orbs:state.resources.orbs,items:{...state.resources.items}};
     const crop=crops[state.plots[index] .crop].name;
     const amount=collect(state,index,now);
@@ -6310,17 +6340,29 @@ button('debug-material-add').onclick=grantDebugMaterial;get('debug-material-coun
 
 const diamondDialog=get                   ('diamonds-dialog');
 const diamondPercent=(fraction       )=>fraction.toLocaleString('ru-RU',{style:'percent',maximumFractionDigits:4});
+const diamondDescriptions                             ={
+  find:'Алмазы чаще выпадают при сборе.',
+  double:'Шанс получить второй алмаз при находке.',
+  charge:'Сбор наполняет заряд. Полный заряд даёт алмаз.',
+  income:'Плоды гибридов продаются дороже.',
+  seedReturn:'Экстрактор чаще выдаёт максимум семян.',
+  dryGrowth:'Растения продолжают расти без воды.',
+  fruit:'Горшки приносят больше плодов.',
+  extract:'Экстрактор может обработать плод раньше.',
+  discount:'Семена в магазине стоят дешевле.',
+  enhancementShield:'Щит может сохранить усиление при неудаче.'
+};
 const diamondEffects                                             ={
-  find:level=>'+'+level+'% к базовому шансу. Редис: '+diamondPercent(.0005*(1+level/100))+' за грядку.',
-  double:level=>diamondPercent(level*.0005)+' дополнительной добычи при находке.',
-  charge:level=>diamondPercent(level?1-.9*.99**(level-1):0)+' от шанса находки в заряд',
-  income:level=>level+'% цены плодов начисляется сразу при сборе.',
-  seedReturn:level=>diamondPercent(diamondCurve(level))+' шанс получить обычное семя за грядку.',
-  dryGrowth:level=>diamondPercent(diamondCurve(level))+' обычной скорости на сухой грядке.',
-  fruit:level=>level+'% дополнительного урожая в пересчёте на один плод за грядку.',
-  extract:level=>'Шанс закончить плод раньше растёт каждую секунду до '+diamondPercent(diamondCurve(level))+'.',
-  discount:level=>diamondPercent(.5*(1-.9**level))+' скидки в магазине семян.',
-  enhancementShield:level=>diamondPercent(enhancementShieldChance(level))+' защитить уровень усиления при неудаче. Материал расходуется.'
+  find:level=>'×'+number(1+level*.25),
+  double:level=>diamondPercent(diamondDoubleChance(level)),
+  charge:level=>diamondPercent(level?1-.9*.99**(level-1):0)+' в заряд',
+  income:level=>'×'+number(diamondHybridValue(level)),
+  seedReturn:level=>diamondPercent(diamondMaxSeedsChance(extractionRange(farm.extraction.yield).max,level)),
+  dryGrowth:level=>diamondPercent(diamondDryGrowth(level))+' скорости',
+  fruit:level=>'×'+number(diamondPotFruit(level)),
+  extract:level=>'До '+diamondPercent(diamondCurve(level)),
+  discount:level=>diamondPercent(.5*(1-.9**level))+' скидки',
+  enhancementShield:level=>diamondPercent(enhancementShieldChance(level))
 };
 const diamondCards=Object.entries(diamondBranches).map(([id,label])=>{
   const branch=id                 ;
@@ -6342,6 +6384,9 @@ const diamondCards=Object.entries(diamondBranches).map(([id,label])=>{
   };
   card.append(title,detail,buy);
   const charge=document.createElement('small');
+  if(branch==='find')addUpgradeDetails(detail,'Точный шанс зависит от культуры и указан в коллекции.');
+  if(branch==='seedReturn')addUpgradeDetails(detail,'Карточка показывает шанс для обычного выхода. При расширении диапазона бонус применяется к новому максимуму.');
+  if(branch==='enhancementShield')addUpgradeDetails(detail,'При срабатывании щита уровень остаётся прежним. Материал расходуется.');
   if(branch==='charge'){
     addUpgradeDetails(detail,'Каждый сбор добавляет немного заряда, даже если алмаз не выпал. Чем выше шанс найти алмаз, тем больше заряд за сбор. За каждые 100% заряда получаешь дополнительный алмаз.');
     buy.before(charge);
@@ -6354,7 +6399,7 @@ function renderDiamondShop(){
   get('diamond-shop-balance').textContent=number(state?.balance??0);
   for(const {branch,detail,buy,charge} of diamondCards){
     const level=diamondLevel(farm,branch),price=diamondPrice(level);
-    renderUpgradeChange(detail,level,diamondEffects[branch](level),Number.isFinite(price)?diamondEffects[branch](level+1):undefined);
+    renderUpgradeChange(detail,level,diamondEffects[branch](level),Number.isFinite(price)?diamondEffects[branch](level+1):undefined,'',diamondDescriptions[branch]);
     if(branch==='charge')charge.textContent='Накоплено '+diamondPercent(state?.charge??0)+' из 100%';
     buy.textContent=Number.isFinite(price)?'💎 '+number(price):'Цена слишком велика';
     buy.disabled=!Number.isFinite(price)||(state?.balance??0)<price;
@@ -6424,14 +6469,14 @@ function renderSetDetails(){
  if(selectedSet<0)return;const set=cropSets[selectedSet],material=materials.find(item=>item.id==='set'+selectedSet) ;
  get('set-details-dialog-title').textContent=set.name;setBody.replaceChildren();
  const intro=document.createElement('p');const count=set.crops.filter(i=>farm.harvested[i]>0).length;
- intro.textContent='Собрано '+count+'/4. Для полного набора собери хотя бы один плод каждого вида. Новые виды находятся в пакетах семян. Урожай не расходуется.';
+ intro.textContent='Собрано '+count+'/4. Чтобы закрыть набор, собери по одному плоду каждой культуры.';
  const grid=document.createElement('div');grid.className='set-crop-grid';
  for(const i of set.crops){const found=unlocked(farm,i)||farm.harvested[i]>0,card=document.createElement('div');card.className='glass resource-card set-crop'+(found?'':' unknown-crop');card.tabIndex=0;
  const icon=document.createElement('span');icon.textContent=crops[i].symbol;icon.className=found?'plant-glow':'muted-crop';icon.style.setProperty('--icon-rarity',rarityColors[cropRarities[i]]);
  const name=document.createElement('small');name.textContent=found?crops[i].name:'Не найдено';const tier=document.createElement('small');tier.textContent=baseRarityNames[cropTiers[i]];card.append(icon,name,tier);
- collectionTooltip(card,crops[i].name+'\nБазовый шанс в обычном пакете без удачи: '+formatChance(openingOdds(farm,0,0)[i])+'%\n'+(found?'Урожай этого вида уже собран':unlocked(farm,i)?'Семена открыты. Собери первый урожай.':'Найди семя в пакете и собери урожай.'));grid.append(card);}
+ collectionTooltip(card,crops[i].name+'\nВ обычном пакете — '+formatChance(openingOdds(farm,0)[i])+'%\n'+(farm.harvested[i]>0?'Первый урожай собран.':unlocked(farm,i)?'Собери первый урожай.':'Найди семя в пакете.'));grid.append(card);}
  const reward=document.createElement('p');reward.textContent=material.icon+' '+material.name+' · В запасе: '+number(farm.resources.items[material.id]??0)+'\n'+material.description+'\nШанс с каждого плода: обычные 1%, редкие 1,5%, эпические 2%, легендарные 5%.';
- const bonus=document.createElement('p');bonus.textContent='Материал можно добывать с каждой открытой культуры набора, не дожидаясь полного сбора. Постоянный бонус за полный набор пока не назначен.';
+ const bonus=document.createElement('p');bonus.textContent='Материал выпадает при сборе любой культуры из этого набора.';
  const gift=document.createElement('p');gift.textContent=farm.diamonds?.sets[selectedSet]?'💎 Награда за набор получена.':'💎 За первый полный набор — 1 алмаз.';
  setBody.append(intro,grid,reward,bonus,gift);
 }
@@ -6459,7 +6504,7 @@ function renderHarvestDetails(){
      return material.icon+' '+material.name+' — '+formatChance(probability*100)+'%';
    }),
    '✨ Дополнительные копии материалов — '+formatChance(farm.resources.duplication?1+(farm.resources.duplication-1)*.1:0)+'%',
-   '💎 Алмаз за грядку — '+formatChance(cropTimes[i]/120*.05*(1+diamondLevel(farm,'find')/100))+'%'
+   '💎 Алмаз за грядку — '+formatChance(diamondFindChance(i,diamondLevel(farm,'find'))*100)+'%'
  ];
  harvestBody.textContent=lines.join('\n');
 }
@@ -6569,8 +6614,8 @@ function renderFarmStatistics(){
     ['⚙️ Переработано плодов',farm.extraction.processed],
     ['🌱 Семян из экстрактора',farm.extraction.produced],
     ['✨ Добыто материалов',stats.materialsFound],
-    ['💎 Проверок на выпадение',stats.crystalRolls],
-    ['💎 Выпало при сборе',stats.crystalDrops],
+    ['💎 Попыток найти алмаз при сборе',stats.crystalRolls],
+    ['💎 Найдено алмазов при сборе',stats.crystalDrops],
     ['🪙 Потрачено монет',stats.coinsSpent],
     ['🔮 Потрачено орбов',stats.orbsSpent],
     ['💎 Потрачено алмазов',stats.diamondsSpent]
@@ -6605,7 +6650,7 @@ function renderFarmStatistics(){
     list.append(row);
   }
   const note=document.createElement('p');
-  note.textContent='Добыча материалов, броски на алмазы и расходы учитываются с этого обновления.';
+  note.textContent='В старых сейвах часть ранних находок и расходов может отсутствовать.';
   host.replaceChildren(list,note);
 }
 
@@ -6796,8 +6841,13 @@ function renderPackWorkshop(){
  crops.forEach((crop,i)=>{const row=get('odds-'+i);row.hidden=odds[i]<=0;row.textContent=(unlocked(farm,i)?crop.symbol+' '+crop.name:'❔ Неизвестно · '+baseRarityNames[cropTiers[i]])+' · '+preciseChance(odds[i])+'%';row.classList.toggle('unknown-crop',!unlocked(farm,i));});}
  seedPacks.forEach((_,i)=>{get('pack-card-note-'+i).textContent='Упор: '+['обычные','редкие','эпические','легендарные'][i];});
  const chosen=Math.max(0,selectedPack);
- const luckEffect=(level       )=>seedPacks[chosen].name+' пакет · '+preciseChance(total(openingOdds(farm,chosen,level).filter((_,i)=>cropTiers[i]===chosen)))+'% на культуру той же редкости';
- renderUpgradeChange(get('luck-preview'),farm.luck,luckEffect(farm.luck),luckEffect(farm.luck+1));
+ const cropType=['обычную','редкую','эпическую','легендарную'][chosen];
+ const luckEffect=(level       )=>{
+   const chance=total(openingOdds(farm,chosen,level).filter((_,i)=>cropTiers[i]===chosen));
+   return chance.toLocaleString('ru-RU',{maximumFractionDigits:3})+'%';
+ };
+ renderUpgradeChange(get('luck-preview'),farm.luck,luckEffect(farm.luck),luckEffect(farm.luck+1),'',
+   'Из выбранного пакета легче получить '+cropType+' культуру.');
  button('buy-luck').disabled=farm.coins<luckPrice(farm.luck);button('buy-luck').textContent='🪙 '+number(luckPrice(farm.luck));
  for(const id of ['speed','slots','refund']         ){const level=farm.packProgress[id],blocked=id==='refund'&&level>=3&&!farm.packProgress.refundGate,offer=blocked?packGateOffer(farm,'refund'):packUpgradeOffer(farm,id);
  const detail=get('pack-upgrade-'+id);
@@ -7388,22 +7438,22 @@ knotOpen.onclick=()=>{renderKnots();knotDialog.showModal();};
 button('upgrades-open').before(knotOpen);
 
 const knotEffects=[
-  ['Удача пакетов · повышает шанс получить культуру редкости пакета.',
-   'Дружный сбор · даёт шанс получить вторую порцию урожая.',
-   'Выручка с грядки · приносит монеты сразу при сборе.',
-   'Глубокие корни · при сборе обычного урожая есть отдельный шанс найти материал этой культуры, даже если обычная добыча ничего не дала.'],
-  ['Щедрая находка · даёт шанс удвоить выпавшие орбы.',
-   'Чистая добыча · повышает шанс найти материал культуры.',
-   'Обмен находок · сдаёшь материалы трёх культур одного набора и получаешь материал четвёртой. Целевую культуру сначала нужно открыть.',
-   'Крупная находка · при выпадении материала он может прийти пачкой. Прокачка повышает шанс пачки и её размер.'],
-  ['Семя в запас · даёт шанс вернуть семя при сборе.',
-   'Удачная продажа · даёт шанс продать плод с наценкой.',
-   'Катализатор партии · усиливает выход семян в длинных партиях.',
-   'Солнечная отдача · даёт порцию плодов до основного сбора в ясную погоду.'],
-  ['Общий сбор · за каждые 20 плодов обычных культур получаешь процент от их общей стоимости. Дорогие и дешёвые плоды учитываются по своей цене.',
-   'Стручок в пакете · повтор открытой культуры может дать её семена.',
-   'Досрочный урожай · посадка может созреть раньше срока.',
-   'Второй оборот · после сбора обычная культура может сразу начать новый цикл с половины шкалы роста, без расхода семени.']
+  ['Из пакета чаще выпадает культура его редкости.',
+   'Иногда урожай удваивается.',
+   'Сбор приносит монеты.',
+   'При сборе можно найти дополнительный материал культуры.'],
+  ['Найденные орбы могут удвоиться.',
+   'Материалы культуры выпадают чаще.',
+   'Обменивай материалы внутри набора. Сначала открой нужную культуру.',
+   'Материалы могут выпадать пачками.'],
+  ['При сборе может вернуться семя.',
+   'Плоды иногда продаются дороже.',
+   'После первого плода экстрактор может дать лишнее семя.',
+   'В ясную погоду можно получить плоды до созревания.'],
+  ['Каждые 20 обычных плодов дают премию от их общей стоимости.',
+   'Повтор культуры в пакете может дать семена.',
+   'Культура может созреть раньше.',
+   'Культура может отрасти с половины шкалы без расхода семени.']
 ];
 const knotNames=[
   ['Удача','Дружность','Выручка','Корни'],
@@ -7476,10 +7526,10 @@ const knotColumns=[3,1,2,0].map(set=>{
 });
 
 const knotEffectUnits=[
-  ['от шкалы удачи пакетов (100 ур.)','шанс удвоить урожай','от цены урожая монетами','шанс дополнительно найти материал'],
-  ['шанс удвоить орбы','к шансу добыть материал','скидка на наценку обмена','шанс получить пачку материалов'],
-  ['шанс вернуть семя','шанс продать на 50% дороже','шанс получить лишнее семя после первого плода','доля обычного урожая в ясную погоду'],
-  ['от цены каждых 20 плодов монетами','шанс получить два семени за повтор','шанс созреть на середине роста','шанс начать новый цикл с половины роста']
+  ['Удача пакетов','Двойной урожай','Монеты со сбора','Лишний материал'],
+  ['Двойные орбы','Бонус к шансу материала','Скидка на наценку','Пачка материалов'],
+  ['Возврат семени','Шанс продать на 50% дороже','Лишнее семя','Урожай до созревания'],
+  ['Премия за 20 плодов','Два семени за повтор','Раннее созревание','Повторный рост']
 ];
 const knotPercent=new Intl.NumberFormat('ru',{style:'percent',maximumFractionDigits:2});
 function renderKnots(){
@@ -7497,7 +7547,7 @@ function renderKnots(){
       const rank=knotRank(farm,set,tier),price=knotPrice(farm,set,tier);
       const locked=tier>0&&knotRank(farm,set,tier-1)<5;
       const affordable=!!price&&price.every(({id,count})=>(farm.resources.items[id]??0)>=count);
-      label.textContent=(locked?'🔒 ':'')+'Ур. '+(rank||1);
+      label.textContent=(locked?'🔒 ':'')+'Ур. '+rank;
       node.dataset.locked=String(locked);
       node.dataset.active=String(!locked);
       node.setAttribute('aria-disabled',String(!affordable));
@@ -7506,8 +7556,7 @@ function renderKnots(){
       const description=document.createElement('p');
       description.textContent=knotEffects[set][tier];
       const levels=document.createElement('p');
-      renderUpgradeChange(levels,rank,rank?'ранг сохранён':'бонус ещё не открыт',
-        price?'следующий ранг':undefined);
+      levels.textContent='Ур. '+rank+(price?' → Ур. '+(rank+1):'');
       const effects=document.createElement('span');
       effects.className='knot-effect-list';
       for(let index=0;index<=tier;index++){
@@ -7516,11 +7565,12 @@ function renderKnots(){
         const next=price?knotEffect(farm,set,index,tier):current;
         const line=document.createElement('span');
         const name=document.createElement('strong');
-        name.textContent=crops[cropSets[set].crops[index]].name+' · ';
+        name.textContent=knotEffectUnits[set][index]+' · ';
         const change=document.createElement('b');
         const scale=set===0&&index===0?100:1;
-        change.textContent=next!==current?' → '+knotPercent.format(next/scale):'';
-        line.append(name,knotPercent.format(current/scale),change,' '+knotEffectUnits[set][index]);
+        const value=(effect       )=>scale===100?'+'+number(effect)+' ур.':knotPercent.format(effect);
+        change.textContent=next!==current?' → '+value(next):'';
+        line.append(name,value(current),change);
         if(set===1&&index===3&&(current||next)){
           const rank=knotRank(farm,set,index);
           const size=rank?knotBundleSize(rank):0;
@@ -7532,7 +7582,7 @@ function renderKnots(){
       const requirement=document.createElement('p');
       requirement.className='knot-tooltip-price';
       if(price){
-        requirement.append('Вложить для прокачки');
+        requirement.append('Стоимость');
         price.forEach(({id,count})=>{
           const item=document.createElement('span');
           item.classList.toggle('knot-cost-missing',(farm.resources.items[id]??0)<count);
@@ -7666,21 +7716,18 @@ var gardenHelperCardsReady=true;
 button('upgrade-tab-helper').addEventListener('click',renderGardenHelperUpgrades);
 button('upgrades-open').addEventListener('click',renderGardenHelperUpgrades);
 function renderGardenHelperUpgrades(){
-  const open=gardenHelperUnlocked(farm),ranks=gardenHelperRankTotal(farm);
+  const open=gardenHelperUnlocked(farm);
   const gate=get('helper-upgrade-gate');
   gate.textContent=helperUnlockText;
   gate.hidden=open;
   for(const {action,effect,buy} of helperCards){
     const level=farm.gardenHelper?.levels[action]??0;
-    const interval=(rank       )=>'1 грядка каждые '+number(gardenHelperIntervals[rank]/1000)+' с';
+    const interval=(rank       )=>number(gardenHelperIntervals[rank]/1000)+' с';
     const price=gardenHelperUpgrade(farm,action);
-    renderUpgradeChange(effect,level,interval(level),price?interval(level+1):undefined);
-    const icon=price?.id?materialsBySaveKey.get(price.id) .icon:'🔮';
-    buy.textContent=price?icon+' '+price.cost+(ranks<price.ranks?' · Узелки '+ranks+'/'+price.ranks:''):'Максимум';
-    buy.disabled=!open||!price||ranks<price.ranks||gardenHelperUpgradeBalance(farm,price)<price.cost;
-    const requirement=price?.ranks?'Ранги суммируются по всем четырём монументам. Каждое купленное улучшение узелка даёт один ранг. Сейчас '+ranks+' из '+price.ranks+' нужных.':'';
-    renderMaterialPriceTip(buy,price?.id?[price.id]:[],
-      price?.id===null?'Орбы выпадают при сборе обычных культур.':requirement,'Орбы');
+    renderUpgradeChange(effect,level,interval(level),price?interval(level+1):undefined,'','Время на одну грядку.');
+    buy.textContent=price?materialsBySaveKey.get(price.id) .icon+' '+price.cost:'Максимум';
+    buy.disabled=!open||!price||(farm.resources.items[price.id]??0)<price.cost;
+    renderMaterialPriceTip(buy,price?[price.id]:[]);
   }
 }
 

@@ -135,7 +135,7 @@ const mutationUpgradeCards=mutationUpgradeIds.map(id=>{
 });
 function mutationUpgradeEffect(id:MutationUpgrade,level:number){
   const seconds=(ms:number)=>(ms/1000).toLocaleString('ru-RU',{maximumFractionDigits:1})+' с';
-  if(id==='interval')return seconds(upgradedMutationInterval(1,level))+' при Re 1, '+seconds(upgradedMutationInterval(30,level))+' при Re 30';
+  if(id==='interval')return seconds(upgradedMutationInterval(30,level))+'–'+seconds(upgradedMutationInterval(1,level));
   if(id==='maturity')return 'До '+seconds(mutationMaturityDuration(120000,level));
   return formatChance(mutationInheritanceWeight(level)*100)+'% веса сильного родителя · '+formatChance(mutationStatGainChance(level)*100)+'% на +1 к гену';
 }

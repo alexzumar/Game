@@ -115,20 +115,17 @@ var gardenHelperCardsReady=true;
 button('upgrade-tab-helper').addEventListener('click',renderGardenHelperUpgrades);
 button('upgrades-open').addEventListener('click',renderGardenHelperUpgrades);
 function renderGardenHelperUpgrades(){
-  const open=gardenHelperUnlocked(farm),ranks=gardenHelperRankTotal(farm);
+  const open=gardenHelperUnlocked(farm);
   const gate=get('helper-upgrade-gate');
   gate.textContent=helperUnlockText;
   gate.hidden=open;
   for(const {action,effect,buy} of helperCards){
     const level=farm.gardenHelper?.levels[action]??0;
-    const interval=(rank:number)=>'1 грядка каждые '+number(gardenHelperIntervals[rank]/1000)+' с';
+    const interval=(rank:number)=>number(gardenHelperIntervals[rank]/1000)+' с';
     const price=gardenHelperUpgrade(farm,action);
-    renderUpgradeChange(effect,level,interval(level),price?interval(level+1):undefined);
-    const icon=price?.id?materialsBySaveKey.get(price.id)!.icon:'🔮';
-    buy.textContent=price?icon+' '+price.cost+(ranks<price.ranks?' · Узелки '+ranks+'/'+price.ranks:''):'Максимум';
-    buy.disabled=!open||!price||ranks<price.ranks||gardenHelperUpgradeBalance(farm,price)<price.cost;
-    const requirement=price?.ranks?'Ранги суммируются по всем четырём монументам. Каждое купленное улучшение узелка даёт один ранг. Сейчас '+ranks+' из '+price.ranks+' нужных.':'';
-    renderMaterialPriceTip(buy,price?.id?[price.id]:[],
-      price?.id===null?'Орбы выпадают при сборе обычных культур.':requirement,'Орбы');
+    renderUpgradeChange(effect,level,interval(level),price?interval(level+1):undefined,'','Время на одну грядку.');
+    buy.textContent=price?materialsBySaveKey.get(price.id)!.icon+' '+price.cost:'Максимум';
+    buy.disabled=!open||!price||(farm.resources.items[price.id]??0)<price.cost;
+    renderMaterialPriceTip(buy,price?[price.id]:[]);
   }
 }

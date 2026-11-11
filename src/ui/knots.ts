@@ -126,22 +126,22 @@ knotOpen.onclick=()=>{renderKnots();knotDialog.showModal();};
 button('upgrades-open').before(knotOpen);
 
 const knotEffects=[
-  ['Удача пакетов · повышает шанс получить культуру редкости пакета.',
-   'Дружный сбор · даёт шанс получить вторую порцию урожая.',
-   'Выручка с грядки · приносит монеты сразу при сборе.',
-   'Глубокие корни · при сборе обычного урожая есть отдельный шанс найти материал этой культуры, даже если обычная добыча ничего не дала.'],
-  ['Щедрая находка · даёт шанс удвоить выпавшие орбы.',
-   'Чистая добыча · повышает шанс найти материал культуры.',
-   'Обмен находок · сдаёшь материалы трёх культур одного набора и получаешь материал четвёртой. Целевую культуру сначала нужно открыть.',
-   'Крупная находка · при выпадении материала он может прийти пачкой. Прокачка повышает шанс пачки и её размер.'],
-  ['Семя в запас · даёт шанс вернуть семя при сборе.',
-   'Удачная продажа · даёт шанс продать плод с наценкой.',
-   'Катализатор партии · усиливает выход семян в длинных партиях.',
-   'Солнечная отдача · даёт порцию плодов до основного сбора в ясную погоду.'],
-  ['Общий сбор · за каждые 20 плодов обычных культур получаешь процент от их общей стоимости. Дорогие и дешёвые плоды учитываются по своей цене.',
-   'Стручок в пакете · повтор открытой культуры может дать её семена.',
-   'Досрочный урожай · посадка может созреть раньше срока.',
-   'Второй оборот · после сбора обычная культура может сразу начать новый цикл с половины шкалы роста, без расхода семени.']
+  ['Из пакета чаще выпадает культура его редкости.',
+   'Иногда урожай удваивается.',
+   'Сбор приносит монеты.',
+   'При сборе можно найти дополнительный материал культуры.'],
+  ['Найденные орбы могут удвоиться.',
+   'Материалы культуры выпадают чаще.',
+   'Обменивай материалы внутри набора. Сначала открой нужную культуру.',
+   'Материалы могут выпадать пачками.'],
+  ['При сборе может вернуться семя.',
+   'Плоды иногда продаются дороже.',
+   'После первого плода экстрактор может дать лишнее семя.',
+   'В ясную погоду можно получить плоды до созревания.'],
+  ['Каждые 20 обычных плодов дают премию от их общей стоимости.',
+   'Повтор культуры в пакете может дать семена.',
+   'Культура может созреть раньше.',
+   'Культура может отрасти с половины шкалы без расхода семени.']
 ];
 const knotNames=[
   ['Удача','Дружность','Выручка','Корни'],
@@ -214,10 +214,10 @@ const knotColumns=[3,1,2,0].map(set=>{
 });
 
 const knotEffectUnits=[
-  ['от шкалы удачи пакетов (100 ур.)','шанс удвоить урожай','от цены урожая монетами','шанс дополнительно найти материал'],
-  ['шанс удвоить орбы','к шансу добыть материал','скидка на наценку обмена','шанс получить пачку материалов'],
-  ['шанс вернуть семя','шанс продать на 50% дороже','шанс получить лишнее семя после первого плода','доля обычного урожая в ясную погоду'],
-  ['от цены каждых 20 плодов монетами','шанс получить два семени за повтор','шанс созреть на середине роста','шанс начать новый цикл с половины роста']
+  ['Удача пакетов','Двойной урожай','Монеты со сбора','Лишний материал'],
+  ['Двойные орбы','Бонус к шансу материала','Скидка на наценку','Пачка материалов'],
+  ['Возврат семени','Шанс продать на 50% дороже','Лишнее семя','Урожай до созревания'],
+  ['Премия за 20 плодов','Два семени за повтор','Раннее созревание','Повторный рост']
 ];
 const knotPercent=new Intl.NumberFormat('ru',{style:'percent',maximumFractionDigits:2});
 function renderKnots(){
@@ -235,7 +235,7 @@ function renderKnots(){
       const rank=knotRank(farm,set,tier),price=knotPrice(farm,set,tier);
       const locked=tier>0&&knotRank(farm,set,tier-1)<5;
       const affordable=!!price&&price.every(({id,count})=>(farm.resources.items[id]??0)>=count);
-      label.textContent=(locked?'🔒 ':'')+'Ур. '+(rank||1);
+      label.textContent=(locked?'🔒 ':'')+'Ур. '+rank;
       node.dataset.locked=String(locked);
       node.dataset.active=String(!locked);
       node.setAttribute('aria-disabled',String(!affordable));
@@ -244,8 +244,7 @@ function renderKnots(){
       const description=document.createElement('p');
       description.textContent=knotEffects[set][tier];
       const levels=document.createElement('p');
-      renderUpgradeChange(levels,rank,rank?'ранг сохранён':'бонус ещё не открыт',
-        price?'следующий ранг':undefined);
+      levels.textContent='Ур. '+rank+(price?' → Ур. '+(rank+1):'');
       const effects=document.createElement('span');
       effects.className='knot-effect-list';
       for(let index=0;index<=tier;index++){
@@ -254,11 +253,12 @@ function renderKnots(){
         const next=price?knotEffect(farm,set,index,tier):current;
         const line=document.createElement('span');
         const name=document.createElement('strong');
-        name.textContent=crops[cropSets[set].crops[index]].name+' · ';
+        name.textContent=knotEffectUnits[set][index]+' · ';
         const change=document.createElement('b');
         const scale=set===0&&index===0?100:1;
-        change.textContent=next!==current?' → '+knotPercent.format(next/scale):'';
-        line.append(name,knotPercent.format(current/scale),change,' '+knotEffectUnits[set][index]);
+        const value=(effect:number)=>scale===100?'+'+number(effect)+' ур.':knotPercent.format(effect);
+        change.textContent=next!==current?' → '+value(next):'';
+        line.append(name,value(current),change);
         if(set===1&&index===3&&(current||next)){
           const rank=knotRank(farm,set,index);
           const size=rank?knotBundleSize(rank):0;
@@ -270,7 +270,7 @@ function renderKnots(){
       const requirement=document.createElement('p');
       requirement.className='knot-tooltip-price';
       if(price){
-        requirement.append('Вложить для прокачки');
+        requirement.append('Стоимость');
         price.forEach(({id,count})=>{
           const item=document.createElement('span');
           item.classList.toggle('knot-cost-missing',(farm.resources.items[id]??0)<count);
