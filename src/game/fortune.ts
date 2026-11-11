@@ -35,7 +35,9 @@ function wheelLayout(farm:Farm,kind:WheelKind,stake:number):WheelPrize[]{
     const material=materials.find(entry=>entry.id===item)!;
     return {type:'item',item,amount,weight,color,label:material.icon+' '+material.name+' ×'+amount,locked:amount===0};
   };
-  const jackpot=.01*Math.min(1,stake/info.reference);
+  const bank=account.bank/10;
+  const jackpotBase=.1+.1/(1+bank/info.reference);
+  const jackpot=jackpotBase*Math.min(1,stake/info.reference);
   const rareLocked=stake<info.minimum;
   const rareWeight=.99;
   const colors=['#8bd2ad','#66a6d7','#626dc5'];

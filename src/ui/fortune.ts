@@ -90,6 +90,9 @@ function renderFortune(){
   get('fortune-carry').textContent=kind==='diamonds'?'Остаток возврата · '+(account.carry/20).toLocaleString('ru-RU')+' / 1 💎':kind==='orbs'&&state.orbBoost?'Запас двойных орбов · '+number(state.orbBoost):'';
   fortuneWheel.style.transform='';
   const prizes=wheelLayout(farm,kind,stake);
+  const jackpotChance=prizes.find(prize=>prize.type==='jackpot')!.weight;
+  get('fortune-jackpot').textContent+=' · шанс '+(jackpotChance>0&&jackpotChance<.0001
+    ?'<0,0001':jackpotChance.toLocaleString('ru-RU',{maximumFractionDigits:4}))+'%';
   drawFortuneWheel(fortuneWheel,prizes);
   get('fortune-odds').replaceChildren(...[...prizes].sort((a,b)=>b.weight-a.weight).map(prize=>{
     const row=document.createElement('li');

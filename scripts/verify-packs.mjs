@@ -306,6 +306,20 @@ assert.ok(Math.abs(total(layout.map(prize=>prize.weight))-100)<1e-9);
 assert.equal(layout.filter(prize=>prize.type==='empty')[0].color,layout.filter(prize=>prize.type==='empty')[1].color);
 assert.deepEqual(wheelLayout(gambler,'coins',1000000),layout);
 const jackpotIndex=layout.findIndex(prize=>prize.type==='jackpot');
+assert.equal(layout[jackpotIndex].weight,.2);
+const jackpotAccount=wheelAccount(gambler,'coins');
+jackpotAccount.bank=10_000_000;
+assert.ok(Math.abs(wheelLayout(gambler,'coins',1_000_000)[jackpotIndex].weight-.15)<1e-9);
+assert.ok(Math.abs(wheelLayout(gambler,'coins',100_000)[jackpotIndex].weight-.015)<1e-9);
+jackpotAccount.bank=0;
+for(const kind of ['orbs','diamonds']){
+  const reference=wheelInfo[kind].reference;
+  const account=wheelAccount(gambler,kind);
+  assert.equal(wheelLayout(gambler,kind,reference)[jackpotIndex].weight,.2);
+  account.bank=reference*10;
+  assert.ok(Math.abs(wheelLayout(gambler,kind,reference)[jackpotIndex].weight-.15)<1e-9);
+  account.bank=0;
+}
 const jackpotRoll=(total(layout.slice(0,jackpotIndex).map(prize=>prize.weight))+.005)/100;
 assert.equal(spinFortune(gambler,'coins',1000000,()=>jackpotRoll).payout,100000);
 assert.equal(wheelAccount(gambler,'coins').bank,0);

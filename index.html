@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
-<meta name="farm-build" content="23389de1a9e7e4a4">
+<meta name="farm-build" content="a74c1b47cc9c7ef9">
 <style>*{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{--mint:#a6d8ba;--lilac:#c9b6e7;--peach:#f2c1a5;--blue:#a9caed;--pink:#e8b0c9;--accent:var(--mint);--base:#e9eee6;--ink:#22362e;--soft:#53655b;--glass:#ffffff76;--line:#ffffffb8;--edge:#243f3026;--soil:#d9c9ae;--soil-dark:#a68a69;--shade:#283d2521;color-scheme:light;font:15px system-ui,sans-serif}
@@ -2601,7 +2601,9 @@ function wheelLayout(farm     ,kind          ,stake       )             {
     const material=materials.find(entry=>entry.id===item) ;
     return {type:'item',item,amount,weight,color,label:material.icon+' '+material.name+' ×'+amount,locked:amount===0};
   };
-  const jackpot=.01*Math.min(1,stake/info.reference);
+  const bank=account.bank/10;
+  const jackpotBase=.1+.1/(1+bank/info.reference);
+  const jackpot=jackpotBase*Math.min(1,stake/info.reference);
   const rareLocked=stake<info.minimum;
   const rareWeight=.99;
   const colors=['#8bd2ad','#66a6d7','#626dc5'];
@@ -7232,6 +7234,9 @@ function renderFortune(){
   get('fortune-carry').textContent=kind==='diamonds'?'Остаток возврата · '+(account.carry/20).toLocaleString('ru-RU')+' / 1 💎':kind==='orbs'&&state.orbBoost?'Запас двойных орбов · '+number(state.orbBoost):'';
   fortuneWheel.style.transform='';
   const prizes=wheelLayout(farm,kind,stake);
+  const jackpotChance=prizes.find(prize=>prize.type==='jackpot') .weight;
+  get('fortune-jackpot').textContent+=' · шанс '+(jackpotChance>0&&jackpotChance<.0001
+    ?'<0,0001':jackpotChance.toLocaleString('ru-RU',{maximumFractionDigits:4}))+'%';
   drawFortuneWheel(fortuneWheel,prizes);
   get('fortune-odds').replaceChildren(...[...prizes].sort((a,b)=>b.weight-a.weight).map(prize=>{
     const row=document.createElement('li');
