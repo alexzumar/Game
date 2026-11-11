@@ -1,7 +1,7 @@
 const gardenHelperDialog=collectionOverlay('garden-helper-dialog','Помощник сада');
 const gardenHelperPanel=document.createElement('section');
 gardenHelperPanel.className='glass panel garden-helper-panel';
-gardenHelperPanel.innerHTML='<p>Для выбранной культуры помощник может сажать, поливать, собирать и пополнять семена через экстрактор. В режиме «Любая доступная» он поливает и собирает все посадки в саду, если эти действия включены. Посев и автопереработка в этом режиме недоступны.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
+gardenHelperPanel.innerHTML='<p>Помощник поливает все посадки в саду. Он сажает, собирает и пополняет семена выбранной культуры. В режиме «Любая доступная» он собирает все созревшие культуры, а посев и автопереработка выключены.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
 gardenHelperDialog.append(gardenHelperPanel);
 const helperHistory=document.createElement('section');
 helperHistory.className='glass panel helper-history';

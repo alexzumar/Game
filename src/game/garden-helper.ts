@@ -57,7 +57,7 @@ function runGardenHelper(farm:Farm,now:number,harvest=collect,onCare?:(action:'s
   if(helperActionEnabled(helper,'water')&&now>=helper.next.water){
     let dry:Plant|undefined;
     for(const plot of farm.plots){
-      if(!plot||!ownPlot(plot))continue;
+      if(!plot||plot.mystery)continue;
       const needsWater=plot.ready===null||(plot.wetUntil!==undefined&&plot.wetUntil<=now&&plot.wetUntil<plot.ready);
       if(needsWater&&(!dry||(plot.watered??plot.planted)<(dry.watered??dry.planted)))dry=plot;
     }

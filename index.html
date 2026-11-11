@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
-<meta name="farm-build" content="4720495b46edec00">
+<meta name="farm-build" content="78551e5a237795b8">
 <style>*{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{--mint:#a6d8ba;--lilac:#c9b6e7;--peach:#f2c1a5;--blue:#a9caed;--pink:#e8b0c9;--accent:var(--mint);--base:#e9eee6;--ink:#22362e;--soft:#53655b;--glass:#ffffff76;--line:#ffffffb8;--edge:#243f3026;--soil:#d9c9ae;--soil-dark:#a68a69;--shade:#283d2521;color-scheme:light;font:15px system-ui,sans-serif}
@@ -2440,7 +2440,7 @@ function runGardenHelper(farm     ,now       ,harvest=collect,onCare            
   if(helperActionEnabled(helper,'water')&&now>=helper.next.water){
     let dry                ;
     for(const plot of farm.plots){
-      if(!plot||!ownPlot(plot))continue;
+      if(!plot||plot.mystery)continue;
       const needsWater=plot.ready===null||(plot.wetUntil!==undefined&&plot.wetUntil<=now&&plot.wetUntil<plot.ready);
       if(needsWater&&(!dry||(plot.watered??plot.planted)<(dry.watered??dry.planted)))dry=plot;
     }
@@ -7653,7 +7653,7 @@ function renderKnots(){
 const gardenHelperDialog=collectionOverlay('garden-helper-dialog','Помощник сада');
 const gardenHelperPanel=document.createElement('section');
 gardenHelperPanel.className='glass panel garden-helper-panel';
-gardenHelperPanel.innerHTML='<p>Для выбранной культуры помощник может сажать, поливать, собирать и пополнять семена через экстрактор. В режиме «Любая доступная» он поливает и собирает все посадки в саду, если эти действия включены. Посев и автопереработка в этом режиме недоступны.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
+gardenHelperPanel.innerHTML='<p>Помощник поливает все посадки в саду. Он сажает, собирает и пополняет семена выбранной культуры. В режиме «Любая доступная» он собирает все созревшие культуры, а посев и автопереработка выключены.</p><p class="garden-helper-gate"></p><label>Культура <select></select></label><button type="button" class="quiet wide"></button>';
 gardenHelperDialog.append(gardenHelperPanel);
 const helperHistory=document.createElement('section');
 helperHistory.className='glass panel helper-history';
