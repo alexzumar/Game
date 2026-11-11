@@ -87,11 +87,13 @@ function renderHarvestDetails(){
    ...properties.map(id=>powerLabel(specimen,id)+' — '+abilityDefinitions[id].description),
    '',
    'Добыча с обычного плода',
-   '🔮 Добыча орбов — '+formatChance((1-2*chance)*100)+'% · количество 0–'+orbMaximums[tier],
+   '🔮 Добыча орбов — '+formatChance((1-chance-propertyHarvestChance(farm,i,0))*100)+'% · количество 0–'+orbMaximums[tier],
    '🔮 Шанс максимума при добыче орбов — '+formatChance(orbMaximumChance(tier,farm.resources.orbLuck)*100)+'%',
    ...['set'+set,...properties.map(propertyMaterialId),'duplication'].map(id=>{
      const material=materials.find(item=>item.id===id)!;
-     const probability=id==='duplication'?harvestDuplicationChance(i):id.startsWith('set')?chance:chance/properties.length;
+     const propertyChance=propertyHarvestChance(farm,i)/properties.length;
+     const rootsChance=knotEffect(farm,0,3)/properties.length;
+     const probability=id==='duplication'?harvestDuplicationChance(i):id.startsWith('set')?chance:1-(1-propertyChance)*(1-rootsChance);
      return material.icon+' '+material.name+' — '+formatChance(probability*100)+'%';
    }),
    '✨ Дополнительные копии материалов — '+formatChance(farm.resources.duplication?1+(farm.resources.duplication-1)*.1:0)+'%',

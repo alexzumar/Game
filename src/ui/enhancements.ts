@@ -19,6 +19,12 @@ orbLuckPanel.className='glass panel';
 orbLuckPanel.innerHTML='<h2>🔮 Удача добычи орбов</h2><p>Повышает шанс получить максимум, когда плоду выпадает добыча орбов.</p><p id="orb-luck-info"></p><button class="quiet" id="buy-orb-luck"></button>';
 get('upgrade-tools').append(orbLuckPanel);
 button('buy-orb-luck').onclick=()=>{if(buyOrbLuck(farm))commit('Удача добычи орбов улучшена.');};
+const materialLuckPanel=document.createElement('section');
+materialLuckPanel.className='glass panel';
+materialLuckPanel.innerHTML='<h2>🌿 Добыча материалов</h2><p id="material-luck-info"></p><button class="quiet" id="buy-material-luck"></button>';
+get('upgrade-tools').append(materialLuckPanel);
+addUpgradeDetails(get('material-luck-info'),'На карточке указан шанс для обычных культур. У других культур шанс выше. Точные значения есть в коллекции.');
+button('buy-material-luck').onclick=()=>{if(buyMaterialLuck(farm))commit();};
 function renderAlpha(){
  if(get<HTMLDialogElement>('diamonds-dialog').open)renderDiamondShop();
  get('resource-upgrade-title').dataset.upgradeTarget=resourceCategory==='cultures'?'discovery':resourceCategory==='properties'?'hybrids':resourceCategory==='special'?'tools':'seeds';
@@ -26,6 +32,14 @@ function renderAlpha(){
  get('mutation-points').textContent=number(farm.mutationPoints??0);
  get('resources-balance').textContent='🪙 '+number(farm.coins)+' · 🔮 '+number(farm.resources.orbs)+' · 🧬 '+number(farm.mutationPoints??0);
  if(typeof refinementReady!=='undefined'&&refinementReady)renderResourceCollections();
+ const materialLevel=farm.resources.materialLuck??0;
+ const materialPrice=materialLuckPrices[materialLevel];
+ const materialEffect=(rank:number)=>formatChance(propertyHarvestChance(farm,0,rank)*100)+'%';
+ renderUpgradeChange(get('material-luck-info'),materialLevel,materialEffect(materialLevel),
+   materialPrice===undefined?undefined:materialEffect(materialLevel+1),'','Материалы свойств чаще выпадают при сборе.');
+ const materialBuy=button('buy-material-luck');
+ materialBuy.disabled=materialPrice===undefined||farm.coins<materialPrice;
+ materialBuy.textContent=materialPrice===undefined?'Максимум':'🪙 '+number(materialPrice);
  const level=farm.resources.duplication;
  const duplicationPercent=(rank:number)=>rank?1+(rank-1)*.1:0;
  const copyEffect=(percent:number)=>{

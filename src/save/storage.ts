@@ -237,6 +237,8 @@ function loadFarm():Farm {
     s.resources??=newResources();
     s.resources.barriers??={};s.resources.irrigation??=0;
     s.resources.orbLuck??=0;
+    s.resources.materialLuck??=0;
+    if(!int(s.resources.materialLuck,0,materialLuckPrices.length))throw new Error('Повреждён уровень добычи материалов');
     if(!s.resources.barriers||!int(s.resources.irrigation,0))throw new Error('Повреждены ресурсные улучшения');
     for(const [key,value] of Object.entries(s.resources.barriers))if(!/^[0-9]+:(growth|yield|moisture)$/.test(key)||!int(Number(key.split(':')[0]),0,crops.length-1)||!int(value,0))throw new Error('Повреждены барьеры');
     const barriersMigrated=s.resources.barrierVersion===undefined;

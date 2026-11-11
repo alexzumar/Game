@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
-<meta name="farm-build" content="c3d459a70120d08d">
+<meta name="farm-build" content="23389de1a9e7e4a4">
 <style>*{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{--mint:#a6d8ba;--lilac:#c9b6e7;--peach:#f2c1a5;--blue:#a9caed;--pink:#e8b0c9;--accent:var(--mint);--base:#e9eee6;--ink:#22362e;--soft:#53655b;--glass:#ffffff76;--line:#ffffffb8;--edge:#243f3026;--soil:#d9c9ae;--soil-dark:#a68a69;--shade:#283d2521;color-scheme:light;font:15px system-ui,sans-serif}
@@ -2178,6 +2178,20 @@ function duplicateCount(farm     ,count       ,random=Math.random){
  return count*(1+Math.floor(chance/100))+sampleBinomial(count,(chance%100)/100,random);
 }
 const harvestMaterialChance=(crop       )=>[.01,.015,.02,.05][cropTiers[crop]];
+const materialLuckMultipliers=[1,1.5,2,3,4,5];
+const materialLuckPrices=[60,180,600,2000,6000];
+function propertyHarvestChance(farm     ,crop       ,level=farm.resources.materialLuck??0){
+  const base=harvestMaterialChance(crop);
+  return Math.min(1,base*(1+knotEffect(farm,1,1))*materialLuckMultipliers[level]);
+}
+function buyMaterialLuck(farm     ){
+  const level=farm.resources.materialLuck??0;
+  const price=materialLuckPrices[level];
+  if(price===undefined||farm.coins<price)return false;
+  spendFarmCoins(farm,price);
+  farm.resources.materialLuck=level+1;
+  return true;
+}
 const orbMaximums=[1,4,16,64];
 const orbLuckMax=200;
 function orbMaximumChance(tier       ,level       ){
@@ -2206,8 +2220,9 @@ const harvestDuplicationChance=(crop       )=>Math.min(1,cropTimes[crop]/120*.00
 function awardHarvestLoot(farm     ,crop       ,count       ,random=Math.random){
  const tier=cropTiers[crop],chance=harvestMaterialChance(crop);
  const setCount=sampleBinomial(count,chance,random);
- const propertyCount=sampleBinomial(count-setCount,Math.min(1,chance*(1+knotEffect(farm,1,1))/(1-chance)),random);
- const orbs=rollHarvestOrbs(count-setCount-propertyCount,tier,farm.resources.orbLuck,random);
+ const basePropertyChance=propertyHarvestChance(farm,crop,0);
+ const basePropertyCount=sampleBinomial(count-setCount,Math.min(1,basePropertyChance/(1-chance)),random);
+ const orbs=rollHarvestOrbs(count-setCount-basePropertyCount,tier,farm.resources.orbLuck,random);
  const bonus=Math.min(orbs,farm.wheels?.orbBoost??0);
  if(farm.wheels)farm.wheels.orbBoost-=bonus;
  const doubleOrbs=knotEffect(farm,1,0);
@@ -2215,6 +2230,9 @@ function awardHarvestLoot(farm     ,crop       ,count       ,random=Math.random)
  const group=cropSets.findIndex(set=>set.crops.includes(crop));
  addMaterial(farm,'set'+group,duplicateCount(farm,setCount,random));
  const properties=Object.keys(basePowers[crop]);
+ const extraChance=propertyHarvestChance(farm,crop)-basePropertyChance;
+ const extra=extraChance>0?sampleBinomial(count-basePropertyCount,extraChance/(1-basePropertyChance),random):0;
+ const propertyCount=basePropertyCount+extra;
  const first=properties.length===1?propertyCount:sampleBinomial(propertyCount,.5,random);
  const propertyDrops=[first,propertyCount-first];
  properties.forEach((property,index)=>addMaterial(farm,propertyMaterialId(property),duplicateCount(farm,propertyDrops[index],random)));
@@ -2997,6 +3015,8 @@ function loadFarm()      {
     s.resources??=newResources();
     s.resources.barriers??={};s.resources.irrigation??=0;
     s.resources.orbLuck??=0;
+    s.resources.materialLuck??=0;
+    if(!int(s.resources.materialLuck,0,materialLuckPrices.length))throw new Error('Повреждён уровень добычи материалов');
     if(!s.resources.barriers||!int(s.resources.irrigation,0))throw new Error('Повреждены ресурсные улучшения');
     for(const [key,value] of Object.entries(s.resources.barriers))if(!/^[0-9]+:(growth|yield|moisture)$/.test(key)||!int(Number(key.split(':')[0]),0,crops.length-1)||!int(value,0))throw new Error('Повреждены барьеры');
     const barriersMigrated=s.resources.barrierVersion===undefined;
@@ -6254,6 +6274,12 @@ orbLuckPanel.className='glass panel';
 orbLuckPanel.innerHTML='<h2>🔮 Удача добычи орбов</h2><p>Повышает шанс получить максимум, когда плоду выпадает добыча орбов.</p><p id="orb-luck-info"></p><button class="quiet" id="buy-orb-luck"></button>';
 get('upgrade-tools').append(orbLuckPanel);
 button('buy-orb-luck').onclick=()=>{if(buyOrbLuck(farm))commit('Удача добычи орбов улучшена.');};
+const materialLuckPanel=document.createElement('section');
+materialLuckPanel.className='glass panel';
+materialLuckPanel.innerHTML='<h2>🌿 Добыча материалов</h2><p id="material-luck-info"></p><button class="quiet" id="buy-material-luck"></button>';
+get('upgrade-tools').append(materialLuckPanel);
+addUpgradeDetails(get('material-luck-info'),'На карточке указан шанс для обычных культур. У других культур шанс выше. Точные значения есть в коллекции.');
+button('buy-material-luck').onclick=()=>{if(buyMaterialLuck(farm))commit();};
 function renderAlpha(){
  if(get                   ('diamonds-dialog').open)renderDiamondShop();
  get('resource-upgrade-title').dataset.upgradeTarget=resourceCategory==='cultures'?'discovery':resourceCategory==='properties'?'hybrids':resourceCategory==='special'?'tools':'seeds';
@@ -6261,6 +6287,14 @@ function renderAlpha(){
  get('mutation-points').textContent=number(farm.mutationPoints??0);
  get('resources-balance').textContent='🪙 '+number(farm.coins)+' · 🔮 '+number(farm.resources.orbs)+' · 🧬 '+number(farm.mutationPoints??0);
  if(typeof refinementReady!=='undefined'&&refinementReady)renderResourceCollections();
+ const materialLevel=farm.resources.materialLuck??0;
+ const materialPrice=materialLuckPrices[materialLevel];
+ const materialEffect=(rank       )=>formatChance(propertyHarvestChance(farm,0,rank)*100)+'%';
+ renderUpgradeChange(get('material-luck-info'),materialLevel,materialEffect(materialLevel),
+   materialPrice===undefined?undefined:materialEffect(materialLevel+1),'','Материалы свойств чаще выпадают при сборе.');
+ const materialBuy=button('buy-material-luck');
+ materialBuy.disabled=materialPrice===undefined||farm.coins<materialPrice;
+ materialBuy.textContent=materialPrice===undefined?'Максимум':'🪙 '+number(materialPrice);
  const level=farm.resources.duplication;
  const duplicationPercent=(rank       )=>rank?1+(rank-1)*.1:0;
  const copyEffect=(percent       )=>{
@@ -6496,11 +6530,13 @@ function renderHarvestDetails(){
    ...properties.map(id=>powerLabel(specimen,id)+' — '+abilityDefinitions[id].description),
    '',
    'Добыча с обычного плода',
-   '🔮 Добыча орбов — '+formatChance((1-2*chance)*100)+'% · количество 0–'+orbMaximums[tier],
+   '🔮 Добыча орбов — '+formatChance((1-chance-propertyHarvestChance(farm,i,0))*100)+'% · количество 0–'+orbMaximums[tier],
    '🔮 Шанс максимума при добыче орбов — '+formatChance(orbMaximumChance(tier,farm.resources.orbLuck)*100)+'%',
    ...['set'+set,...properties.map(propertyMaterialId),'duplication'].map(id=>{
      const material=materials.find(item=>item.id===id) ;
-     const probability=id==='duplication'?harvestDuplicationChance(i):id.startsWith('set')?chance:chance/properties.length;
+     const propertyChance=propertyHarvestChance(farm,i)/properties.length;
+     const rootsChance=knotEffect(farm,0,3)/properties.length;
+     const probability=id==='duplication'?harvestDuplicationChance(i):id.startsWith('set')?chance:1-(1-propertyChance)*(1-rootsChance);
      return material.icon+' '+material.name+' — '+formatChance(probability*100)+'%';
    }),
    '✨ Дополнительные копии материалов — '+formatChance(farm.resources.duplication?1+(farm.resources.duplication-1)*.1:0)+'%',

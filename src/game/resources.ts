@@ -1,4 +1,4 @@
-type Resources={barrierVersion:2;barriers:Record<string,number>;irrigation:number;orbs:number;orbLuck:number;items:Record<string,number>;found:Record<string,boolean>;duplication:number};
+type Resources={barrierVersion:2;barriers:Record<string,number>;irrigation:number;orbs:number;orbLuck:number;materialLuck?:number;items:Record<string,number>;found:Record<string,boolean>;duplication:number};
 const newResources=():Resources=>({barrierVersion:2,barriers:{},irrigation:0,orbs:0,orbLuck:0,items:{},found:{},duplication:0});
 // Exact geometric sampling for sparse results, bounded-cost normal approximation for large batches.
 function extractorConcentrateChance(crop:number){
@@ -20,6 +20,20 @@ function duplicateCount(farm:Farm,count:number,random=Math.random){
  return count*(1+Math.floor(chance/100))+sampleBinomial(count,(chance%100)/100,random);
 }
 const harvestMaterialChance=(crop:number)=>[.01,.015,.02,.05][cropTiers[crop]];
+const materialLuckMultipliers=[1,1.5,2,3,4,5];
+const materialLuckPrices=[60,180,600,2000,6000];
+function propertyHarvestChance(farm:Farm,crop:number,level=farm.resources.materialLuck??0){
+  const base=harvestMaterialChance(crop);
+  return Math.min(1,base*(1+knotEffect(farm,1,1))*materialLuckMultipliers[level]);
+}
+function buyMaterialLuck(farm:Farm){
+  const level=farm.resources.materialLuck??0;
+  const price=materialLuckPrices[level];
+  if(price===undefined||farm.coins<price)return false;
+  spendFarmCoins(farm,price);
+  farm.resources.materialLuck=level+1;
+  return true;
+}
 const orbMaximums=[1,4,16,64];
 const orbLuckMax=200;
 function orbMaximumChance(tier:number,level:number){
@@ -48,8 +62,9 @@ const harvestDuplicationChance=(crop:number)=>Math.min(1,cropTimes[crop]/120*.00
 function awardHarvestLoot(farm:Farm,crop:number,count:number,random=Math.random){
  const tier=cropTiers[crop],chance=harvestMaterialChance(crop);
  const setCount=sampleBinomial(count,chance,random);
- const propertyCount=sampleBinomial(count-setCount,Math.min(1,chance*(1+knotEffect(farm,1,1))/(1-chance)),random);
- const orbs=rollHarvestOrbs(count-setCount-propertyCount,tier,farm.resources.orbLuck,random);
+ const basePropertyChance=propertyHarvestChance(farm,crop,0);
+ const basePropertyCount=sampleBinomial(count-setCount,Math.min(1,basePropertyChance/(1-chance)),random);
+ const orbs=rollHarvestOrbs(count-setCount-basePropertyCount,tier,farm.resources.orbLuck,random);
  const bonus=Math.min(orbs,farm.wheels?.orbBoost??0);
  if(farm.wheels)farm.wheels.orbBoost-=bonus;
  const doubleOrbs=knotEffect(farm,1,0);
@@ -57,6 +72,9 @@ function awardHarvestLoot(farm:Farm,crop:number,count:number,random=Math.random)
  const group=cropSets.findIndex(set=>set.crops.includes(crop));
  addMaterial(farm,'set'+group,duplicateCount(farm,setCount,random));
  const properties=Object.keys(basePowers[crop]);
+ const extraChance=propertyHarvestChance(farm,crop)-basePropertyChance;
+ const extra=extraChance>0?sampleBinomial(count-basePropertyCount,extraChance/(1-basePropertyChance),random):0;
+ const propertyCount=basePropertyCount+extra;
  const first=properties.length===1?propertyCount:sampleBinomial(propertyCount,.5,random);
  const propertyDrops=[first,propertyCount-first];
  properties.forEach((property,index)=>addMaterial(farm,propertyMaterialId(property),duplicateCount(farm,propertyDrops[index],random)));
