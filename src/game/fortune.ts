@@ -9,6 +9,8 @@ const wheelInfo={
   diamonds:{icon:'💎',name:'Алмазы',minimum:5,reference:20}
 };
 const wheelStakeLimit=1_000_000_000_000;
+const wheelJackpotMultiplier=777;
+const wheelBankAmount=(units:number)=>Math.floor(units/10);
 function wheelMaterialAmount(stake:number,unit:number){
   if(stake<unit)return 0;
   return Math.floor(1+Math.log10(stake/unit));
@@ -71,7 +73,7 @@ function wheelLayout(farm:Farm,kind:WheelKind,stake:number):WheelPrize[]{
   }));
   return [
     refunds[0],{type:'empty',label:'Ничего',weight:15,color:'#e3e7ed'},regular[0],refunds[1],regular[1],
-    {type:'jackpot',weight:jackpot,color:'#ffc646',label:'Джекпот · '+unit+' '+Math.floor((account.bank+stake)/10).toLocaleString('ru-RU')},
+    {type:'jackpot',weight:jackpot,color:'#ffc646',label:'Джекпот · '+unit+' '+(wheelBankAmount(account.bank+stake)*wheelJackpotMultiplier).toLocaleString('ru-RU')},
     {type:'empty',label:'Ничего',weight:10+.01-jackpot,color:'#e3e7ed'},refunds[2],regular[2],rare
   ];
 }
@@ -89,14 +91,14 @@ function spinFortune(farm:Farm,kind:WheelKind,stake:number,random=Math.random){
   if(kind==='coins')spendFarmCoins(farm,stake);
   else if(kind==='orbs')spendFarmOrbs(farm,stake);
   else{farm.diamonds!.balance-=stake;farmStatistics(farm).diamondsSpent+=stake;}
-  account.bank+=stake; // One unit is 5% of one currency unit.
+  account.bank+=stake; // Ten bank units equal one currency unit.
   let payout=0;
   if(prize.type==='refund'){
     const units=stake*(prize.amount!/5)+(kind==='diamonds'?account.carry:0);
     payout=Math.floor(units/20);
     if(kind==='diamonds')account.carry=units%20;
   }
-  if(prize.type==='jackpot'){payout=Math.floor(account.bank/10);account.bank=0;}
+  if(prize.type==='jackpot'){payout=wheelBankAmount(account.bank)*wheelJackpotMultiplier;account.bank=0;}
   if(kind==='coins')farm.coins+=payout;
   else if(kind==='orbs')farm.resources.orbs+=payout;
   else farm.diamonds!.balance+=payout;

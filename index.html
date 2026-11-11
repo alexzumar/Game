@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
-<meta name="farm-build" content="78551e5a237795b8">
+<meta name="farm-build" content="01f1abc259094d2e">
 <style>*{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{--mint:#a6d8ba;--lilac:#c9b6e7;--peach:#f2c1a5;--blue:#a9caed;--pink:#e8b0c9;--accent:var(--mint);--base:#e9eee6;--ink:#22362e;--soft:#53655b;--glass:#ffffff76;--line:#ffffffb8;--edge:#243f3026;--soil:#d9c9ae;--soil-dark:#a68a69;--shade:#283d2521;color-scheme:light;font:15px system-ui,sans-serif}
@@ -2576,6 +2576,8 @@ const wheelInfo={
   diamonds:{icon:'💎',name:'Алмазы',minimum:5,reference:20}
 };
 const wheelStakeLimit=1_000_000_000_000;
+const wheelJackpotMultiplier=777;
+const wheelBankAmount=(units       )=>Math.floor(units/10);
 function wheelMaterialAmount(stake       ,unit       ){
   if(stake<unit)return 0;
   return Math.floor(1+Math.log10(stake/unit));
@@ -2638,7 +2640,7 @@ function wheelLayout(farm     ,kind          ,stake       )             {
   }));
   return [
     refunds[0],{type:'empty',label:'Ничего',weight:15,color:'#e3e7ed'},regular[0],refunds[1],regular[1],
-    {type:'jackpot',weight:jackpot,color:'#ffc646',label:'Джекпот · '+unit+' '+Math.floor((account.bank+stake)/10).toLocaleString('ru-RU')},
+    {type:'jackpot',weight:jackpot,color:'#ffc646',label:'Джекпот · '+unit+' '+(wheelBankAmount(account.bank+stake)*wheelJackpotMultiplier).toLocaleString('ru-RU')},
     {type:'empty',label:'Ничего',weight:10+.01-jackpot,color:'#e3e7ed'},refunds[2],regular[2],rare
   ];
 }
@@ -2656,14 +2658,14 @@ function spinFortune(farm     ,kind          ,stake       ,random=Math.random){
   if(kind==='coins')spendFarmCoins(farm,stake);
   else if(kind==='orbs')spendFarmOrbs(farm,stake);
   else{farm.diamonds .balance-=stake;farmStatistics(farm).diamondsSpent+=stake;}
-  account.bank+=stake; // One unit is 5% of one currency unit.
+  account.bank+=stake; // Ten bank units equal one currency unit.
   let payout=0;
   if(prize.type==='refund'){
     const units=stake*(prize.amount /5)+(kind==='diamonds'?account.carry:0);
     payout=Math.floor(units/20);
     if(kind==='diamonds')account.carry=units%20;
   }
-  if(prize.type==='jackpot'){payout=Math.floor(account.bank/10);account.bank=0;}
+  if(prize.type==='jackpot'){payout=wheelBankAmount(account.bank)*wheelJackpotMultiplier;account.bank=0;}
   if(kind==='coins')farm.coins+=payout;
   else if(kind==='orbs')farm.resources.orbs+=payout;
   else farm.diamonds .balance+=payout;
@@ -2793,6 +2795,7 @@ function readActiveSlot(){
 const activeSlot=readActiveSlot();
 const key=slotKey(activeSlot);
 let storageError = false;
+let activeSaveUnreadable = false;
 const int = (value        ,min       ,max = Number.MAX_SAFE_INTEGER) =>
   typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max;
 function loadFarm()      {
@@ -3095,12 +3098,14 @@ function loadFarm()      {
     if(finishPackOpening(s)||weatherMigrated||barriersMigrated||refundedWeatherDiamonds||diamondEffectsMigrated||awardedSets||resumed)saveFarm(s);
     return s;
   } catch (error) {
+    activeSaveUnreadable = true;
     storageError = true;
     console.error('Ферма: ошибка загрузки сохранения',error);
     return newFarm();
   }
 }
 function saveFarm(state     ,targetKey=key) {
+  if(activeSaveUnreadable&&targetKey===key)return false;
   try {
     localStorage.setItem(targetKey,JSON.stringify({...state,catalogSlots:crops.length,clockSavedAt:Date.now()}));
     storageError = false;
@@ -3234,7 +3239,7 @@ function render() {
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
   get('counter').textContent = number(total(farm.harvest));
-  get('save-state').textContent = storageError ? 'Ошибка сохранения' : '';
+  get('save-state').textContent = activeSaveUnreadable ? 'Мир не загрузился. Исходный сейв защищён от перезаписи.' : storageError ? 'Ошибка сохранения' : '';
   get('basket-coins').textContent = number(farm.coins);
   get('basket-empty').hidden = total(farm.harvest) > 0;
   get('basket-dialog').classList.toggle('empty-basket',total(farm.harvest)===0);
@@ -6508,7 +6513,7 @@ addGameHelp(get('resources-dialog').querySelector('.window-heading h2') ,'Кол
 ]);
 addGameHelp(get('fortune-dialog').querySelector('.window-heading h2') ,'Колесо фортуны',[
  'Выбери валюту и ставку. Колесо может вернуть половину ставки, всю ставку или полторы ставки. Например, за 100 монет можно получить 50, 100 или 150.',
- 'Пустой сектор ничего не даёт. У некоторых наград есть минимальная ставка. Джекпот растёт с прокрутками и сбрасывается после выигрыша.'
+ 'Пустой сектор ничего не даёт. У некоторых наград есть минимальная ставка. В банк джекпота уходит 10% каждой ставки. При выигрыше получаешь ×777 от целой суммы банка, а банк обнуляется.'
 ]);
 const setLabels=['Корнеплоды','Луковые','Паслёновые','Бахчевые'];
 function renderSetDetails(){
@@ -7054,7 +7059,7 @@ function renderSaveSlots(){
     for(const [index,slot] of slots.entries()){
       const isActive=slot===activeSlot;
       const raw=localStorage.getItem(slotKey(slot));
-      let state          =isActive?farm:null;
+      let state          =isActive&&!activeSaveUnreadable?farm:null;
       if(!isActive&&raw){
         try{state=JSON.parse(raw)        ;}catch{/* The damaged world can still be deleted. */}
       }
@@ -7077,7 +7082,7 @@ function switchSaveSlot(slot       ,newWorld      ){
   let created=false;
   try{
     syncPlayTime();
-    if(!saveFarm({...farm,pausedAt:Date.now()}))throw new Error('Не удалось сохранить текущий мир');
+    if(!activeSaveUnreadable&&!saveFarm({...farm,pausedAt:Date.now()}))throw new Error('Не удалось сохранить текущий мир');
     if(newWorld){
       if(!saveFarm(newWorld,slotKey(slot)))throw new Error('Не удалось создать мир');
       created=true;
@@ -7240,7 +7245,7 @@ function renderFortune(){
   if(last&&!spinningFortune)outcome.textContent=last.label+'\nШанс '+fortuneChance(last.chance)+'%';
   if(spinningFortune)return;
   get('fortune-balance').textContent=info.icon+' '+number(balance);
-  get('fortune-jackpot').textContent='Джекпот после ставки · '+info.icon+' '+number(Math.floor((account.bank+stake)/10));
+  get('fortune-jackpot').textContent='Банк джекпота после ставки · '+info.icon+' '+number(wheelBankAmount(account.bank+stake));
   get('fortune-carry').textContent=kind==='diamonds'?'Остаток возврата · '+(account.carry/20).toLocaleString('ru-RU')+' / 1 💎':kind==='orbs'&&state.orbBoost?'Запас двойных орбов · '+number(state.orbBoost):'';
   fortuneWheel.style.transform='';
   const prizes=wheelLayout(farm,kind,stake);

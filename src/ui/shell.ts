@@ -90,7 +90,7 @@ function render() {
   get('diamond-balance').textContent=number(farm.diamonds?.balance??0);
   get('dimensions').textContent = farm.size + ' × ' + farm.size;
   get('counter').textContent = number(total(farm.harvest));
-  get('save-state').textContent = storageError ? 'Ошибка сохранения' : '';
+  get('save-state').textContent = activeSaveUnreadable ? 'Мир не загрузился. Исходный сейв защищён от перезаписи.' : storageError ? 'Ошибка сохранения' : '';
   get('basket-coins').textContent = number(farm.coins);
   get('basket-empty').hidden = total(farm.harvest) > 0;
   get('basket-dialog').classList.toggle('empty-basket',total(farm.harvest)===0);

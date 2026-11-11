@@ -28,7 +28,7 @@ function renderSaveSlots(){
     for(const [index,slot] of slots.entries()){
       const isActive=slot===activeSlot;
       const raw=localStorage.getItem(slotKey(slot));
-      let state:Farm|null=isActive?farm:null;
+      let state:Farm|null=isActive&&!activeSaveUnreadable?farm:null;
       if(!isActive&&raw){
         try{state=JSON.parse(raw) as Farm;}catch{/* The damaged world can still be deleted. */}
       }
@@ -51,7 +51,7 @@ function switchSaveSlot(slot:number,newWorld?:Farm){
   let created=false;
   try{
     syncPlayTime();
-    if(!saveFarm({...farm,pausedAt:Date.now()}))throw new Error('Не удалось сохранить текущий мир');
+    if(!activeSaveUnreadable&&!saveFarm({...farm,pausedAt:Date.now()}))throw new Error('Не удалось сохранить текущий мир');
     if(newWorld){
       if(!saveFarm(newWorld,slotKey(slot)))throw new Error('Не удалось создать мир');
       created=true;

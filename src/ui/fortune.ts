@@ -86,7 +86,7 @@ function renderFortune(){
   if(last&&!spinningFortune)outcome.textContent=last.label+'\nШанс '+fortuneChance(last.chance)+'%';
   if(spinningFortune)return;
   get('fortune-balance').textContent=info.icon+' '+number(balance);
-  get('fortune-jackpot').textContent='Джекпот после ставки · '+info.icon+' '+number(Math.floor((account.bank+stake)/10));
+  get('fortune-jackpot').textContent='Банк джекпота после ставки · '+info.icon+' '+number(wheelBankAmount(account.bank+stake));
   get('fortune-carry').textContent=kind==='diamonds'?'Остаток возврата · '+(account.carry/20).toLocaleString('ru-RU')+' / 1 💎':kind==='orbs'&&state.orbBoost?'Запас двойных орбов · '+number(state.orbBoost):'';
   fortuneWheel.style.transform='';
   const prizes=wheelLayout(farm,kind,stake);

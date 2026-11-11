@@ -12,6 +12,7 @@ function readActiveSlot(){
 const activeSlot=readActiveSlot();
 const key=slotKey(activeSlot);
 let storageError = false;
+let activeSaveUnreadable = false;
 const int = (value:unknown,min:number,max = Number.MAX_SAFE_INTEGER) =>
   typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max;
 function loadFarm():Farm {
@@ -314,12 +315,14 @@ function loadFarm():Farm {
     if(finishPackOpening(s)||weatherMigrated||barriersMigrated||refundedWeatherDiamonds||diamondEffectsMigrated||awardedSets||resumed)saveFarm(s);
     return s;
   } catch (error) {
+    activeSaveUnreadable = true;
     storageError = true;
     console.error('Ферма: ошибка загрузки сохранения',error);
     return newFarm();
   }
 }
 function saveFarm(state:Farm,targetKey=key) {
+  if(activeSaveUnreadable&&targetKey===key)return false;
   try {
     localStorage.setItem(targetKey,JSON.stringify({...state,catalogSlots:crops.length,clockSavedAt:Date.now()}));
     storageError = false;

@@ -321,7 +321,7 @@ for(const kind of ['orbs','diamonds']){
   account.bank=0;
 }
 const jackpotRoll=(total(layout.slice(0,jackpotIndex).map(prize=>prize.weight))+.005)/100;
-assert.equal(spinFortune(gambler,'coins',1000000,()=>jackpotRoll).payout,100000);
+assert.equal(spinFortune(gambler,'coins',1000000,()=>jackpotRoll).payout,77_700_000);
 assert.equal(wheelAccount(gambler,'coins').bank,0);
 gambler.diamonds=newDiamonds();
 gambler.diamonds.balance=2;
@@ -332,4 +332,9 @@ assert.equal(wheelAccount(gambler,'diamonds').carry,refund.prize.amount/5%20);
 saveFarm(gambler);
 assert.equal(loadFarm().wheels.accounts.diamonds.carry,wheelAccount(gambler,'diamonds').carry);
 console.log('PASS: wheel odds, jackpot, locked prizes, fractional diamond returns and save/reload');
+const unreadableSave='{"catalogSlots":-1}';
+localStorage.setItem(key,unreadableSave);
+assert.equal(saveFarm(loadFarm()),false);
+assert.equal(localStorage.getItem(key),unreadableSave);
+console.log('PASS: unreadable save survives a write attempt');
 `,context);
