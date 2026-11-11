@@ -23,6 +23,15 @@ function cropArt(host:HTMLElement,crop:number,asset:string,fallback:string) {
 }
 const get = <T extends HTMLElement = HTMLElement>(id:string) => document.getElementById(id) as T;
 const farm = loadFarm();
+for(const id of ['hybrid-sort','hybrid-direction','basket-sort','basket-direction','seed-sort'] as const){
+  const select=get<HTMLSelectElement>(id);
+  const saved=farm.sorting?.[id];
+  if(saved!==undefined&&Array.from(select.options).some(option=>option.value===saved))select.value=saved;
+  select.addEventListener('change',()=>{
+    (farm.sorting??={})[id]=select.value;
+    saveFarm(farm);
+  });
+}
 farm.automation.replant=false;
 farm.automation.irrigation=false;
 document.querySelector<HTMLElement>('.debug')!.hidden=farm.saveCheats!==true;

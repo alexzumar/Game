@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Семенная ферма: открой пакет, посей и вырасти урожай.">
 <title>Всходы — семенная ферма</title>
-<meta name="farm-build" content="a74c1b47cc9c7ef9">
+<meta name="farm-build" content="4720495b46edec00">
 <style>*{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{--mint:#a6d8ba;--lilac:#c9b6e7;--peach:#f2c1a5;--blue:#a9caed;--pink:#e8b0c9;--accent:var(--mint);--base:#e9eee6;--ink:#22362e;--soft:#53655b;--glass:#ffffff76;--line:#ffffffb8;--edge:#243f3026;--soil:#d9c9ae;--soil-dark:#a68a69;--shade:#283d2521;color-scheme:light;font:15px system-ui,sans-serif}
@@ -1224,6 +1224,7 @@ function newGreenhouse(now       )           {
     trellises:Array(greenhouseCells).fill(false),plots:Array(greenhouseCells).fill(null),
     rot:Array(greenhouseCells).fill(null),mutationCheck:now+30000};
 }
+
 
 
 
@@ -3166,6 +3167,15 @@ function cropArt(host            ,crop       ,asset       ,fallback       ) {
 }
 const get =                                      (id       ) => document.getElementById(id)     ;
 const farm = loadFarm();
+for(const id of ['hybrid-sort','hybrid-direction','basket-sort','basket-direction','seed-sort']         ){
+  const select=get                   (id);
+  const saved=farm.sorting?.[id];
+  if(saved!==undefined&&Array.from(select.options).some(option=>option.value===saved))select.value=saved;
+  select.addEventListener('change',()=>{
+    (farm.sorting??={})[id]=select.value;
+    saveFarm(farm);
+  });
+}
 farm.automation.replant=false;
 farm.automation.irrigation=false;
 document.querySelector             ('.debug') .hidden=farm.saveCheats!==true;

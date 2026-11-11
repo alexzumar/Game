@@ -39,6 +39,7 @@ type Farm = {
   greenhouse?:Greenhouse;
   wheels?:WheelState;
   pausedAt?:number;
+  sorting?:Partial<Record<'hybrid-sort'|'hybrid-direction'|'basket-sort'|'basket-direction'|'seed-sort',string>>;
   activePlayMs?:number;
   backgroundPlayMs?:number;
   statistics?:FarmStatistics;

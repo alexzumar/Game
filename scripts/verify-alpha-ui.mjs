@@ -66,7 +66,11 @@ const smoke=`<script>setTimeout(async()=>{try{
  upgradeWallet.dispatchEvent(new PointerEvent('pointerleave',{pointerType:'mouse'}));
  assert(upgradeMaterialTip.hidden,'Tooltip remains visible after mouse leaves the balance');
  upgradesDialog.close();
+ get('hybrid-sort').value='genes';
+ get('hybrid-direction').value='1';
+ for(const id of ['hybrid-sort','hybrid-direction'])get(id).dispatchEvent(new Event('change'));
  location.hash='greenhouse';await sleep(100);
+ assert(get('hybrid-sort').value==='genes'&&get('hybrid-direction').value==='1','Greenhouse lost hybrid sorting');
  assert(document.body.classList.contains('in-greenhouse')&&greenhouseGrid.children.length===30,'Greenhouse navigation or grid missing');
  assert(greenhouseGrid.querySelectorAll('[data-bed="true"]').length===3,'Incorrect initial greenhouse beds');
  assert([20,21,22].every(i=>farm.greenhouse.beds[i]),'Greenhouse beds do not start at bottom left');
@@ -122,6 +126,7 @@ const smoke=`<script>setTimeout(async()=>{try{
  greenPlant.dispatchEvent(new PointerEvent('pointerleave',{pointerType:'mouse'}));
  location.hash='garden';await sleep(100);
  assert(!document.body.classList.contains('in-greenhouse'),'Garden navigation failed');
+ assert(get('hybrid-sort').value==='genes'&&get('hybrid-direction').value==='1'&&loadFarm().sorting?.['hybrid-direction']==='1','Garden or save lost hybrid sorting');
  assert(get('field-tip').parentElement===get('garden-field-head'),'Garden did not recover the shared plot tooltip');
  const quickAnchor=get('field').querySelector('.tile');
  openQuickSeeds(0,quickAnchor);
